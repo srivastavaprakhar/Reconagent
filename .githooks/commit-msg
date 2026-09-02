@@ -1,0 +1,6 @@
+#!/bin/sh
+# Reject any AI/tool attribution in commit messages (see CLAUDE.md).
+if grep -qiE 'co-authored-by:.*(claude|anthropic|ai)|generated with|claude code|claude-session|anthropic|🤖' "$1"; then
+  echo "commit-msg: attribution trailer detected; CLAUDE.md forbids it." >&2
+  exit 1
+fi
