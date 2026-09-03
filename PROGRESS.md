@@ -3,18 +3,25 @@
 Updated after every integrated unit of work. Source of truth for scope:
 `reconagent-design-description.md`. Rules: `CLAUDE.md`.
 
-## Status: Tier 1 — skeleton committed, A dispatched
+## Status: Tier 1 — A done, B next
 
 ### Tier 1 subagents
 | # | Unit | State | Commit | Notes |
 |---|------|-------|--------|-------|
-| A | Synthetic data generator + ground_truth.json | not started | — | MT103 text + camt.053 XML, labelled defects, adversarial holdout |
+| A | Synthetic data generator + ground_truth.json | **done** | (this commit) | 153 main cases + 54 holdout; 40 tests pass |
 | B | Ingestion & parsing (Razorpay / MT103 / camt.053) | not started | — | Decimal-or-minor-units enforced at boundary |
 | C | Stage 1 deterministic + Stage 2 subset-sum | not started | — | |
 | D | FX tolerance, variance decomposition, EDPMS aging | not started | — | tolerance band = parameter |
 | F | Eval harness (false-match / false-clear headline, mutation test) | not started | — | runs last, against C+D output |
 | E | Exception taxonomy, abstention gate, LLM explanation | **deferred** | — | Tier 1.5 checkpoint decides |
 | G | FastAPI + hash-chained Postgres audit log | **deferred** | — | Tier 1.5 checkpoint decides |
+
+### Dataset (A)
+Main: 153 cases / 200 settlements / 150 bank credits / 200 invoices.
+Holdout: 54 cases, every defect knob hardened. Generator deterministic under
+`--seed`, verified by regenerate-and-diff. No float on any money path, verified
+programmatically. Subset-sum bundles verified unambiguous: the labelled subset is
+the unique minimum-|residual| candidate in all 19 bundles across both splits.
 
 ### Eval numbers
 None yet. Headline metrics once F lands: **false-match rate**, **false-clear rate**
@@ -44,6 +51,15 @@ Blocked on the Tier 1.5 checkpoint. Requires explicit go-ahead before either sta
   rejects any commit message mentioning Claude/Anthropic/AI attribution. Verified to
   fail closed: probe commits carrying "Generated with Claude Code" and a
   "Co-Authored-By: Claude" trailer were both rejected, neither entered history.
+
+## Constraints discovered in the data (binding on downstream units)
+- **Subset-sum solver (C) must rank by minimum absolute residual, not first-fit.**
+  Every bundle carries a decoy subset landing 3 minor units from the credit (1 in
+  the holdout), inside the labelling tolerance. The correct subset is always
+  residual-zero and is the unique argmin, but a first-admissible-match solver will
+  take the decoy roughly half the time.
+- Tolerances in `ground_truth.json.conventions` are labelling metadata only. C and D
+  own their own bands as parameters; do not read them from the answer key.
 
 ## Open decisions (flagged, not guessed)
 - LangChain is dropped from §11's tooling list for this build. If E is built, its single

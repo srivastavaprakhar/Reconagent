@@ -1,0 +1,3895 @@
+{
+  "schema_version": "1.0",
+  "generator": {
+    "script": "scripts/generate_synthetic.py",
+    "seed": 20360903,
+    "scale": 100,
+    "split": "holdout",
+    "adversarial_holdout": true,
+    "deterministic": "same seed + scale => byte-identical output; no wall-clock input"
+  },
+  "conventions": {
+    "money": "Every *_minor field in this file is an integer count of currency minor units (paise for INR, cents for USD/EUR/GBP/SGD/AED). Never a float. The emitted CSV / MT103 / camt.053 carry the same values as exact fixed-point decimal strings.",
+    "rates": "All rates are decimal strings, INR per 1 unit of the foreign currency, 4 dp. reference_rate is the FBIL daily rate for the value date (see fx_reference_rates.csv); applied_rate is what Razorpay actually used.",
+    "amount_tolerance_minor": 100,
+    "fx_tolerance_bps": "50",
+    "tolerance_ownership": "amount_tolerance_minor and fx_tolerance_bps describe how THIS FILE was labelled. They are not a configuration input to the matcher or the FX validator, which own their own bands. They are published so a grader can see what the label means.",
+    "case_fields": {
+      "case_id": "stable id, unique within the split",
+      "defect_class": "one of clean_match, edpms_open, fx_drift_benign, fx_drift_flagged, missing_remitter, partial_payment, refund_fx_asymmetry, subset_sum_bundle, timing_pending",
+      "split": "main | holdout",
+      "settlement_ids": "every settlement_id in razorpay_settlements.csv this case involves",
+      "payment_ids": "every entity_id (pay_/rfnd_) this case involves",
+      "bank_txn_ids": "every NtryRef in the camt.053 (and TxId) this case involves; [] if none",
+      "invoice_ids": "every invoice_id in invoice_ledger.csv this case involves",
+      "expected_link": "the correct linkage: which bank credit covers which exact set of settlements, the credit amount, the sum of those settlements' net amounts, and the residual (settlement_net_sum_minor - credit_amount_minor)",
+      "expected_link_resolution": "MATCHED | PARTIAL | UNMATCHED",
+      "expected_exception_category": "null, or one of BENIGN_FX_DRIFT, FLAGGED_FX_DRIFT, MISSING_SENDER_INFO, TIMING_PENDING, PARTIAL_PAYMENT, REFUND_FX_ASYMMETRY, OPEN_EDPMS_LINKAGE",
+      "details": "class-specific expected values; see notes",
+      "notes": "plain-English statement of what the case simulates"
+    },
+    "statement_as_of": "2026-08-31",
+    "period": [
+      "2026-08-01",
+      "2026-08-31"
+    ]
+  },
+  "counts": {
+    "cases": 54,
+    "settlements": 100,
+    "settlement_rows": 101,
+    "bank_credits": 53,
+    "invoices": 100,
+    "by_defect_class": {
+      "clean_match": 22,
+      "edpms_open": 2,
+      "fx_drift_benign": 8,
+      "fx_drift_flagged": 3,
+      "missing_remitter": 6,
+      "partial_payment": 4,
+      "refund_fx_asymmetry": 1,
+      "subset_sum_bundle": 7,
+      "timing_pending": 1
+    }
+  },
+  "fx_reference_rates": [
+    {
+      "value_date": "2026-07-22",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.8140"
+    },
+    {
+      "value_date": "2026-07-22",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.1896"
+    },
+    {
+      "value_date": "2026-07-22",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4925"
+    },
+    {
+      "value_date": "2026-07-22",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8132"
+    },
+    {
+      "value_date": "2026-07-22",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3915"
+    },
+    {
+      "value_date": "2026-07-23",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.8027"
+    },
+    {
+      "value_date": "2026-07-23",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.1816"
+    },
+    {
+      "value_date": "2026-07-23",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4962"
+    },
+    {
+      "value_date": "2026-07-23",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8185"
+    },
+    {
+      "value_date": "2026-07-23",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3791"
+    },
+    {
+      "value_date": "2026-07-24",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.8159"
+    },
+    {
+      "value_date": "2026-07-24",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.1739"
+    },
+    {
+      "value_date": "2026-07-24",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.5044"
+    },
+    {
+      "value_date": "2026-07-24",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8151"
+    },
+    {
+      "value_date": "2026-07-24",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3714"
+    },
+    {
+      "value_date": "2026-07-25",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.8031"
+    },
+    {
+      "value_date": "2026-07-25",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.1626"
+    },
+    {
+      "value_date": "2026-07-25",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.5002"
+    },
+    {
+      "value_date": "2026-07-25",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8071"
+    },
+    {
+      "value_date": "2026-07-25",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3824"
+    },
+    {
+      "value_date": "2026-07-26",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.8045"
+    },
+    {
+      "value_date": "2026-07-26",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.1604"
+    },
+    {
+      "value_date": "2026-07-26",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.5097"
+    },
+    {
+      "value_date": "2026-07-26",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8146"
+    },
+    {
+      "value_date": "2026-07-26",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3890"
+    },
+    {
+      "value_date": "2026-07-27",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.8004"
+    },
+    {
+      "value_date": "2026-07-27",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.1474"
+    },
+    {
+      "value_date": "2026-07-27",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.5124"
+    },
+    {
+      "value_date": "2026-07-27",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8126"
+    },
+    {
+      "value_date": "2026-07-27",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3759"
+    },
+    {
+      "value_date": "2026-07-28",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7950"
+    },
+    {
+      "value_date": "2026-07-28",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.1569"
+    },
+    {
+      "value_date": "2026-07-28",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.5059"
+    },
+    {
+      "value_date": "2026-07-28",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8255"
+    },
+    {
+      "value_date": "2026-07-28",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3852"
+    },
+    {
+      "value_date": "2026-07-29",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7978"
+    },
+    {
+      "value_date": "2026-07-29",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.1718"
+    },
+    {
+      "value_date": "2026-07-29",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.5131"
+    },
+    {
+      "value_date": "2026-07-29",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8216"
+    },
+    {
+      "value_date": "2026-07-29",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3976"
+    },
+    {
+      "value_date": "2026-07-30",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.8061"
+    },
+    {
+      "value_date": "2026-07-30",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.1717"
+    },
+    {
+      "value_date": "2026-07-30",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.5233"
+    },
+    {
+      "value_date": "2026-07-30",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8353"
+    },
+    {
+      "value_date": "2026-07-30",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3931"
+    },
+    {
+      "value_date": "2026-07-31",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7941"
+    },
+    {
+      "value_date": "2026-07-31",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.1594"
+    },
+    {
+      "value_date": "2026-07-31",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.5371"
+    },
+    {
+      "value_date": "2026-07-31",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8439"
+    },
+    {
+      "value_date": "2026-07-31",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.4017"
+    },
+    {
+      "value_date": "2026-08-01",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7798"
+    },
+    {
+      "value_date": "2026-08-01",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.1652"
+    },
+    {
+      "value_date": "2026-08-01",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.5276"
+    },
+    {
+      "value_date": "2026-08-01",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8579"
+    },
+    {
+      "value_date": "2026-08-01",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3947"
+    },
+    {
+      "value_date": "2026-08-02",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7904"
+    },
+    {
+      "value_date": "2026-08-02",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.1686"
+    },
+    {
+      "value_date": "2026-08-02",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.5246"
+    },
+    {
+      "value_date": "2026-08-02",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8510"
+    },
+    {
+      "value_date": "2026-08-02",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3829"
+    },
+    {
+      "value_date": "2026-08-03",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7842"
+    },
+    {
+      "value_date": "2026-08-03",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.1599"
+    },
+    {
+      "value_date": "2026-08-03",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.5299"
+    },
+    {
+      "value_date": "2026-08-03",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8434"
+    },
+    {
+      "value_date": "2026-08-03",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3813"
+    },
+    {
+      "value_date": "2026-08-04",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7810"
+    },
+    {
+      "value_date": "2026-08-04",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.1611"
+    },
+    {
+      "value_date": "2026-08-04",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.5366"
+    },
+    {
+      "value_date": "2026-08-04",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8393"
+    },
+    {
+      "value_date": "2026-08-04",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3817"
+    },
+    {
+      "value_date": "2026-08-05",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7703"
+    },
+    {
+      "value_date": "2026-08-05",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.1711"
+    },
+    {
+      "value_date": "2026-08-05",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.5510"
+    },
+    {
+      "value_date": "2026-08-05",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8469"
+    },
+    {
+      "value_date": "2026-08-05",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3768"
+    },
+    {
+      "value_date": "2026-08-06",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7666"
+    },
+    {
+      "value_date": "2026-08-06",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.1786"
+    },
+    {
+      "value_date": "2026-08-06",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.5420"
+    },
+    {
+      "value_date": "2026-08-06",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8493"
+    },
+    {
+      "value_date": "2026-08-06",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3911"
+    },
+    {
+      "value_date": "2026-08-07",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7703"
+    },
+    {
+      "value_date": "2026-08-07",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.1892"
+    },
+    {
+      "value_date": "2026-08-07",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.5294"
+    },
+    {
+      "value_date": "2026-08-07",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8392"
+    },
+    {
+      "value_date": "2026-08-07",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3968"
+    },
+    {
+      "value_date": "2026-08-08",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7580"
+    },
+    {
+      "value_date": "2026-08-08",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2009"
+    },
+    {
+      "value_date": "2026-08-08",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.5426"
+    },
+    {
+      "value_date": "2026-08-08",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8419"
+    },
+    {
+      "value_date": "2026-08-08",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3834"
+    },
+    {
+      "value_date": "2026-08-09",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7650"
+    },
+    {
+      "value_date": "2026-08-09",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2088"
+    },
+    {
+      "value_date": "2026-08-09",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.5514"
+    },
+    {
+      "value_date": "2026-08-09",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8417"
+    },
+    {
+      "value_date": "2026-08-09",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3780"
+    },
+    {
+      "value_date": "2026-08-10",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7566"
+    },
+    {
+      "value_date": "2026-08-10",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2028"
+    },
+    {
+      "value_date": "2026-08-10",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.5631"
+    },
+    {
+      "value_date": "2026-08-10",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8347"
+    },
+    {
+      "value_date": "2026-08-10",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3905"
+    },
+    {
+      "value_date": "2026-08-11",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7520"
+    },
+    {
+      "value_date": "2026-08-11",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.1906"
+    },
+    {
+      "value_date": "2026-08-11",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.5481"
+    },
+    {
+      "value_date": "2026-08-11",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8441"
+    },
+    {
+      "value_date": "2026-08-11",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.4039"
+    },
+    {
+      "value_date": "2026-08-12",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7620"
+    },
+    {
+      "value_date": "2026-08-12",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.1945"
+    },
+    {
+      "value_date": "2026-08-12",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.5609"
+    },
+    {
+      "value_date": "2026-08-12",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8348"
+    },
+    {
+      "value_date": "2026-08-12",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3930"
+    },
+    {
+      "value_date": "2026-08-13",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7676"
+    },
+    {
+      "value_date": "2026-08-13",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2018"
+    },
+    {
+      "value_date": "2026-08-13",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.5726"
+    },
+    {
+      "value_date": "2026-08-13",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8296"
+    },
+    {
+      "value_date": "2026-08-13",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.4051"
+    },
+    {
+      "value_date": "2026-08-14",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7689"
+    },
+    {
+      "value_date": "2026-08-14",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.1956"
+    },
+    {
+      "value_date": "2026-08-14",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.5752"
+    },
+    {
+      "value_date": "2026-08-14",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8333"
+    },
+    {
+      "value_date": "2026-08-14",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.4036"
+    },
+    {
+      "value_date": "2026-08-15",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7822"
+    },
+    {
+      "value_date": "2026-08-15",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.1907"
+    },
+    {
+      "value_date": "2026-08-15",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.5866"
+    },
+    {
+      "value_date": "2026-08-15",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8189"
+    },
+    {
+      "value_date": "2026-08-15",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.4121"
+    },
+    {
+      "value_date": "2026-08-16",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7778"
+    },
+    {
+      "value_date": "2026-08-16",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.1913"
+    },
+    {
+      "value_date": "2026-08-16",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.5862"
+    },
+    {
+      "value_date": "2026-08-16",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8286"
+    },
+    {
+      "value_date": "2026-08-16",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.4149"
+    },
+    {
+      "value_date": "2026-08-17",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7722"
+    },
+    {
+      "value_date": "2026-08-17",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.1987"
+    },
+    {
+      "value_date": "2026-08-17",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.5792"
+    },
+    {
+      "value_date": "2026-08-17",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8148"
+    },
+    {
+      "value_date": "2026-08-17",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.4230"
+    },
+    {
+      "value_date": "2026-08-18",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7751"
+    },
+    {
+      "value_date": "2026-08-18",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2135"
+    },
+    {
+      "value_date": "2026-08-18",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.5842"
+    },
+    {
+      "value_date": "2026-08-18",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8277"
+    },
+    {
+      "value_date": "2026-08-18",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.4086"
+    },
+    {
+      "value_date": "2026-08-19",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7602"
+    },
+    {
+      "value_date": "2026-08-19",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2045"
+    },
+    {
+      "value_date": "2026-08-19",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.5732"
+    },
+    {
+      "value_date": "2026-08-19",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8406"
+    },
+    {
+      "value_date": "2026-08-19",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.4200"
+    },
+    {
+      "value_date": "2026-08-20",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7680"
+    },
+    {
+      "value_date": "2026-08-20",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.1938"
+    },
+    {
+      "value_date": "2026-08-20",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.5876"
+    },
+    {
+      "value_date": "2026-08-20",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8492"
+    },
+    {
+      "value_date": "2026-08-20",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.4066"
+    },
+    {
+      "value_date": "2026-08-21",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7622"
+    },
+    {
+      "value_date": "2026-08-21",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.1992"
+    },
+    {
+      "value_date": "2026-08-21",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.5745"
+    },
+    {
+      "value_date": "2026-08-21",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8414"
+    },
+    {
+      "value_date": "2026-08-21",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.4131"
+    },
+    {
+      "value_date": "2026-08-22",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7611"
+    },
+    {
+      "value_date": "2026-08-22",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2118"
+    },
+    {
+      "value_date": "2026-08-22",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.5850"
+    },
+    {
+      "value_date": "2026-08-22",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8442"
+    },
+    {
+      "value_date": "2026-08-22",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.4165"
+    },
+    {
+      "value_date": "2026-08-23",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7631"
+    },
+    {
+      "value_date": "2026-08-23",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2216"
+    },
+    {
+      "value_date": "2026-08-23",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.5712"
+    },
+    {
+      "value_date": "2026-08-23",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8328"
+    },
+    {
+      "value_date": "2026-08-23",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.4270"
+    },
+    {
+      "value_date": "2026-08-24",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7699"
+    },
+    {
+      "value_date": "2026-08-24",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2072"
+    },
+    {
+      "value_date": "2026-08-24",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.5702"
+    },
+    {
+      "value_date": "2026-08-24",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8367"
+    },
+    {
+      "value_date": "2026-08-24",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.4152"
+    },
+    {
+      "value_date": "2026-08-25",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7840"
+    },
+    {
+      "value_date": "2026-08-25",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.1929"
+    },
+    {
+      "value_date": "2026-08-25",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.5786"
+    },
+    {
+      "value_date": "2026-08-25",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8407"
+    },
+    {
+      "value_date": "2026-08-25",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.4181"
+    },
+    {
+      "value_date": "2026-08-26",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7961"
+    },
+    {
+      "value_date": "2026-08-26",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.1786"
+    },
+    {
+      "value_date": "2026-08-26",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.5893"
+    },
+    {
+      "value_date": "2026-08-26",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8471"
+    },
+    {
+      "value_date": "2026-08-26",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.4185"
+    },
+    {
+      "value_date": "2026-08-27",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7857"
+    },
+    {
+      "value_date": "2026-08-27",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.1878"
+    },
+    {
+      "value_date": "2026-08-27",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.5768"
+    },
+    {
+      "value_date": "2026-08-27",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8432"
+    },
+    {
+      "value_date": "2026-08-27",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.4186"
+    },
+    {
+      "value_date": "2026-08-28",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7835"
+    },
+    {
+      "value_date": "2026-08-28",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.1913"
+    },
+    {
+      "value_date": "2026-08-28",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.5676"
+    },
+    {
+      "value_date": "2026-08-28",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8540"
+    },
+    {
+      "value_date": "2026-08-28",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.4257"
+    },
+    {
+      "value_date": "2026-08-29",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7691"
+    },
+    {
+      "value_date": "2026-08-29",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.1964"
+    },
+    {
+      "value_date": "2026-08-29",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.5730"
+    },
+    {
+      "value_date": "2026-08-29",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8419"
+    },
+    {
+      "value_date": "2026-08-29",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.4151"
+    },
+    {
+      "value_date": "2026-08-30",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7783"
+    },
+    {
+      "value_date": "2026-08-30",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.1874"
+    },
+    {
+      "value_date": "2026-08-30",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.5855"
+    },
+    {
+      "value_date": "2026-08-30",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8274"
+    },
+    {
+      "value_date": "2026-08-30",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.4025"
+    },
+    {
+      "value_date": "2026-08-31",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7740"
+    },
+    {
+      "value_date": "2026-08-31",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2009"
+    },
+    {
+      "value_date": "2026-08-31",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.5992"
+    },
+    {
+      "value_date": "2026-08-31",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8154"
+    },
+    {
+      "value_date": "2026-08-31",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.4022"
+    },
+    {
+      "value_date": "2026-09-01",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7633"
+    },
+    {
+      "value_date": "2026-09-01",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.1891"
+    },
+    {
+      "value_date": "2026-09-01",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.5962"
+    },
+    {
+      "value_date": "2026-09-01",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8117"
+    },
+    {
+      "value_date": "2026-09-01",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.4040"
+    },
+    {
+      "value_date": "2026-09-02",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7489"
+    },
+    {
+      "value_date": "2026-09-02",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2033"
+    },
+    {
+      "value_date": "2026-09-02",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.5880"
+    },
+    {
+      "value_date": "2026-09-02",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.7998"
+    },
+    {
+      "value_date": "2026-09-02",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3975"
+    },
+    {
+      "value_date": "2026-09-03",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7628"
+    },
+    {
+      "value_date": "2026-09-03",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2071"
+    },
+    {
+      "value_date": "2026-09-03",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.6004"
+    },
+    {
+      "value_date": "2026-09-03",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.7944"
+    },
+    {
+      "value_date": "2026-09-03",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3934"
+    },
+    {
+      "value_date": "2026-09-04",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7581"
+    },
+    {
+      "value_date": "2026-09-04",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2064"
+    },
+    {
+      "value_date": "2026-09-04",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.6035"
+    },
+    {
+      "value_date": "2026-09-04",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.7980"
+    },
+    {
+      "value_date": "2026-09-04",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3792"
+    },
+    {
+      "value_date": "2026-09-05",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7442"
+    },
+    {
+      "value_date": "2026-09-05",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2188"
+    },
+    {
+      "value_date": "2026-09-05",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.6113"
+    },
+    {
+      "value_date": "2026-09-05",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.7929"
+    },
+    {
+      "value_date": "2026-09-05",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3909"
+    },
+    {
+      "value_date": "2026-09-06",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7457"
+    },
+    {
+      "value_date": "2026-09-06",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2221"
+    },
+    {
+      "value_date": "2026-09-06",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.6091"
+    },
+    {
+      "value_date": "2026-09-06",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.7814"
+    },
+    {
+      "value_date": "2026-09-06",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3850"
+    },
+    {
+      "value_date": "2026-09-07",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7396"
+    },
+    {
+      "value_date": "2026-09-07",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2218"
+    },
+    {
+      "value_date": "2026-09-07",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.6222"
+    },
+    {
+      "value_date": "2026-09-07",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.7757"
+    },
+    {
+      "value_date": "2026-09-07",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3817"
+    },
+    {
+      "value_date": "2026-09-08",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7297"
+    },
+    {
+      "value_date": "2026-09-08",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2360"
+    },
+    {
+      "value_date": "2026-09-08",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.6315"
+    },
+    {
+      "value_date": "2026-09-08",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.7722"
+    },
+    {
+      "value_date": "2026-09-08",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3956"
+    },
+    {
+      "value_date": "2026-09-09",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7319"
+    },
+    {
+      "value_date": "2026-09-09",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2276"
+    },
+    {
+      "value_date": "2026-09-09",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.6343"
+    },
+    {
+      "value_date": "2026-09-09",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.7820"
+    },
+    {
+      "value_date": "2026-09-09",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.4002"
+    },
+    {
+      "value_date": "2026-09-10",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7339"
+    },
+    {
+      "value_date": "2026-09-10",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2327"
+    },
+    {
+      "value_date": "2026-09-10",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.6213"
+    },
+    {
+      "value_date": "2026-09-10",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.7851"
+    },
+    {
+      "value_date": "2026-09-10",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3913"
+    }
+  ],
+  "cases": [
+    {
+      "case_id": "HOLDOUT-00001",
+      "defect_class": "subset_sum_bundle",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_7bdSkqippVYYdh",
+        "setl_ZWyQfHPxhKhP7s",
+        "setl_J6VSoTylDcnUik",
+        "setl_cgcu9au57DagJr",
+        "setl_3JPniPQf9Bsr55",
+        "setl_rtd86r816jsahL"
+      ],
+      "payment_ids": [
+        "pay_91dZD1N6bPsHlw",
+        "pay_ZctlHIanldJWCE",
+        "pay_0lSQGFiLmj5aHp",
+        "pay_6Vx9ekEWVUCXdq",
+        "pay_qGAaP4gOZlhdNm",
+        "pay_c5QQ4E72DPTzRW"
+      ],
+      "bank_txn_ids": [
+        "BNKH000001"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00001",
+        "INV-2026-H00002",
+        "INV-2026-H00003",
+        "INV-2026-H00004",
+        "INV-2026-H00005",
+        "INV-2026-H00006"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000001",
+        "covers_settlement_ids": [
+          "setl_7bdSkqippVYYdh",
+          "setl_ZWyQfHPxhKhP7s",
+          "setl_J6VSoTylDcnUik",
+          "setl_cgcu9au57DagJr"
+        ],
+        "credit_amount_minor": 8742895,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 8742895,
+        "residual_minor": 0
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": null,
+      "details": {
+        "cardinality": 4,
+        "member_net_minor": {
+          "setl_7bdSkqippVYYdh": 3139191,
+          "setl_ZWyQfHPxhKhP7s": 584549,
+          "setl_J6VSoTylDcnUik": 1238510,
+          "setl_cgcu9au57DagJr": 3780645
+        },
+        "decoy_settlement_ids": [
+          "setl_3JPniPQf9Bsr55",
+          "setl_rtd86r816jsahL"
+        ],
+        "decoy_sum_minor": 8742894,
+        "decoy_delta_minor": -1,
+        "expected_unmatched_settlement_ids": [
+          "setl_3JPniPQf9Bsr55",
+          "setl_rtd86r816jsahL"
+        ],
+        "no_settlement_utr_in_narration": true
+      },
+      "notes": "One credit sweeps 4 settlements. A decoy pair sums to -1 minor units off the credit; a solver whose tolerance exceeds that will select the decoy."
+    },
+    {
+      "case_id": "HOLDOUT-00002",
+      "defect_class": "clean_match",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_yaVyC7IIXCwosf"
+      ],
+      "payment_ids": [
+        "pay_AYR6J8H8OZ3AO9"
+      ],
+      "bank_txn_ids": [
+        "BNKH000002"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00007"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000002",
+        "covers_settlement_ids": [
+          "setl_yaVyC7IIXCwosf"
+        ],
+        "credit_amount_minor": 1137180,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 1137180,
+        "residual_minor": 0
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": null,
+      "details": {
+        "utr_present_in_narration": true
+      },
+      "notes": "Single settlement, single credit, UTR quoted verbatim in the narration."
+    },
+    {
+      "case_id": "HOLDOUT-00003",
+      "defect_class": "edpms_open",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_eZJ8AiqDgXMn6C"
+      ],
+      "payment_ids": [
+        "pay_4tLooTrMAPgxWN"
+      ],
+      "bank_txn_ids": [
+        "BNKH000003"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00008"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000003",
+        "covers_settlement_ids": [
+          "setl_eZJ8AiqDgXMn6C"
+        ],
+        "credit_amount_minor": 130239248,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 429060138,
+        "residual_minor": 298820890
+      },
+      "expected_link_resolution": "PARTIAL",
+      "expected_exception_category": "OPEN_EDPMS_LINKAGE",
+      "details": {
+        "shipping_bill_no": "7913776",
+        "shipping_bill_date": "2025-12-08",
+        "purpose_code": "P0802",
+        "realisation_deadline": "2026-09-04",
+        "statement_as_of": "2026-08-31",
+        "days_to_deadline": 4,
+        "overdue": false,
+        "currency": "USD",
+        "invoiced_foreign_minor": 5089736,
+        "realised_foreign_minor": 1670451,
+        "outstanding_foreign_minor": 3419285
+      },
+      "notes": "Export receipt partially realised against its shipping bill; 4 days to the FEMA realisation deadline."
+    },
+    {
+      "case_id": "HOLDOUT-00004",
+      "defect_class": "fx_drift_benign",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_wDb0NF91tuLMg7"
+      ],
+      "payment_ids": [
+        "pay_yP51LS3neZ8Ctn"
+      ],
+      "bank_txn_ids": [
+        "BNKH000004"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00009"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000004",
+        "covers_settlement_ids": [
+          "setl_wDb0NF91tuLMg7"
+        ],
+        "credit_amount_minor": 63070973,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 63070973,
+        "residual_minor": 0
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "BENIGN_FX_DRIFT",
+      "details": {
+        "currency_pair": "USD/INR",
+        "value_date": "2026-08-20",
+        "applied_rate": "87.6939",
+        "reference_rate": "87.4066",
+        "reference_source": "FBIL",
+        "deviation_bps": "32.87",
+        "expected_within_tolerance": true,
+        "labelling_tolerance_bps": "50",
+        "gross_foreign_minor": 745612,
+        "base_amount_minor": 65385624,
+        "fee_minor": 1961569,
+        "tax_minor": 353082
+      },
+      "notes": "Applied conversion rate sits 32.87 bps from the FBIL reference for the value date; inside the labelling band. The validator supplies its own band."
+    },
+    {
+      "case_id": "HOLDOUT-00005",
+      "defect_class": "subset_sum_bundle",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_EDBmmGeIXZBBVM",
+        "setl_J2l62EBvHjdACk",
+        "setl_gErh3rqG3myjxh",
+        "setl_uIPU7Tj6jJXDx1",
+        "setl_FDNulqJcChsUA8",
+        "setl_APmxvJ8kZNptsU",
+        "setl_dIEmmbbJBBRiPW",
+        "setl_LYGRKPfajFonD8"
+      ],
+      "payment_ids": [
+        "pay_UudAyX89ruTxXs",
+        "pay_dCpRKBhd9XaitK",
+        "pay_7pORXxWHsGlLbF",
+        "pay_qFEGpTfQ9VMpJV",
+        "pay_qaNIycOVyHWsGV",
+        "pay_PhbGj84eX6nhbj",
+        "pay_MpEQkyRfGeb1RV",
+        "pay_GwCI567GNk5kgy"
+      ],
+      "bank_txn_ids": [
+        "BNKH000005"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00010",
+        "INV-2026-H00011",
+        "INV-2026-H00012",
+        "INV-2026-H00013",
+        "INV-2026-H00014",
+        "INV-2026-H00015",
+        "INV-2026-H00016",
+        "INV-2026-H00017"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000005",
+        "covers_settlement_ids": [
+          "setl_EDBmmGeIXZBBVM",
+          "setl_J2l62EBvHjdACk",
+          "setl_gErh3rqG3myjxh",
+          "setl_uIPU7Tj6jJXDx1",
+          "setl_FDNulqJcChsUA8",
+          "setl_APmxvJ8kZNptsU"
+        ],
+        "credit_amount_minor": 9127647,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 9127647,
+        "residual_minor": 0
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": null,
+      "details": {
+        "cardinality": 6,
+        "member_net_minor": {
+          "setl_EDBmmGeIXZBBVM": 491391,
+          "setl_J2l62EBvHjdACk": 405295,
+          "setl_gErh3rqG3myjxh": 1921262,
+          "setl_uIPU7Tj6jJXDx1": 1829719,
+          "setl_FDNulqJcChsUA8": 2040516,
+          "setl_APmxvJ8kZNptsU": 2439464
+        },
+        "decoy_settlement_ids": [
+          "setl_dIEmmbbJBBRiPW",
+          "setl_LYGRKPfajFonD8"
+        ],
+        "decoy_sum_minor": 9127648,
+        "decoy_delta_minor": 1,
+        "expected_unmatched_settlement_ids": [
+          "setl_dIEmmbbJBBRiPW",
+          "setl_LYGRKPfajFonD8"
+        ],
+        "no_settlement_utr_in_narration": true
+      },
+      "notes": "One credit sweeps 6 settlements. A decoy pair sums to +1 minor units off the credit; a solver whose tolerance exceeds that will select the decoy."
+    },
+    {
+      "case_id": "HOLDOUT-00006",
+      "defect_class": "clean_match",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_cfhdA8yQciGDpE"
+      ],
+      "payment_ids": [
+        "pay_SXJs60JBnrz8w4"
+      ],
+      "bank_txn_ids": [
+        "BNKH000006"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00018"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000006",
+        "covers_settlement_ids": [
+          "setl_cfhdA8yQciGDpE"
+        ],
+        "credit_amount_minor": 2884670,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 2884670,
+        "residual_minor": 0
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": null,
+      "details": {
+        "utr_present_in_narration": true
+      },
+      "notes": "Single settlement, single credit, UTR quoted verbatim in the narration."
+    },
+    {
+      "case_id": "HOLDOUT-00007",
+      "defect_class": "missing_remitter",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_U5L3e5cQ7goDGU"
+      ],
+      "payment_ids": [
+        "pay_9GRzgeTCbmAxL0"
+      ],
+      "bank_txn_ids": [
+        "BNKH000007"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00019"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000007",
+        "covers_settlement_ids": [
+          "setl_U5L3e5cQ7goDGU"
+        ],
+        "credit_amount_minor": 304036235,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 304036235,
+        "residual_minor": 0
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "MISSING_SENDER_INFO",
+      "details": {
+        "mangling_style": "mangled",
+        "true_remitter_name": "MERIDIAN PTE LTD",
+        "field_50a_name_as_sent": "MERIDIAN PTE LT",
+        "field_70_as_sent": "/INV/INV-2026-H00019/RFB/EXPORT PRC 758757",
+        "resolvable_by": [
+          "amount",
+          "value_date",
+          "fuzzy_name"
+        ]
+      },
+      "notes": "Ordering-customer information absent or degraded in transit; amount and value date still identify it."
+    },
+    {
+      "case_id": "HOLDOUT-00008",
+      "defect_class": "missing_remitter",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_lSVqFiDFuaxhKB"
+      ],
+      "payment_ids": [
+        "pay_SfNFoOyK0BmuyG"
+      ],
+      "bank_txn_ids": [
+        "BNKH000008"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00020"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000008",
+        "covers_settlement_ids": [
+          "setl_lSVqFiDFuaxhKB"
+        ],
+        "credit_amount_minor": 106415128,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 106415128,
+        "residual_minor": 0
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "MISSING_SENDER_INFO",
+      "details": {
+        "mangling_style": "initials",
+        "true_remitter_name": "AL MAHA GENERAL TRADING LLC",
+        "field_50a_name_as_sent": "AMGTL",
+        "field_70_as_sent": "RFBINV-2026",
+        "resolvable_by": [
+          "amount",
+          "value_date",
+          "fuzzy_name"
+        ]
+      },
+      "notes": "Ordering-customer information absent or degraded in transit; amount and value date still identify it."
+    },
+    {
+      "case_id": "HOLDOUT-00009",
+      "defect_class": "partial_payment",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_hT9Bbht7AXFwnm"
+      ],
+      "payment_ids": [
+        "pay_ttMoQOB7700typ"
+      ],
+      "bank_txn_ids": [
+        "BNKH000009"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00021"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000009",
+        "covers_settlement_ids": [
+          "setl_hT9Bbht7AXFwnm"
+        ],
+        "credit_amount_minor": 1729251,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 1757190,
+        "residual_minor": 27939
+      },
+      "expected_link_resolution": "PARTIAL",
+      "expected_exception_category": "PARTIAL_PAYMENT",
+      "details": {
+        "settlement_net_minor": 1757190,
+        "credit_amount_minor": 1729251,
+        "shortfall_minor": 27939,
+        "coverage_bps": 9841
+      },
+      "notes": "Credit covers only part of the settlement; the remainder stays open."
+    },
+    {
+      "case_id": "HOLDOUT-00010",
+      "defect_class": "refund_fx_asymmetry",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_G3S115efNxbrNt"
+      ],
+      "payment_ids": [
+        "pay_hsqWXx4UZayx6K",
+        "rfnd_3NU8bjBJHsweC9"
+      ],
+      "bank_txn_ids": [
+        "BNKH000010"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00022"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000010",
+        "covers_settlement_ids": [
+          "setl_G3S115efNxbrNt"
+        ],
+        "credit_amount_minor": 370252132,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 370252132,
+        "residual_minor": 0
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "REFUND_FX_ASYMMETRY",
+      "details": {
+        "refund_id": "rfnd_3NU8bjBJHsweC9",
+        "capture": {
+          "value_date": "2026-08-19",
+          "rate": "87.2077",
+          "reference_rate": "87.4200",
+          "foreign_minor": 4401447,
+          "inr_minor": 383840070
+        },
+        "refund": {
+          "value_date": "2026-08-23",
+          "rate": "87.8571",
+          "reference_rate": "87.4270",
+          "foreign_minor": 4401447,
+          "inr_minor": 386698369
+        },
+        "foreign_residual_minor": 0,
+        "inr_residual_minor": -2858299,
+        "currency": "USD"
+      },
+      "notes": "Full refund in the original currency; the two conversion events differ, so INR residual is -2858299 minor units. Not a break."
+    },
+    {
+      "case_id": "HOLDOUT-00011",
+      "defect_class": "subset_sum_bundle",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_uzjca4Ud7WMpqR",
+        "setl_VUQkDC414I3bBn",
+        "setl_7t2PPWkjvptqyw",
+        "setl_60r164ZdmdxyAD",
+        "setl_pnrWzITP3M436j",
+        "setl_eUMggFzBhqtvVm",
+        "setl_jBhBjvkqfSTmE9"
+      ],
+      "payment_ids": [
+        "pay_PwZSR3lCQRJLO7",
+        "pay_AuGyyDF7OwBq5T",
+        "pay_qjm7UOa1XWWcWC",
+        "pay_cjyy1VcdtPd8wJ",
+        "pay_31O9kXxa5805kY",
+        "pay_gpvBPdCQLmO9Z4",
+        "pay_hh3xFtxXM2Alsl"
+      ],
+      "bank_txn_ids": [
+        "BNKH000011"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00023",
+        "INV-2026-H00024",
+        "INV-2026-H00025",
+        "INV-2026-H00026",
+        "INV-2026-H00027",
+        "INV-2026-H00028",
+        "INV-2026-H00029"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000011",
+        "covers_settlement_ids": [
+          "setl_uzjca4Ud7WMpqR",
+          "setl_VUQkDC414I3bBn",
+          "setl_7t2PPWkjvptqyw",
+          "setl_60r164ZdmdxyAD",
+          "setl_pnrWzITP3M436j"
+        ],
+        "credit_amount_minor": 11163184,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 11163184,
+        "residual_minor": 0
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": null,
+      "details": {
+        "cardinality": 5,
+        "member_net_minor": {
+          "setl_uzjca4Ud7WMpqR": 3565319,
+          "setl_VUQkDC414I3bBn": 682879,
+          "setl_7t2PPWkjvptqyw": 1327692,
+          "setl_60r164ZdmdxyAD": 2107245,
+          "setl_pnrWzITP3M436j": 3480049
+        },
+        "decoy_settlement_ids": [
+          "setl_eUMggFzBhqtvVm",
+          "setl_jBhBjvkqfSTmE9"
+        ],
+        "decoy_sum_minor": 11163185,
+        "decoy_delta_minor": 1,
+        "expected_unmatched_settlement_ids": [
+          "setl_eUMggFzBhqtvVm",
+          "setl_jBhBjvkqfSTmE9"
+        ],
+        "no_settlement_utr_in_narration": true
+      },
+      "notes": "One credit sweeps 5 settlements. A decoy pair sums to +1 minor units off the credit; a solver whose tolerance exceeds that will select the decoy."
+    },
+    {
+      "case_id": "HOLDOUT-00012",
+      "defect_class": "fx_drift_benign",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_JhT7LCoYezg58p"
+      ],
+      "payment_ids": [
+        "pay_W4gNw5V0ooD4ya"
+      ],
+      "bank_txn_ids": [
+        "BNKH000012"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00030"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000012",
+        "covers_settlement_ids": [
+          "setl_JhT7LCoYezg58p"
+        ],
+        "credit_amount_minor": 114748204,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 114748204,
+        "residual_minor": 0
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "BENIGN_FX_DRIFT",
+      "details": {
+        "currency_pair": "AED/INR",
+        "value_date": "2026-08-16",
+        "applied_rate": "23.8381",
+        "reference_rate": "23.7778",
+        "reference_source": "FBIL",
+        "deviation_bps": "25.36",
+        "expected_within_tolerance": true,
+        "labelling_tolerance_bps": "50",
+        "gross_foreign_minor": 4990304,
+        "base_amount_minor": 118959366,
+        "fee_minor": 3568781,
+        "tax_minor": 642381
+      },
+      "notes": "Applied conversion rate sits 25.36 bps from the FBIL reference for the value date; inside the labelling band. The validator supplies its own band."
+    },
+    {
+      "case_id": "HOLDOUT-00013",
+      "defect_class": "timing_pending",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_0cUVzoyJFJZxc5"
+      ],
+      "payment_ids": [
+        "pay_hkyLAlzx1V6mdy"
+      ],
+      "bank_txn_ids": [],
+      "invoice_ids": [
+        "INV-2026-H00031"
+      ],
+      "expected_link": {
+        "bank_txn_id": null,
+        "covers_settlement_ids": [
+          "setl_0cUVzoyJFJZxc5"
+        ],
+        "credit_amount_minor": null,
+        "credit_currency": null,
+        "settlement_net_sum_minor": 74133300,
+        "residual_minor": 74133300
+      },
+      "expected_link_resolution": "UNMATCHED",
+      "expected_exception_category": "TIMING_PENDING",
+      "details": {
+        "settled_at": "2026-08-27",
+        "statement_as_of": "2026-08-31",
+        "days_outstanding": 4,
+        "expected_window_days": [
+          2,
+          7
+        ],
+        "inside_expected_window": true
+      },
+      "notes": "No bank credit yet; still inside the cross-border T+2..T+7 window. Not an exception."
+    },
+    {
+      "case_id": "HOLDOUT-00014",
+      "defect_class": "subset_sum_bundle",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_cPMX7dsWHgDdwP",
+        "setl_SbyAB7gSefc3sQ",
+        "setl_u2CzycwnDVkJVI",
+        "setl_QJiEJTvQb7eZRP",
+        "setl_MnEKCX3Ak9iX4Y",
+        "setl_qkGZsxt2aOMk5s",
+        "setl_jZI2bd9KFE4nKq",
+        "setl_xUgWjgdGuJsKGH"
+      ],
+      "payment_ids": [
+        "pay_Nd3BRGTm2Ksudc",
+        "pay_ER9T2GebdV0tJo",
+        "pay_VbCFFYDTFL3RH6",
+        "pay_yLumQ9aprA9b1L",
+        "pay_dSRmbqzIhANZrx",
+        "pay_6540gF3Z0AjhVp",
+        "pay_931bZXtEiV3I0V",
+        "pay_IrBgDh5senr2LH"
+      ],
+      "bank_txn_ids": [
+        "BNKH000013"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00032",
+        "INV-2026-H00033",
+        "INV-2026-H00034",
+        "INV-2026-H00035",
+        "INV-2026-H00036",
+        "INV-2026-H00037",
+        "INV-2026-H00038",
+        "INV-2026-H00039"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000013",
+        "covers_settlement_ids": [
+          "setl_cPMX7dsWHgDdwP",
+          "setl_SbyAB7gSefc3sQ",
+          "setl_u2CzycwnDVkJVI",
+          "setl_QJiEJTvQb7eZRP",
+          "setl_MnEKCX3Ak9iX4Y",
+          "setl_qkGZsxt2aOMk5s"
+        ],
+        "credit_amount_minor": 11388110,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 11388110,
+        "residual_minor": 0
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": null,
+      "details": {
+        "cardinality": 6,
+        "member_net_minor": {
+          "setl_cPMX7dsWHgDdwP": 2592259,
+          "setl_SbyAB7gSefc3sQ": 3711232,
+          "setl_u2CzycwnDVkJVI": 1498013,
+          "setl_QJiEJTvQb7eZRP": 2010398,
+          "setl_MnEKCX3Ak9iX4Y": 156475,
+          "setl_qkGZsxt2aOMk5s": 1419733
+        },
+        "decoy_settlement_ids": [
+          "setl_jZI2bd9KFE4nKq",
+          "setl_xUgWjgdGuJsKGH"
+        ],
+        "decoy_sum_minor": 11388109,
+        "decoy_delta_minor": -1,
+        "expected_unmatched_settlement_ids": [
+          "setl_jZI2bd9KFE4nKq",
+          "setl_xUgWjgdGuJsKGH"
+        ],
+        "no_settlement_utr_in_narration": true
+      },
+      "notes": "One credit sweeps 6 settlements. A decoy pair sums to -1 minor units off the credit; a solver whose tolerance exceeds that will select the decoy."
+    },
+    {
+      "case_id": "HOLDOUT-00015",
+      "defect_class": "fx_drift_flagged",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_rpkrtxpCw3gla8"
+      ],
+      "payment_ids": [
+        "pay_2vnWJorJZy96hO"
+      ],
+      "bank_txn_ids": [
+        "BNKH000014"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00040"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000014",
+        "covers_settlement_ids": [
+          "setl_rpkrtxpCw3gla8"
+        ],
+        "credit_amount_minor": 410400621,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 410400621,
+        "residual_minor": 0
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "FLAGGED_FX_DRIFT",
+      "details": {
+        "currency_pair": "USD/INR",
+        "value_date": "2026-08-26",
+        "applied_rate": "88.1393",
+        "reference_rate": "87.4185",
+        "reference_source": "FBIL",
+        "deviation_bps": "82.45",
+        "expected_within_tolerance": false,
+        "labelling_tolerance_bps": "50",
+        "gross_foreign_minor": 4827154,
+        "base_amount_minor": 425461975,
+        "fee_minor": 12763859,
+        "tax_minor": 2297495
+      },
+      "notes": "Applied conversion rate sits 82.45 bps from the FBIL reference for the value date; outside the labelling band. The validator supplies its own band."
+    },
+    {
+      "case_id": "HOLDOUT-00016",
+      "defect_class": "subset_sum_bundle",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_gLlE1RAXjXmIoN",
+        "setl_8MSRnMDyEMIsnI",
+        "setl_xsDQRAMPB47Ezd",
+        "setl_2zKDQSUuxzyU3V",
+        "setl_9AyIVWtdLGLxMf",
+        "setl_v6EIFXdg4ytaWT",
+        "setl_yQhQw54x8EPRPa"
+      ],
+      "payment_ids": [
+        "pay_l54ml9e6riZLxv",
+        "pay_CXmPlvJV26CzPH",
+        "pay_qQgLjaw0i7Cy14",
+        "pay_CAcgBNJ4gJuJPP",
+        "pay_q5gyk1j5c7OwvT",
+        "pay_Qdx32J5aJi9SHQ",
+        "pay_SBB3MGm0aZMZfs"
+      ],
+      "bank_txn_ids": [
+        "BNKH000015"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00041",
+        "INV-2026-H00042",
+        "INV-2026-H00043",
+        "INV-2026-H00044",
+        "INV-2026-H00045",
+        "INV-2026-H00046",
+        "INV-2026-H00047"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000015",
+        "covers_settlement_ids": [
+          "setl_gLlE1RAXjXmIoN",
+          "setl_8MSRnMDyEMIsnI",
+          "setl_xsDQRAMPB47Ezd",
+          "setl_2zKDQSUuxzyU3V",
+          "setl_9AyIVWtdLGLxMf"
+        ],
+        "credit_amount_minor": 9128365,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 9128365,
+        "residual_minor": 0
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": null,
+      "details": {
+        "cardinality": 5,
+        "member_net_minor": {
+          "setl_gLlE1RAXjXmIoN": 233139,
+          "setl_8MSRnMDyEMIsnI": 3671951,
+          "setl_xsDQRAMPB47Ezd": 670988,
+          "setl_2zKDQSUuxzyU3V": 2442078,
+          "setl_9AyIVWtdLGLxMf": 2110209
+        },
+        "decoy_settlement_ids": [
+          "setl_v6EIFXdg4ytaWT",
+          "setl_yQhQw54x8EPRPa"
+        ],
+        "decoy_sum_minor": 9128364,
+        "decoy_delta_minor": -1,
+        "expected_unmatched_settlement_ids": [
+          "setl_v6EIFXdg4ytaWT",
+          "setl_yQhQw54x8EPRPa"
+        ],
+        "no_settlement_utr_in_narration": true
+      },
+      "notes": "One credit sweeps 5 settlements. A decoy pair sums to -1 minor units off the credit; a solver whose tolerance exceeds that will select the decoy."
+    },
+    {
+      "case_id": "HOLDOUT-00017",
+      "defect_class": "fx_drift_benign",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_3p2vjmRNzJb19W"
+      ],
+      "payment_ids": [
+        "pay_IFeSRtb3vvVWhy"
+      ],
+      "bank_txn_ids": [
+        "BNKH000016"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00048"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000016",
+        "covers_settlement_ids": [
+          "setl_3p2vjmRNzJb19W"
+        ],
+        "credit_amount_minor": 111887393,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 111887393,
+        "residual_minor": 0
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "BENIGN_FX_DRIFT",
+      "details": {
+        "currency_pair": "AED/INR",
+        "value_date": "2026-08-11",
+        "applied_rate": "23.8064",
+        "reference_rate": "23.7520",
+        "reference_source": "FBIL",
+        "deviation_bps": "22.90",
+        "expected_within_tolerance": true,
+        "labelling_tolerance_bps": "50",
+        "gross_foreign_minor": 4872369,
+        "base_amount_minor": 115993565,
+        "fee_minor": 3479807,
+        "tax_minor": 626365
+      },
+      "notes": "Applied conversion rate sits 22.90 bps from the FBIL reference for the value date; inside the labelling band. The validator supplies its own band."
+    },
+    {
+      "case_id": "HOLDOUT-00018",
+      "defect_class": "clean_match",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_QQvpLAnnN65TJR"
+      ],
+      "payment_ids": [
+        "pay_g6zXRI7EVUIsgp"
+      ],
+      "bank_txn_ids": [
+        "BNKH000017"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00049"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000017",
+        "covers_settlement_ids": [
+          "setl_QQvpLAnnN65TJR"
+        ],
+        "credit_amount_minor": 2033398,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 2033398,
+        "residual_minor": 0
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": null,
+      "details": {
+        "utr_present_in_narration": true
+      },
+      "notes": "Single settlement, single credit, UTR quoted verbatim in the narration."
+    },
+    {
+      "case_id": "HOLDOUT-00019",
+      "defect_class": "missing_remitter",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_EIhcJ8xtcXEfjM"
+      ],
+      "payment_ids": [
+        "pay_S1hNtmx8ee3fIg"
+      ],
+      "bank_txn_ids": [
+        "BNKH000018"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00050"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000018",
+        "covers_settlement_ids": [
+          "setl_EIhcJ8xtcXEfjM"
+        ],
+        "credit_amount_minor": 27475599,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 27475599,
+        "residual_minor": 0
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "MISSING_SENDER_INFO",
+      "details": {
+        "mangling_style": "mangled",
+        "true_remitter_name": "ACME TRADING GMBH",
+        "field_50a_name_as_sent": "TRADING GMBH 921782",
+        "field_70_as_sent": "/INV/INV-2026-H00050/RFB/EXPORT PRCDS CM TRDNG",
+        "resolvable_by": [
+          "amount",
+          "value_date",
+          "fuzzy_name"
+        ]
+      },
+      "notes": "Ordering-customer information absent or degraded in transit; amount and value date still identify it."
+    },
+    {
+      "case_id": "HOLDOUT-00020",
+      "defect_class": "clean_match",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_4uSiWwAJ1nYKgs"
+      ],
+      "payment_ids": [
+        "pay_6Z9NhrIfFZ0lh3"
+      ],
+      "bank_txn_ids": [
+        "BNKH000019"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00051"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000019",
+        "covers_settlement_ids": [
+          "setl_4uSiWwAJ1nYKgs"
+        ],
+        "credit_amount_minor": 3572484,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 3572484,
+        "residual_minor": 0
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": null,
+      "details": {
+        "utr_present_in_narration": true
+      },
+      "notes": "Single settlement, single credit, UTR quoted verbatim in the narration."
+    },
+    {
+      "case_id": "HOLDOUT-00021",
+      "defect_class": "clean_match",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_CqQ76ixq71oagM"
+      ],
+      "payment_ids": [
+        "pay_33sNHzsNNRNjSz"
+      ],
+      "bank_txn_ids": [
+        "BNKH000020"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00052"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000020",
+        "covers_settlement_ids": [
+          "setl_CqQ76ixq71oagM"
+        ],
+        "credit_amount_minor": 319877,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 319877,
+        "residual_minor": 0
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": null,
+      "details": {
+        "utr_present_in_narration": true
+      },
+      "notes": "Single settlement, single credit, UTR quoted verbatim in the narration."
+    },
+    {
+      "case_id": "HOLDOUT-00022",
+      "defect_class": "missing_remitter",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_2NGo0ByKdddSUy"
+      ],
+      "payment_ids": [
+        "pay_wzSiUIf7pYVMFh"
+      ],
+      "bank_txn_ids": [
+        "BNKH000021"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00053"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000021",
+        "covers_settlement_ids": [
+          "setl_2NGo0ByKdddSUy"
+        ],
+        "credit_amount_minor": 148679297,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 148679297,
+        "residual_minor": 0
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "MISSING_SENDER_INFO",
+      "details": {
+        "mangling_style": "mangled",
+        "true_remitter_name": "MERIDIAN PTE LTD",
+        "field_50a_name_as_sent": "PTE MERIDIAN LTD 940365",
+        "field_70_as_sent": "/INV/INV-2026-H00053/RFB/EXPORT PT MRDN LTD PRCDS",
+        "resolvable_by": [
+          "amount",
+          "value_date",
+          "fuzzy_name"
+        ]
+      },
+      "notes": "Ordering-customer information absent or degraded in transit; amount and value date still identify it."
+    },
+    {
+      "case_id": "HOLDOUT-00023",
+      "defect_class": "partial_payment",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_Zywx6XzEOLrVBl"
+      ],
+      "payment_ids": [
+        "pay_hXjcaTRu8DUghF"
+      ],
+      "bank_txn_ids": [
+        "BNKH000022"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00054"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000022",
+        "covers_settlement_ids": [
+          "setl_Zywx6XzEOLrVBl"
+        ],
+        "credit_amount_minor": 2030251,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 2065993,
+        "residual_minor": 35742
+      },
+      "expected_link_resolution": "PARTIAL",
+      "expected_exception_category": "PARTIAL_PAYMENT",
+      "details": {
+        "settlement_net_minor": 2065993,
+        "credit_amount_minor": 2030251,
+        "shortfall_minor": 35742,
+        "coverage_bps": 9827
+      },
+      "notes": "Credit covers only part of the settlement; the remainder stays open."
+    },
+    {
+      "case_id": "HOLDOUT-00024",
+      "defect_class": "partial_payment",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_RAkXa0e0A48Y7i"
+      ],
+      "payment_ids": [
+        "pay_GB1vqqyCNplMR9"
+      ],
+      "bank_txn_ids": [
+        "BNKH000023"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00055"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000023",
+        "covers_settlement_ids": [
+          "setl_RAkXa0e0A48Y7i"
+        ],
+        "credit_amount_minor": 3621261,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 3712971,
+        "residual_minor": 91710
+      },
+      "expected_link_resolution": "PARTIAL",
+      "expected_exception_category": "PARTIAL_PAYMENT",
+      "details": {
+        "settlement_net_minor": 3712971,
+        "credit_amount_minor": 3621261,
+        "shortfall_minor": 91710,
+        "coverage_bps": 9753
+      },
+      "notes": "Credit covers only part of the settlement; the remainder stays open."
+    },
+    {
+      "case_id": "HOLDOUT-00025",
+      "defect_class": "fx_drift_benign",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_zj9mjGggc51IO3"
+      ],
+      "payment_ids": [
+        "pay_6tdGWwQc0DtZqY"
+      ],
+      "bank_txn_ids": [
+        "BNKH000024"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00056"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000024",
+        "covers_settlement_ids": [
+          "setl_zj9mjGggc51IO3"
+        ],
+        "credit_amount_minor": 82766419,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 82766419,
+        "residual_minor": 0
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "BENIGN_FX_DRIFT",
+      "details": {
+        "currency_pair": "EUR/INR",
+        "value_date": "2026-08-05",
+        "applied_rate": "94.9782",
+        "reference_rate": "95.1711",
+        "reference_source": "FBIL",
+        "deviation_bps": "-20.27",
+        "expected_within_tolerance": true,
+        "labelling_tolerance_bps": "50",
+        "gross_foreign_minor": 903406,
+        "base_amount_minor": 85803876,
+        "fee_minor": 2574116,
+        "tax_minor": 463341
+      },
+      "notes": "Applied conversion rate sits -20.27 bps from the FBIL reference for the value date; inside the labelling band. The validator supplies its own band."
+    },
+    {
+      "case_id": "HOLDOUT-00026",
+      "defect_class": "missing_remitter",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_lrDlZcKg5vX9Ml"
+      ],
+      "payment_ids": [
+        "pay_XqUnOk8duvi1RT"
+      ],
+      "bank_txn_ids": [
+        "BNKH000025"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00057"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000025",
+        "covers_settlement_ids": [
+          "setl_lrDlZcKg5vX9Ml"
+        ],
+        "credit_amount_minor": 403162191,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 403162191,
+        "residual_minor": 0
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "MISSING_SENDER_INFO",
+      "details": {
+        "mangling_style": "initials",
+        "true_remitter_name": "HELIOS DATA BV",
+        "field_50a_name_as_sent": "HDB",
+        "field_70_as_sent": "RFB INV-2026 902051",
+        "resolvable_by": [
+          "amount",
+          "value_date",
+          "fuzzy_name"
+        ]
+      },
+      "notes": "Ordering-customer information absent or degraded in transit; amount and value date still identify it."
+    },
+    {
+      "case_id": "HOLDOUT-00027",
+      "defect_class": "fx_drift_benign",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_EQaEmwVLtF7eGb"
+      ],
+      "payment_ids": [
+        "pay_Ma1NIzaZ8YfVvg"
+      ],
+      "bank_txn_ids": [
+        "BNKH000026"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00058"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000026",
+        "covers_settlement_ids": [
+          "setl_EQaEmwVLtF7eGb"
+        ],
+        "credit_amount_minor": 408064733,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 408064733,
+        "residual_minor": 0
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "BENIGN_FX_DRIFT",
+      "details": {
+        "currency_pair": "EUR/INR",
+        "value_date": "2026-08-09",
+        "applied_rate": "95.4070",
+        "reference_rate": "95.2088",
+        "reference_source": "FBIL",
+        "deviation_bps": "20.82",
+        "expected_within_tolerance": true,
+        "labelling_tolerance_bps": "50",
+        "gross_foreign_minor": 4434060,
+        "base_amount_minor": 423040362,
+        "fee_minor": 12691211,
+        "tax_minor": 2284418
+      },
+      "notes": "Applied conversion rate sits 20.82 bps from the FBIL reference for the value date; inside the labelling band. The validator supplies its own band."
+    },
+    {
+      "case_id": "HOLDOUT-00028",
+      "defect_class": "fx_drift_flagged",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_rKV16ntTJ4bfEu"
+      ],
+      "payment_ids": [
+        "pay_mbTxVkfNFQ3Piz"
+      ],
+      "bank_txn_ids": [
+        "BNKH000027"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00059"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000027",
+        "covers_settlement_ids": [
+          "setl_rKV16ntTJ4bfEu"
+        ],
+        "credit_amount_minor": 230006930,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 230006930,
+        "residual_minor": 0
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "FLAGGED_FX_DRIFT",
+      "details": {
+        "currency_pair": "EUR/INR",
+        "value_date": "2026-08-27",
+        "applied_rate": "95.8336",
+        "reference_rate": "95.1878",
+        "reference_source": "FBIL",
+        "deviation_bps": "67.84",
+        "expected_within_tolerance": false,
+        "labelling_tolerance_bps": "50",
+        "gross_foreign_minor": 2488146,
+        "base_amount_minor": 238447989,
+        "fee_minor": 7153440,
+        "tax_minor": 1287619
+      },
+      "notes": "Applied conversion rate sits 67.84 bps from the FBIL reference for the value date; outside the labelling band. The validator supplies its own band."
+    },
+    {
+      "case_id": "HOLDOUT-00029",
+      "defect_class": "clean_match",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_8FKvFy3ozl6Ppo"
+      ],
+      "payment_ids": [
+        "pay_NcsV9QNIF8PhKy"
+      ],
+      "bank_txn_ids": [
+        "BNKH000028"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00060"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000028",
+        "covers_settlement_ids": [
+          "setl_8FKvFy3ozl6Ppo"
+        ],
+        "credit_amount_minor": 3413068,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 3413068,
+        "residual_minor": 0
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": null,
+      "details": {
+        "utr_present_in_narration": true
+      },
+      "notes": "Single settlement, single credit, UTR quoted verbatim in the narration."
+    },
+    {
+      "case_id": "HOLDOUT-00030",
+      "defect_class": "fx_drift_benign",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_EF6mzeEqvmtY3b"
+      ],
+      "payment_ids": [
+        "pay_MNSbl2eUfcmLhV"
+      ],
+      "bank_txn_ids": [
+        "BNKH000029"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00061"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000029",
+        "covers_settlement_ids": [
+          "setl_EF6mzeEqvmtY3b"
+        ],
+        "credit_amount_minor": 60984084,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 60984084,
+        "residual_minor": 0
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "BENIGN_FX_DRIFT",
+      "details": {
+        "currency_pair": "AED/INR",
+        "value_date": "2026-08-16",
+        "applied_rate": "23.8366",
+        "reference_rate": "23.7778",
+        "reference_source": "FBIL",
+        "deviation_bps": "24.73",
+        "expected_within_tolerance": true,
+        "labelling_tolerance_bps": "50",
+        "gross_foreign_minor": 2652314,
+        "base_amount_minor": 63222148,
+        "fee_minor": 1896664,
+        "tax_minor": 341400
+      },
+      "notes": "Applied conversion rate sits 24.73 bps from the FBIL reference for the value date; inside the labelling band. The validator supplies its own band."
+    },
+    {
+      "case_id": "HOLDOUT-00031",
+      "defect_class": "fx_drift_flagged",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_VTPxgHI9s7NzBM"
+      ],
+      "payment_ids": [
+        "pay_ujP7bcq9cZ3fkt"
+      ],
+      "bank_txn_ids": [
+        "BNKH000030"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00062"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000030",
+        "covers_settlement_ids": [
+          "setl_VTPxgHI9s7NzBM"
+        ],
+        "credit_amount_minor": 67562490,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 67562490,
+        "residual_minor": 0
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "FLAGGED_FX_DRIFT",
+      "details": {
+        "currency_pair": "GBP/INR",
+        "value_date": "2026-08-15",
+        "applied_rate": "112.3629",
+        "reference_rate": "111.5866",
+        "reference_source": "FBIL",
+        "deviation_bps": "69.57",
+        "expected_within_tolerance": false,
+        "labelling_tolerance_bps": "50",
+        "gross_foreign_minor": 623355,
+        "base_amount_minor": 70041976,
+        "fee_minor": 2101259,
+        "tax_minor": 378227
+      },
+      "notes": "Applied conversion rate sits 69.57 bps from the FBIL reference for the value date; outside the labelling band. The validator supplies its own band."
+    },
+    {
+      "case_id": "HOLDOUT-00032",
+      "defect_class": "subset_sum_bundle",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_GdBBYPz6b5SxLr",
+        "setl_D1URsZNyJKRRqv",
+        "setl_HhlzbC1cBiXln7",
+        "setl_roUKktjTlji0RG",
+        "setl_fN2JS5dZrkvjyw",
+        "setl_taUatzpIL1qbJ9",
+        "setl_CVuP3qKFbgb6ch",
+        "setl_webVU0clh8SiE4"
+      ],
+      "payment_ids": [
+        "pay_4B2ymcfCrqmaT3",
+        "pay_JLAUZXoS2u9AOo",
+        "pay_EM6MxTU1Gqdfks",
+        "pay_pxMd9ucGUcsrDe",
+        "pay_daRfyjz7oXKYgD",
+        "pay_w7MXQKT88j8I2q",
+        "pay_5ozIBXwRiuYBTq",
+        "pay_r2w8YwEdiLdy3k"
+      ],
+      "bank_txn_ids": [
+        "BNKH000031"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00063",
+        "INV-2026-H00064",
+        "INV-2026-H00065",
+        "INV-2026-H00066",
+        "INV-2026-H00067",
+        "INV-2026-H00068",
+        "INV-2026-H00069",
+        "INV-2026-H00070"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000031",
+        "covers_settlement_ids": [
+          "setl_GdBBYPz6b5SxLr",
+          "setl_D1URsZNyJKRRqv",
+          "setl_HhlzbC1cBiXln7",
+          "setl_roUKktjTlji0RG",
+          "setl_fN2JS5dZrkvjyw",
+          "setl_taUatzpIL1qbJ9"
+        ],
+        "credit_amount_minor": 14640463,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 14640463,
+        "residual_minor": 0
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": null,
+      "details": {
+        "cardinality": 6,
+        "member_net_minor": {
+          "setl_GdBBYPz6b5SxLr": 2263517,
+          "setl_D1URsZNyJKRRqv": 923082,
+          "setl_HhlzbC1cBiXln7": 2366053,
+          "setl_roUKktjTlji0RG": 2514395,
+          "setl_fN2JS5dZrkvjyw": 3138656,
+          "setl_taUatzpIL1qbJ9": 3434760
+        },
+        "decoy_settlement_ids": [
+          "setl_CVuP3qKFbgb6ch",
+          "setl_webVU0clh8SiE4"
+        ],
+        "decoy_sum_minor": 14640462,
+        "decoy_delta_minor": -1,
+        "expected_unmatched_settlement_ids": [
+          "setl_CVuP3qKFbgb6ch",
+          "setl_webVU0clh8SiE4"
+        ],
+        "no_settlement_utr_in_narration": true
+      },
+      "notes": "One credit sweeps 6 settlements. A decoy pair sums to -1 minor units off the credit; a solver whose tolerance exceeds that will select the decoy."
+    },
+    {
+      "case_id": "HOLDOUT-00033",
+      "defect_class": "clean_match",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_1hCyevilLJuStC"
+      ],
+      "payment_ids": [
+        "pay_NEboqnwB0hCygt"
+      ],
+      "bank_txn_ids": [
+        "BNKH000032"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00071"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000032",
+        "covers_settlement_ids": [
+          "setl_1hCyevilLJuStC"
+        ],
+        "credit_amount_minor": 3513399,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 3513399,
+        "residual_minor": 0
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": null,
+      "details": {
+        "utr_present_in_narration": true
+      },
+      "notes": "Single settlement, single credit, UTR quoted verbatim in the narration."
+    },
+    {
+      "case_id": "HOLDOUT-00034",
+      "defect_class": "missing_remitter",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_8WEXnbLI1JFiJV"
+      ],
+      "payment_ids": [
+        "pay_Dsvpj7vkPgbmJM"
+      ],
+      "bank_txn_ids": [
+        "BNKH000033"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00072"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000033",
+        "covers_settlement_ids": [
+          "setl_8WEXnbLI1JFiJV"
+        ],
+        "credit_amount_minor": 36442871,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 36442871,
+        "residual_minor": 0
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "MISSING_SENDER_INFO",
+      "details": {
+        "mangling_style": "mangled",
+        "true_remitter_name": "NORTHWIND SOFTWARE INC",
+        "field_50a_name_as_sent": "SFTWR NC NORTHWIND",
+        "field_70_as_sent": "/INV/INV-2026-H00072/RFB/EXPORTPROCEEDSNORTHWINDSOFTWAREINC731927",
+        "resolvable_by": [
+          "amount",
+          "value_date",
+          "fuzzy_name"
+        ]
+      },
+      "notes": "Ordering-customer information absent or degraded in transit; amount and value date still identify it."
+    },
+    {
+      "case_id": "HOLDOUT-00035",
+      "defect_class": "clean_match",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_SoX305Lkp8MvFd"
+      ],
+      "payment_ids": [
+        "pay_Fc517RGyOsj0Bc"
+      ],
+      "bank_txn_ids": [
+        "BNKH000034"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00073"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000034",
+        "covers_settlement_ids": [
+          "setl_SoX305Lkp8MvFd"
+        ],
+        "credit_amount_minor": 779751,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 779751,
+        "residual_minor": 0
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": null,
+      "details": {
+        "utr_present_in_narration": true
+      },
+      "notes": "Single settlement, single credit, UTR quoted verbatim in the narration."
+    },
+    {
+      "case_id": "HOLDOUT-00036",
+      "defect_class": "clean_match",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_yGG61U71KFP6Um"
+      ],
+      "payment_ids": [
+        "pay_NEOf6wZ3WOAOh1"
+      ],
+      "bank_txn_ids": [
+        "BNKH000035"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00074"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000035",
+        "covers_settlement_ids": [
+          "setl_yGG61U71KFP6Um"
+        ],
+        "credit_amount_minor": 1935348,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 1935348,
+        "residual_minor": 0
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": null,
+      "details": {
+        "utr_present_in_narration": true
+      },
+      "notes": "Single settlement, single credit, UTR quoted verbatim in the narration."
+    },
+    {
+      "case_id": "HOLDOUT-00037",
+      "defect_class": "clean_match",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_0ZhMFzoL2EFKM2"
+      ],
+      "payment_ids": [
+        "pay_W1JI2xnDDtvXoi"
+      ],
+      "bank_txn_ids": [
+        "BNKH000036"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00075"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000036",
+        "covers_settlement_ids": [
+          "setl_0ZhMFzoL2EFKM2"
+        ],
+        "credit_amount_minor": 2107634,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 2107634,
+        "residual_minor": 0
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": null,
+      "details": {
+        "utr_present_in_narration": true
+      },
+      "notes": "Single settlement, single credit, UTR quoted verbatim in the narration."
+    },
+    {
+      "case_id": "HOLDOUT-00038",
+      "defect_class": "clean_match",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_VB6pd33bRJMFRD"
+      ],
+      "payment_ids": [
+        "pay_yF6BKPLJM0MAsY"
+      ],
+      "bank_txn_ids": [
+        "BNKH000037"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00076"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000037",
+        "covers_settlement_ids": [
+          "setl_VB6pd33bRJMFRD"
+        ],
+        "credit_amount_minor": 3506500,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 3506500,
+        "residual_minor": 0
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": null,
+      "details": {
+        "utr_present_in_narration": true
+      },
+      "notes": "Single settlement, single credit, UTR quoted verbatim in the narration."
+    },
+    {
+      "case_id": "HOLDOUT-00039",
+      "defect_class": "clean_match",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_hvhAcvIuxJnBAI"
+      ],
+      "payment_ids": [
+        "pay_FXR6CF4BeuhH92"
+      ],
+      "bank_txn_ids": [
+        "BNKH000038"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00077"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000038",
+        "covers_settlement_ids": [
+          "setl_hvhAcvIuxJnBAI"
+        ],
+        "credit_amount_minor": 3791270,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 3791270,
+        "residual_minor": 0
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": null,
+      "details": {
+        "utr_present_in_narration": true
+      },
+      "notes": "Single settlement, single credit, UTR quoted verbatim in the narration."
+    },
+    {
+      "case_id": "HOLDOUT-00040",
+      "defect_class": "partial_payment",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_ta505lBhLR6sTg"
+      ],
+      "payment_ids": [
+        "pay_sMig4HRGx0q7an"
+      ],
+      "bank_txn_ids": [
+        "BNKH000039"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00078"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000039",
+        "covers_settlement_ids": [
+          "setl_ta505lBhLR6sTg"
+        ],
+        "credit_amount_minor": 532038,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 542951,
+        "residual_minor": 10913
+      },
+      "expected_link_resolution": "PARTIAL",
+      "expected_exception_category": "PARTIAL_PAYMENT",
+      "details": {
+        "settlement_net_minor": 542951,
+        "credit_amount_minor": 532038,
+        "shortfall_minor": 10913,
+        "coverage_bps": 9799
+      },
+      "notes": "Credit covers only part of the settlement; the remainder stays open."
+    },
+    {
+      "case_id": "HOLDOUT-00041",
+      "defect_class": "subset_sum_bundle",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_G7U9fqSrjlTZZp",
+        "setl_HI2JnQB39HHEbf",
+        "setl_7p3HuHaCOvfAyv",
+        "setl_BgWxstXEuWEIOo",
+        "setl_ncPigms0AEgnle",
+        "setl_BMSfMc1H1ryHin",
+        "setl_HPlDZOI18ZRG5Y",
+        "setl_Jh5wjhtYhghsUg",
+        "setl_m3aWwPJVgdQrB8"
+      ],
+      "payment_ids": [
+        "pay_BEsa8R53bk5Uad",
+        "pay_s4jpS8hByaYLNw",
+        "pay_Im60K0U6yY9RPW",
+        "pay_9b79adHhKRLY7r",
+        "pay_LnvaL6Ad8j4aa0",
+        "pay_vZGEyKgYG6Obsl",
+        "pay_EZXCdeb3LWbS5D",
+        "pay_VyDT8xxankN8W5",
+        "pay_nr0gLvCviOLJjF"
+      ],
+      "bank_txn_ids": [
+        "BNKH000040"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00079",
+        "INV-2026-H00080",
+        "INV-2026-H00081",
+        "INV-2026-H00082",
+        "INV-2026-H00083",
+        "INV-2026-H00084",
+        "INV-2026-H00085",
+        "INV-2026-H00086",
+        "INV-2026-H00087"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000040",
+        "covers_settlement_ids": [
+          "setl_G7U9fqSrjlTZZp",
+          "setl_HI2JnQB39HHEbf",
+          "setl_7p3HuHaCOvfAyv",
+          "setl_BgWxstXEuWEIOo",
+          "setl_ncPigms0AEgnle",
+          "setl_BMSfMc1H1ryHin",
+          "setl_HPlDZOI18ZRG5Y"
+        ],
+        "credit_amount_minor": 15156569,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 15156569,
+        "residual_minor": 0
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": null,
+      "details": {
+        "cardinality": 7,
+        "member_net_minor": {
+          "setl_G7U9fqSrjlTZZp": 1657335,
+          "setl_HI2JnQB39HHEbf": 2352131,
+          "setl_7p3HuHaCOvfAyv": 3569954,
+          "setl_BgWxstXEuWEIOo": 280091,
+          "setl_ncPigms0AEgnle": 2711405,
+          "setl_BMSfMc1H1ryHin": 1657799,
+          "setl_HPlDZOI18ZRG5Y": 2927854
+        },
+        "decoy_settlement_ids": [
+          "setl_Jh5wjhtYhghsUg",
+          "setl_m3aWwPJVgdQrB8"
+        ],
+        "decoy_sum_minor": 15156570,
+        "decoy_delta_minor": 1,
+        "expected_unmatched_settlement_ids": [
+          "setl_Jh5wjhtYhghsUg",
+          "setl_m3aWwPJVgdQrB8"
+        ],
+        "no_settlement_utr_in_narration": true
+      },
+      "notes": "One credit sweeps 7 settlements. A decoy pair sums to +1 minor units off the credit; a solver whose tolerance exceeds that will select the decoy."
+    },
+    {
+      "case_id": "HOLDOUT-00042",
+      "defect_class": "clean_match",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_JB0u2zVKSjDHL4"
+      ],
+      "payment_ids": [
+        "pay_H65B89a68exZtl"
+      ],
+      "bank_txn_ids": [
+        "BNKH000041"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00088"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000041",
+        "covers_settlement_ids": [
+          "setl_JB0u2zVKSjDHL4"
+        ],
+        "credit_amount_minor": 1983627,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 1983627,
+        "residual_minor": 0
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": null,
+      "details": {
+        "utr_present_in_narration": true
+      },
+      "notes": "Single settlement, single credit, UTR quoted verbatim in the narration."
+    },
+    {
+      "case_id": "HOLDOUT-00043",
+      "defect_class": "edpms_open",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_ACc8KNsNgFY2h0"
+      ],
+      "payment_ids": [
+        "pay_mJxLza8DrZvkpw"
+      ],
+      "bank_txn_ids": [
+        "BNKH000042"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00089"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000042",
+        "covers_settlement_ids": [
+          "setl_ACc8KNsNgFY2h0"
+        ],
+        "credit_amount_minor": 349274182,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 641366651,
+        "residual_minor": 292092469
+      },
+      "expected_link_resolution": "PARTIAL",
+      "expected_exception_category": "OPEN_EDPMS_LINKAGE",
+      "details": {
+        "shipping_bill_no": "1004686",
+        "shipping_bill_date": "2025-12-06",
+        "purpose_code": "P0801",
+        "realisation_deadline": "2026-09-02",
+        "statement_as_of": "2026-08-31",
+        "days_to_deadline": 2,
+        "overdue": false,
+        "currency": "GBP",
+        "invoiced_foreign_minor": 5967088,
+        "realised_foreign_minor": 3345746,
+        "outstanding_foreign_minor": 2621342
+      },
+      "notes": "Export receipt partially realised against its shipping bill; 2 days to the FEMA realisation deadline."
+    },
+    {
+      "case_id": "HOLDOUT-00044",
+      "defect_class": "clean_match",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_pajteGeVDlLx3u"
+      ],
+      "payment_ids": [
+        "pay_XdyP1tD0UZS87U"
+      ],
+      "bank_txn_ids": [
+        "BNKH000043"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00090"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000043",
+        "covers_settlement_ids": [
+          "setl_pajteGeVDlLx3u"
+        ],
+        "credit_amount_minor": 3420702,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 3420702,
+        "residual_minor": 0
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": null,
+      "details": {
+        "utr_present_in_narration": true
+      },
+      "notes": "Single settlement, single credit, UTR quoted verbatim in the narration."
+    },
+    {
+      "case_id": "HOLDOUT-00045",
+      "defect_class": "clean_match",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_GhGCspzGoDHWCa"
+      ],
+      "payment_ids": [
+        "pay_Ihl9xJr4QFj5PP"
+      ],
+      "bank_txn_ids": [
+        "BNKH000044"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00091"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000044",
+        "covers_settlement_ids": [
+          "setl_GhGCspzGoDHWCa"
+        ],
+        "credit_amount_minor": 1833584,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 1833584,
+        "residual_minor": 0
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": null,
+      "details": {
+        "utr_present_in_narration": true
+      },
+      "notes": "Single settlement, single credit, UTR quoted verbatim in the narration."
+    },
+    {
+      "case_id": "HOLDOUT-00046",
+      "defect_class": "clean_match",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_gZSoCKHlMlrmvm"
+      ],
+      "payment_ids": [
+        "pay_HYrjZh2gei65Jj"
+      ],
+      "bank_txn_ids": [
+        "BNKH000045"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00092"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000045",
+        "covers_settlement_ids": [
+          "setl_gZSoCKHlMlrmvm"
+        ],
+        "credit_amount_minor": 717458,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 717458,
+        "residual_minor": 0
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": null,
+      "details": {
+        "utr_present_in_narration": true
+      },
+      "notes": "Single settlement, single credit, UTR quoted verbatim in the narration."
+    },
+    {
+      "case_id": "HOLDOUT-00047",
+      "defect_class": "clean_match",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_7GzGHJwi6jTIgL"
+      ],
+      "payment_ids": [
+        "pay_C2xeoIgJQZpyli"
+      ],
+      "bank_txn_ids": [
+        "BNKH000046"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00093"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000046",
+        "covers_settlement_ids": [
+          "setl_7GzGHJwi6jTIgL"
+        ],
+        "credit_amount_minor": 1143204,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 1143204,
+        "residual_minor": 0
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": null,
+      "details": {
+        "utr_present_in_narration": true
+      },
+      "notes": "Single settlement, single credit, UTR quoted verbatim in the narration."
+    },
+    {
+      "case_id": "HOLDOUT-00048",
+      "defect_class": "clean_match",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_KCv9HvvK5pSsZX"
+      ],
+      "payment_ids": [
+        "pay_veCrNeKdSP20z1"
+      ],
+      "bank_txn_ids": [
+        "BNKH000047"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00094"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000047",
+        "covers_settlement_ids": [
+          "setl_KCv9HvvK5pSsZX"
+        ],
+        "credit_amount_minor": 2848660,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 2848660,
+        "residual_minor": 0
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": null,
+      "details": {
+        "utr_present_in_narration": true
+      },
+      "notes": "Single settlement, single credit, UTR quoted verbatim in the narration."
+    },
+    {
+      "case_id": "HOLDOUT-00049",
+      "defect_class": "clean_match",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_Xb3gzVdG0CDD2O"
+      ],
+      "payment_ids": [
+        "pay_WFQG9Wi5c9DzZY"
+      ],
+      "bank_txn_ids": [
+        "BNKH000048"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00095"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000048",
+        "covers_settlement_ids": [
+          "setl_Xb3gzVdG0CDD2O"
+        ],
+        "credit_amount_minor": 1670816,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 1670816,
+        "residual_minor": 0
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": null,
+      "details": {
+        "utr_present_in_narration": true
+      },
+      "notes": "Single settlement, single credit, UTR quoted verbatim in the narration."
+    },
+    {
+      "case_id": "HOLDOUT-00050",
+      "defect_class": "clean_match",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_yGUJf7967txLBk"
+      ],
+      "payment_ids": [
+        "pay_ehCbq5p2qtxJl5"
+      ],
+      "bank_txn_ids": [
+        "BNKH000049"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00096"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000049",
+        "covers_settlement_ids": [
+          "setl_yGUJf7967txLBk"
+        ],
+        "credit_amount_minor": 1060631,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 1060631,
+        "residual_minor": 0
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": null,
+      "details": {
+        "utr_present_in_narration": true
+      },
+      "notes": "Single settlement, single credit, UTR quoted verbatim in the narration."
+    },
+    {
+      "case_id": "HOLDOUT-00051",
+      "defect_class": "fx_drift_benign",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_q2BVLWNL9UVoeN"
+      ],
+      "payment_ids": [
+        "pay_vn8FOUVAT7NYSJ"
+      ],
+      "bank_txn_ids": [
+        "BNKH000050"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00097"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000050",
+        "covers_settlement_ids": [
+          "setl_q2BVLWNL9UVoeN"
+        ],
+        "credit_amount_minor": 517086915,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 517086915,
+        "residual_minor": 0
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "BENIGN_FX_DRIFT",
+      "details": {
+        "currency_pair": "GBP/INR",
+        "value_date": "2026-08-12",
+        "applied_rate": "112.0168",
+        "reference_rate": "111.5609",
+        "reference_source": "FBIL",
+        "deviation_bps": "40.87",
+        "expected_within_tolerance": true,
+        "labelling_tolerance_bps": "50",
+        "gross_foreign_minor": 4785564,
+        "base_amount_minor": 536063565,
+        "fee_minor": 16081907,
+        "tax_minor": 2894743
+      },
+      "notes": "Applied conversion rate sits 40.87 bps from the FBIL reference for the value date; inside the labelling band. The validator supplies its own band."
+    },
+    {
+      "case_id": "HOLDOUT-00052",
+      "defect_class": "clean_match",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_FTouIZAKxUgGMC"
+      ],
+      "payment_ids": [
+        "pay_XJ54MDfZQPyn66"
+      ],
+      "bank_txn_ids": [
+        "BNKH000051"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00098"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000051",
+        "covers_settlement_ids": [
+          "setl_FTouIZAKxUgGMC"
+        ],
+        "credit_amount_minor": 2995984,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 2995984,
+        "residual_minor": 0
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": null,
+      "details": {
+        "utr_present_in_narration": true
+      },
+      "notes": "Single settlement, single credit, UTR quoted verbatim in the narration."
+    },
+    {
+      "case_id": "HOLDOUT-00053",
+      "defect_class": "clean_match",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_2H4A5wqNstlyps"
+      ],
+      "payment_ids": [
+        "pay_MGwhrgxZhrOzX3"
+      ],
+      "bank_txn_ids": [
+        "BNKH000052"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00099"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000052",
+        "covers_settlement_ids": [
+          "setl_2H4A5wqNstlyps"
+        ],
+        "credit_amount_minor": 627763,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 627763,
+        "residual_minor": 0
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": null,
+      "details": {
+        "utr_present_in_narration": true
+      },
+      "notes": "Single settlement, single credit, UTR quoted verbatim in the narration."
+    },
+    {
+      "case_id": "HOLDOUT-00054",
+      "defect_class": "fx_drift_benign",
+      "split": "holdout",
+      "settlement_ids": [
+        "setl_lmVF2rPKDYyU6z"
+      ],
+      "payment_ids": [
+        "pay_V6spAiS7QAIcBZ"
+      ],
+      "bank_txn_ids": [
+        "BNKH000053"
+      ],
+      "invoice_ids": [
+        "INV-2026-H00100"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKH000053",
+        "covers_settlement_ids": [
+          "setl_lmVF2rPKDYyU6z"
+        ],
+        "credit_amount_minor": 388554564,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 388554564,
+        "residual_minor": 0
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "BENIGN_FX_DRIFT",
+      "details": {
+        "currency_pair": "USD/INR",
+        "value_date": "2026-08-09",
+        "applied_rate": "87.6833",
+        "reference_rate": "87.3780",
+        "reference_source": "FBIL",
+        "deviation_bps": "34.94",
+        "expected_within_tolerance": true,
+        "labelling_tolerance_bps": "50",
+        "gross_foreign_minor": 4593967,
+        "base_amount_minor": 402814187,
+        "fee_minor": 12084426,
+        "tax_minor": 2175197
+      },
+      "notes": "Applied conversion rate sits 34.94 bps from the FBIL reference for the value date; inside the labelling band. The validator supplies its own band."
+    }
+  ]
+}
