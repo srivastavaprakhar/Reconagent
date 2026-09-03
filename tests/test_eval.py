@@ -231,6 +231,86 @@ def test_writes_report_to_a_normal_path(tmp_path):
 
 
 # --------------------------------------------------------------------------
+# Variance decomposition breakdown -- descriptive tally, not a matching-
+# accuracy metric (see reconagent.eval.FX_METRICS_NOTE).
+# --------------------------------------------------------------------------
+
+
+def test_decomposition_breakdown_has_all_six_categories_main(main: E.Split):
+    breakdown = E.decomposition_breakdown(main)
+    assert set(breakdown) == {
+        "NO_VARIANCE", "BENIGN_FX_DRIFT", "FLAGGED_FX_DRIFT",
+        "FEE_MISMATCH", "DATA_ENTRY_ERROR", "UNRESOLVED",
+    }
+
+
+def test_decomposition_breakdown_reproduces_known_main_numbers(main: E.Split):
+    breakdown = E.decomposition_breakdown(main)
+    assert breakdown == {
+        "NO_VARIANCE": 172,
+        "BENIGN_FX_DRIFT": 23,
+        "FLAGGED_FX_DRIFT": 5,
+        "FEE_MISMATCH": 0,
+        "DATA_ENTRY_ERROR": 0,
+        "UNRESOLVED": 0,
+    }
+    assert sum(breakdown.values()) == 200 == len(main.settlements)
+
+
+def test_decomposition_breakdown_reproduces_known_holdout_numbers(holdout: E.Split):
+    breakdown = E.decomposition_breakdown(holdout)
+    assert breakdown == {
+        "NO_VARIANCE": 79,
+        "BENIGN_FX_DRIFT": 18,
+        "FLAGGED_FX_DRIFT": 3,
+        "FEE_MISMATCH": 0,
+        "DATA_ENTRY_ERROR": 0,
+        "UNRESOLVED": 0,
+    }
+    assert sum(breakdown.values()) == 100 == len(holdout.settlements)
+
+
+def test_render_markdown_shows_zero_valued_categories_not_just_nonzero_ones():
+    """The whole point of the fix: FEE_MISMATCH and DATA_ENTRY_ERROR must be
+    visible in the rendered table even though their count is zero today --
+    a category silently missing from the table is the bug this closes."""
+    report = {
+        "splits": {
+            "main": {
+                "false_match_rate": 0.0, "false_clear_rate": 0.0, "match_rate": 1.0,
+                "precision": 1.0, "recall": 1.0, "false_match": 0, "false_clear": 0,
+                "total_linked": 1, "true_link_count": 1, "by_defect_class": {},
+            },
+            "holdout": {
+                "false_match_rate": 0.0, "false_clear_rate": 0.0, "match_rate": 1.0,
+                "precision": 1.0, "recall": 1.0, "false_match": 0, "false_clear": 0,
+                "total_linked": 1, "true_link_count": 1, "by_defect_class": {},
+            },
+        },
+        "coverage_gaps": [],
+        "fx_metrics_note": E.FX_METRICS_NOTE,
+        "decomposition": {
+            "main": {
+                "NO_VARIANCE": 172, "BENIGN_FX_DRIFT": 23, "FLAGGED_FX_DRIFT": 5,
+                "FEE_MISMATCH": 0, "DATA_ENTRY_ERROR": 0, "UNRESOLVED": 0,
+            },
+            "holdout": {
+                "NO_VARIANCE": 79, "BENIGN_FX_DRIFT": 18, "FLAGGED_FX_DRIFT": 3,
+                "FEE_MISMATCH": 0, "DATA_ENTRY_ERROR": 0, "UNRESOLVED": 0,
+            },
+        },
+        "throughput": [],
+        "mutation_test": {"sweep": [], "bundle_wrong_subset": None},
+        "threshold_sweep": {"main": [], "holdout": []},
+    }
+    md = E.render_markdown(report)
+    assert "FEE_MISMATCH" in md
+    assert "DATA_ENTRY_ERROR" in md
+    assert "UNRESOLVED" in md
+    assert E.FX_METRICS_NOTE in md
+
+
+# --------------------------------------------------------------------------
 # Throughput -- small scales only, so the suite stays fast.
 # --------------------------------------------------------------------------
 

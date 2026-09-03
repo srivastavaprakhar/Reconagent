@@ -22,6 +22,19 @@
 
 FX metrics: FX attribution accuracy is not included in this pass -- matching accuracy and FX attribution accuracy are different failure surfaces and this harness reports the former only.
 
+## FX variance attribution (descriptive tally, not a matching-accuracy metric)
+
+This table counts what `decompose_variance` produced for every settlement in the split -- it is not graded against ground truth here, so there is no correct/wrong column the way the per-defect-class breakdown below has one. Whether an attribution is *correct* would require grading against ground truth's `expected_exception_category`, a different question from "does this category exist and get produced", and is out of scope for this table. See the FX metrics note above: matching accuracy and FX attribution are different failure surfaces and stay separate.
+
+| attribution | main | holdout |
+|---|---|---|
+| NO_VARIANCE | 172 | 79 |
+| BENIGN_FX_DRIFT | 23 | 18 |
+| FLAGGED_FX_DRIFT | 5 | 3 |
+| FEE_MISMATCH | 0 | 0 |
+| DATA_ENTRY_ERROR | 0 | 0 |
+| UNRESOLVED | 0 | 0 |
+
 ## Per-defect-class breakdown (main)
 
 | defect class | total | correct | false match | false clear | match rate |
@@ -39,9 +52,9 @@ FX metrics: FX attribution accuracy is not included in this pass -- matching acc
 
 | scale (settlements) | credits | seconds | records/sec |
 |---|---|---|---|
-| 200 | 150 | 0.0134 | 11169 |
-| 1000 | 749 | 2.5041 | 299 |
-| 5000 | 3726 | 23.0261 | 162 |
+| 200 | 150 | 0.0135 | 11139 |
+| 1000 | 749 | 2.5059 | 299 |
+| 5000 | 3726 | 22.7653 | 164 |
 
 ## Mutation test (harness credibility check, not a matcher metric)
 

@@ -4,6 +4,24 @@
     "no DATA_ENTRY_ERROR case in ground truth",
     "no overdue EDPMS receipt in ground truth as of 2026-08-31"
   ],
+  "decomposition": {
+    "holdout": {
+      "BENIGN_FX_DRIFT": 18,
+      "DATA_ENTRY_ERROR": 0,
+      "FEE_MISMATCH": 0,
+      "FLAGGED_FX_DRIFT": 3,
+      "NO_VARIANCE": 79,
+      "UNRESOLVED": 0
+    },
+    "main": {
+      "BENIGN_FX_DRIFT": 23,
+      "DATA_ENTRY_ERROR": 0,
+      "FEE_MISMATCH": 0,
+      "FLAGGED_FX_DRIFT": 5,
+      "NO_VARIANCE": 172,
+      "UNRESOLVED": 0
+    }
+  },
   "fx_metrics_note": "FX attribution accuracy is not included in this pass -- matching accuracy and FX attribution accuracy are different failure surfaces and this harness reports the former only.",
   "mutation_test": {
     "bundle_wrong_subset": {
@@ -308,23 +326,23 @@
   "throughput": [
     {
       "credits": 150,
-      "records_per_sec": 11168.95554592227,
+      "records_per_sec": 11139.027992522413,
       "scale": 200,
-      "seconds": 0.013430082999548176,
+      "seconds": 0.013466165997670032,
       "settlements": 200
     },
     {
       "credits": 749,
-      "records_per_sec": 299.1100527085309,
+      "records_per_sec": 298.8942259657327,
       "scale": 1000,
-      "seconds": 2.5040950420006993,
+      "seconds": 2.5059032090030087,
       "settlements": 1002
     },
     {
       "credits": 3726,
-      "records_per_sec": 161.8164669962629,
+      "records_per_sec": 163.67044786698614,
       "scale": 5000,
-      "seconds": 23.026086709000083,
+      "seconds": 22.765258166997228,
       "settlements": 5001
     }
   ]

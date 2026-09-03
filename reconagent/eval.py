@@ -111,8 +111,28 @@ from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 
 from reconagent.camt053 import parse_camt053_file
+from reconagent.fx import (
+    BENIGN_FX_DRIFT,
+    DATA_ENTRY_ERROR,
+    FEE_MISMATCH,
+    FLAGGED_FX_DRIFT,
+    NO_VARIANCE,
+    UNRESOLVED,
+    decompose_variance,
+    load_reference_rates,
+)
 from reconagent.match import AMBIGUOUS, MATCHED, PARTIAL, MatchResult, match_all
 from reconagent.razorpay import parse_razorpay_settlements
+
+# Fixed order, all six named every time -- see decomposition_breakdown().
+DECOMPOSITION_CATEGORIES = (
+    NO_VARIANCE,
+    BENIGN_FX_DRIFT,
+    FLAGGED_FX_DRIFT,
+    FEE_MISMATCH,
+    DATA_ENTRY_ERROR,
+    UNRESOLVED,
+)
 
 REPO = Path(__file__).resolve().parent.parent
 DATA_ROOT = (REPO / "data").resolve()
@@ -145,6 +165,8 @@ class Split:
     settlements: list
     credits: list
     results: dict  # bank_txn_id -> MatchResult
+    data_dir: Path
+    prefix: str
 
 
 def load_split(data_dir: Path, prefix: str, name: str) -> Split:
@@ -152,7 +174,7 @@ def load_split(data_dir: Path, prefix: str, name: str) -> Split:
     settlements = parse_razorpay_settlements(data_dir / f"{prefix}razorpay_settlements.csv")
     credits = parse_camt053_file(data_dir / f"{prefix}bank_statement.camt053.xml")
     results = {r.bank_txn_id: r for r in match_all(credits, settlements)}
-    return Split(name, truth, settlements, credits, results)
+    return Split(name, truth, settlements, credits, results, data_dir, prefix)
 
 
 def load_main() -> Split:
@@ -168,6 +190,29 @@ def linked_cases(truth: dict) -> list[dict]:
     cases do not (spec section 5) and are excluded here, not scored as
     misses -- there is no credit for the matcher to have judged."""
     return [c for c in truth["cases"] if c["expected_link"]["bank_txn_id"]]
+
+
+# --------------------------------------------------------------------------
+# Variance decomposition breakdown -- a descriptive tally of what
+# `reconagent.fx.decompose_variance` produces for every settlement in a
+# split, not a matching-accuracy metric (see FX_METRICS_NOTE and the
+# module docstring: the two failure surfaces stay separate, this just
+# stops the tally from being invisible to a reader of this report).
+# --------------------------------------------------------------------------
+
+
+def decomposition_breakdown(split: Split) -> dict[str, int]:
+    """Count `decompose_variance` outcomes across every settlement in the
+    split, keyed by attribution. All six category names are always
+    present, zero-valued ones included, so a reader can see FEE_MISMATCH
+    and DATA_ENTRY_ERROR are real categories currently sitting at zero
+    rather than missing from the schema."""
+    reference = load_reference_rates(split.data_dir / f"{split.prefix}fx_reference_rates.csv")
+    counts = {category: 0 for category in DECOMPOSITION_CATEGORIES}
+    for record in split.settlements:
+        decomposition = decompose_variance(record, reference)
+        counts[decomposition.attribution] += 1
+    return counts
 
 
 # --------------------------------------------------------------------------
@@ -459,6 +504,10 @@ def build_report(
         },
         "coverage_gaps": list(COVERAGE_GAPS),
         "fx_metrics_note": FX_METRICS_NOTE,
+        "decomposition": {
+            "main": decomposition_breakdown(main),
+            "holdout": decomposition_breakdown(holdout),
+        },
         "throughput": throughput_table(scales, seed=seed),
         "mutation_test": {
             "sweep": mutation_sweep(main, mutation_rates, seed=seed),
@@ -503,6 +552,34 @@ def render_markdown(report: dict) -> str:
         "",
         f"FX metrics: {report['fx_metrics_note']}",
         "",
+    ]
+    decomposition = report.get("decomposition")
+    if decomposition:
+        lines += [
+            "## FX variance attribution (descriptive tally, not a matching-accuracy metric)",
+            "",
+            "This table counts what `decompose_variance` produced for every "
+            "settlement in the split -- it is not graded against ground truth "
+            "here, so there is no correct/wrong column the way the per-defect-"
+            "class breakdown below has one. Whether an attribution is *correct* "
+            "would require grading against ground truth's "
+            "`expected_exception_category`, a different question from \"does "
+            "this category exist and get produced\", and is out of scope for "
+            "this table. See the FX metrics note above: matching accuracy and "
+            "FX attribution are different failure surfaces and stay separate.",
+            "",
+            "| attribution | main | holdout |",
+            "|---|---|---|",
+        ]
+        main_counts = decomposition.get("main", {})
+        holdout_counts = decomposition.get("holdout", {})
+        for category in DECOMPOSITION_CATEGORIES:
+            lines.append(
+                f"| {category} | {main_counts.get(category, 0)} "
+                f"| {holdout_counts.get(category, 0)} |"
+            )
+        lines.append("")
+    lines += [
         "## Per-defect-class breakdown (main)",
         "",
         "| defect class | total | correct | false match | false clear | match rate |",
