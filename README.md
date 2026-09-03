@@ -155,3 +155,151 @@ fixed-point decimal string only at the serialization boundary, via
 `Decimal(minor).scaleb(-2)`, which is exact. No float is constructed anywhere on
 a money path, and `ground_truth.json` contains no JSON float — checked
 programmatically, not by eye.
+
+---
+
+## Ingestion & parsing
+
+`reconagent/` turns the three raw sources in `data/` into one normalized shape
+every downstream unit (matcher, subset-sum solver, FX validator, eval harness)
+consumes. This is a boundary layer, not a framework — plain dataclasses, no
+ORM, no pydantic, no base-class hierarchy for one implementation per format.
+
+### The canonical record
+
+`reconagent/records.py` defines `CanonicalRecord`, the one shape a Razorpay
+settlement, a bank credit (MT103 or camt.053), or an invoice all collapse
+into, distinguished by `source`:
+
+```
+source, record_id, counterparty_name, narration, amount_minor, currency,
+booking_date, value_date, created_at, settled_at,
+utr, end_to_end_id, invoice_id, order_id, payment_id,
+conversion_rate, foreign_amount_minor, foreign_currency, base_amount_minor,
+channel, rows
+```
+
+Fields that don't apply to a given source are left at their default rather
+than growing per-source variants — e.g. a Razorpay settlement has no natural
+`counterparty_name` in its own columns (the counterparty is Razorpay itself,
+a constant not worth carrying as text), so it's left blank rather than
+hardcoded.
+
+`rows` exists only on `razorpay_settlement` records: it carries the raw
+`SettlementRow` per CSV row that fed the aggregate, because a refund row
+converts at its own FX event and the variance-decomposition layer (spec §5,
+owned by a later unit) needs that rate, not just the settlement's net.
+
+### The money boundary
+
+`reconagent/money.py` is the single choke point every raw value must pass
+through before it becomes a money-path field. `parse_minor` and `parse_rate`
+raise `FloatMoneyError` — a real, named exception, not a logged warning — the
+instant a `float` (or `bool`, which is a `float`-shaped footgun via
+`isinstance(x, int)`) reaches them. `Decimal(some_float)` is exactly the
+accident this exists to prevent: it looks like a safe conversion but silently
+inherits the float's binary rounding error, so the boundary parses only from
+strings, ints already in minor units, or a `Decimal` built from a string.
+Excess precision (e.g. a third decimal place on an INR amount) is also
+rejected rather than silently rounded away — a reconciliation engine that
+guesses which way to round a discrepancy has already lost the thing that
+makes it trustworthy.
+
+Every parser routes its amounts and rates through this module; there is no
+parallel path that reaches a money field any other way.
+
+### Three field-level parsers, one CSV loader
+
+- **`reconagent/razorpay.py`** groups `razorpay_settlements.csv` rows by
+  `settlement_id` and computes net as `sum(credit) - sum(debit)` across the
+  group, so a settlement with a payment row plus a later refund row nets
+  correctly instead of reading only the first row.
+- **`reconagent/mt103.py`** splits the file into messages on the generator's
+  `\n$\n` delimiter, then walks block 4 line by line, attaching a line that
+  doesn't open a new `:NN:` tag to whichever tag came before it — this is
+  what makes a `:70:` wrapped mid-word across four 35-character lines
+  rejoinable by straight concatenation instead of read as separate fields.
+  `:32A:` is parsed into its date/currency/amount components with an
+  explicit regex, not tokenized generically. The SWIFT decimal comma is
+  converted to a dot immediately before handing the string to
+  `money.parse_minor`/`parse_rate` — the comma handling lives here, in the
+  wire-format-specific parser, not in the general money boundary.
+- **`reconagent/camt053.py`** is namespace-aware: it checks the document root
+  is exactly `{urn:iso:std:iso:20022:tech:xsd:camt.053.001.02}Document`
+  before reading anything, and raises `Camt053ParseError` rather than
+  silently returning zero records if the namespace is missing or wrong — an
+  empty result and "this file has no credits this period" should never look
+  the same as "this is the wrong file". It targets `RltdPties/Dbtr/Nm` and
+  `RmtInf/Ustrd` specifically, plus `CdtDbtInd` (used to skip a non-credit
+  entry rather than misread it as one — this dataset's camt.053 covers every
+  *credit*, and a debit needs handling this unit doesn't own), and both
+  `BookgDt` and `ValDt`.
+- **`reconagent/invoices.py`** parses `invoice_ledger.csv`. It isn't one of
+  the three wire/export formats the task called out by name, but the spec
+  frames the invoice ledger as the third of the system's three sources of
+  truth (§3), and the canonical record's `invoice_id`/`order_id` fields are
+  otherwise unpopulatable from anywhere — so it's included, deliberately
+  small, as a flat CSV with no format-specific parsing to justify its own
+  section.
+
+### Malformed input: what raises, what doesn't
+
+| Input | Behavior | Why |
+|---|---|---|
+| Truncated MT103 (no `{4:`/no `-}` trailer) | raises `MT103ParseError` | can't trust field boundaries in a corrupt message |
+| MT103 missing `:20:` or `:32A:` | raises `MT103ParseError` | no id or no amount means no record |
+| `:32A:` with an invalid date (e.g. month 13) | raises `MT103ParseError` | a silently-wrong value date breaks T+2..T+7 timing downstream |
+| `:70:` wrapped mid-word across lines | rejoins exactly, no error | real SWIFT behavior, not corruption |
+| camt.053 with missing/wrong namespace | raises `Camt053ParseError` | an empty result must not look like "no credits" |
+| camt.053 entry with no `RmtInf` | narration defaults to `""` | a blank remittance field is real bank behavior |
+| camt.053 entry missing `NtryRef`/`Amt` | raises `Camt053ParseError` | no id or no amount means no record |
+| camt.053 `CdtDbtInd` other than `CRDT` | entry is skipped | out of scope for this unit, and skipping beats misreading a debit as a credit |
+| CSV row with an empty amount | raises `RazorpayParseError`/`InvoiceParseError` | can't guess a settlement's net |
+| CSV amount with a comma instead of `.` | raises (via `money.parse_minor`) | rejected, not silently reinterpreted |
+| Settlement whose rows don't net as a single row | **not an error** — aggregates `sum(credit) - sum(debit)` across every row sharing a `settlement_id` | this is what the aggregation is for (a payment row plus a refund row is normal data, not corruption) |
+| A `float` reaching any money or rate field | raises `FloatMoneyError` | the one rule this whole layer exists to make unbreakable |
+
+### Tests
+
+`tests/test_money.py` exercises the money boundary directly (float, bool,
+excess precision, wrong separator, empty string). `tests/test_ingest.py`
+parses the real `data/` files and `data/holdout/` — counts are computed from
+the raw files rather than hardcoded, so they don't rot if `--scale` changes —
+spot-checks exact field values against the source text/XML, and checks the
+MT103/camt.053 cross-format correspondence (shared `:20:`/`EndToEndId`, exact
+amounts). `tests/test_ingest_malformed.py` covers the edge cases in the table
+above against hand-built minimal fixtures.
+
+### A refund is not netted into its settlement
+
+A settlement's `amount_minor` is its **capture** net — credits minus debits over
+the non-refund rows. When a settlement carries a refund row, that refund is
+deliberately left out of the total.
+
+This is spec §5 taken literally: a refund converts at its own FX event and
+settles as its own bank movement. Netting it against the capture produces a
+figure that matches no bank credit, and it fails *silently* — the arithmetic
+still balances, so the only symptom is the subset-sum solver missing exactly the
+refund cases. The refund rows stay on `.rows`, which is where the FX layer wants
+them anyway, since each carries its own conversion rate.
+
+Regression-tested against the answer key: for every linked case in both splits,
+the sum of parsed settlement nets equals `settlement_net_sum_minor`.
+
+### Decisions flagged, not buried
+
+- The invoice ledger parser (above) is scope this unit added beyond the three
+  named formats, because the canonical record's invoice-side fields need a
+  loader from somewhere and the spec names the ledger as one of the three
+  sources of truth.
+- `CanonicalRecord.amount_minor` for a `razorpay_settlement` record is the
+  settlement's **net** in INR (`base_currency`), not the gross in the
+  transaction's own currency — the gross/foreign leg is on
+  `foreign_amount_minor`/`foreign_currency`. This mirrors what actually lands
+  in the bank account, which is what a bank-credit record needs to compare
+  against.
+- A camt.053 entry with `CdtDbtInd != "CRDT"` is skipped rather than raised
+  on, on the basis that this dataset's camt.053 covers only credits by
+  construction and a debit is a different, out-of-scope record shape — not a
+  malformed one. No such row currently exists in `data/`; this is a defensive
+  default for real-world statements that do carry debits.
