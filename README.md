@@ -420,3 +420,97 @@ band 65 bps, as of 2026-08-31:
 three paths are tested by mutating one term of a real record, so they are
 exercised but not ground-truth validated. That is a gap in the dataset, not
 something the tests can close.
+
+## Matching cascade — Stage 1 and Stage 2
+
+### Stage 1: deterministic
+
+Reference identity (UTR, end-to-end id, invoice or order id, or a reference
+recovered from the narration) plus amount within tolerance. Reference recovery
+treats an identifier as up to three hyphen-joined alphanumeric groups of at least
+six characters, matched as a whole token against a reference unique across
+settlements — because the NEFT narrations use `-` both as a field separator and
+*inside* `INV-2026-M00012`, so neither splitting on hyphens nor refusing to works
+alone. Zero wrong attributions on both splits.
+
+Amount tolerance is 100 minor units (₹1), chosen here rather than read from the
+answer key: net is gross minus fee minus GST-on-fee, each rounded to the paise, so
+a sweep of a handful of settlements accumulates a few paise of rounding. ₹1 is two
+orders of magnitude of headroom over that.
+
+### Stage 2: bounded subset-sum, minimum residual wins
+
+**A first-fit solver gets 8 of 12 main bundles and 7 of 7 holdout bundles wrong.**
+That is the measurement that justifies the whole stage design. Every bundle in the
+dataset ships a decoy subset landing 1–3 minor units from the credit; taking the
+first subset inside tolerance takes the decoy most of the time, and a wrong subset
+posted with confidence is the worst failure this system has.
+
+So the solver enumerates every admissible subset and takes the **minimum absolute
+residual**. The correct subset is always residual-zero. Result: **zero decoys
+picked on either split.**
+
+Ties are detected during enumeration and never broken. Two subsets at the same
+minimum residual produce `AMBIGUOUS` — candidates attached, confidence 0.20,
+never a match.
+
+Written as a DFS over descending amounts rather than `itertools.combinations`, so
+two prunes can cut whole branches: a running sum past `target + tol` skips, and a
+running sum that cannot reach `target − tol` even taking the largest remaining
+elements *breaks* rather than continues. Worst case is unchanged at `O(P^K)` —
+C(64,8) ≈ 4.4e9 is why blind enumeration is not viable — but real pools land at
+1e4–8e5 visited nodes.
+
+Bounds are explicit and exceeding one is a *reported* outcome (`truncated`), never
+a silent wrong answer: `MAX_CARDINALITY=8`, `MAX_POOL=64`, `NODE_BUDGET=2e6`,
+`POOL_WINDOW_DAYS=[-1,+30]`. The main set gives no signal for the cardinality
+bound (150/150 at every value from 4 to 9), so it was chosen from failure
+asymmetry instead: too low puts the true subset outside the search space, and the
+best remaining subset is then wrong *and indistinguishable from right* — a silent
+false match. Too high admits extra subsets, which surface as a detected tie and
+abstain. Too low fails silently, too high fails loudly, and §9 says which costs
+more.
+
+### Results
+
+| | Main | Holdout |
+|---|---|---|
+| Credits | 150 | 53 |
+| Correct | **150 / 150** | **50 / 53** |
+| **False-match rate** | **0** | **0** |
+| False clears | 0 | 3 |
+| Decoys picked | 0 | 0 |
+| Cascade wall time | 0.02 s | 0.84 s |
+
+The three holdout misses are not solver weakness. They are bundles where several
+*distinct* subsets of the open pool sum to the credit at **residual exactly zero**
+— verified directly: the labelled subset is among the tied candidates, and no
+arithmetic distinguishes it. Guessing would be a coin flip that false-matches five
+times in six. They abstain at confidence 0.20 with the rivals attached.
+
+**Resolving those needs a signal that is not the amount** — counterparty, date
+proximity, narration. That is precisely Stage 3 (Fellegi-Sunter) and Stage 4
+(fuzzy text), and it is now a measured argument for Tier 2 rather than a
+speculative one.
+
+### The measured ceiling on Stage 2
+
+Subset sums are dense, and Stage 2 is only safe because Stage 1 runs first and
+takes its settlements out of the pool. Probing the post-Stage-1 open pool with
+arbitrary amounts corresponding to no real sweep: the main pool (27 settlements)
+returned no spurious match, but the denser holdout pool (34) produced one exact
+spurious match plus seven ambiguous hits out of forty probes.
+
+The uncomfortable part: **a spurious subset is arithmetically indistinguishable
+from a real one once found**, and the confidence ranges overlap — genuine bundles
+score 0.55–0.90, the spurious match scored 0.46. Confidence is therefore the only
+instrument an abstention gate can hold a false-match budget with, and it is not a
+clean separator. Whoever calibrates thresholds needs this number, so it is
+documented in the module and locked behind a test that fails if the rate degrades.
+
+### Known structural weakness, not fixed
+
+Credits are solved oldest-first and greedily: a wrong Stage 2 match can lock away
+a settlement a later credit needed. This is what produced a cascading holdout
+failure at `MAX_CARDINALITY=6`. At 8 it does not bite, but the vulnerability is
+structural and the fix is a global assignment pass, which is out of Tier 1 scope.

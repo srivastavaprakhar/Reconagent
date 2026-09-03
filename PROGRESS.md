@@ -3,14 +3,14 @@
 Updated after every integrated unit of work. Source of truth for scope:
 `reconagent-design-description.md`. Rules: `CLAUDE.md`.
 
-## Status: Tier 1 — A, B, D done; C in flight; F next
+## Status: Tier 1 — A, B, C, D done; F next, then the Tier 1.5 checkpoint
 
 ### Tier 1 subagents
 | # | Unit | State | Commit | Notes |
 |---|------|-------|--------|-------|
 | A | Synthetic data generator + ground_truth.json | **done** | (this commit) | 153 main cases + 54 holdout; 40 tests pass |
 | B | Ingestion & parsing (Razorpay / MT103 / camt.053) | **done** | (this commit) | 96 tests pass; float rule enforced on the record type, not just the parsers |
-| C | Stage 1 deterministic + Stage 2 subset-sum | not started | — | |
+| C | Stage 1 deterministic + Stage 2 subset-sum | **done** | (this commit) | main 150/150, holdout 50/53, false-match 0 on both, 0 decoys picked |
 | D | FX tolerance, variance decomposition, EDPMS aging | **done** | (this commit) | 43 tests; band derived at 65 bps, 0 false-clear / 0 false-flag both splits |
 | F | Eval harness (false-match / false-clear headline, mutation test) | not started | — | runs last, against C+D output |
 | E | Exception taxonomy, abstention gate, LLM explanation | **deferred** | — | Tier 1.5 checkpoint decides |
@@ -22,6 +22,23 @@ Holdout: 54 cases, every defect knob hardened. Generator deterministic under
 `--seed`, verified by regenerate-and-diff. No float on any money path, verified
 programmatically. Subset-sum bundles verified unambiguous: the labelled subset is
 the unique minimum-|residual| candidate in all 19 bundles across both splits.
+
+### C results (verified independently against the answer key)
+Main: 150/150 credits correct, false-match 0, false-clear 0, 0.02s.
+Holdout: 50/53, false-match 0, 3 abstentions, 0.84s.
+Zero decoys picked on either split; a first-fit control posts the wrong subset on
+8/12 main and 7/7 holdout bundles, so min-residual is load-bearing, not decorative.
+
+The 3 holdout misses are genuine exact-sum collisions — several distinct subsets
+of the open pool hit the credit at residual exactly 0, labelled subset among them.
+Unresolvable by amount; needs a non-amount signal (Stage 3/4). Measured argument
+for Tier 2.
+
+**Ceiling on Stage 2, and the risk it creates for the abstention gate:** a
+spurious subset is arithmetically indistinguishable from a real one, and the
+confidence bands overlap (genuine 0.55-0.90, spurious 0.46 in my probe). Stage 2
+is only safe because Stage 1 empties the pool first. Any threshold E picks cannot
+cleanly separate the two.
 
 ### D results (verified independently against the answer key)
 Band 65 bps, derived from main-set labels (3σ-about-zero, rounded down), never
