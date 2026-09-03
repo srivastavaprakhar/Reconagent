@@ -3,7 +3,7 @@
 Updated after every integrated unit of work. Source of truth for scope:
 `reconagent-design-description.md`. Rules: `CLAUDE.md`.
 
-## Status: Tier 1.5 review in progress — closing four gaps found at checkpoint, one commit each
+## Status: Tier 1.5 review in progress — 3 of 4 gaps closed, one commit each
 
 ### Tier 1.5 fix 1 — F now reports the FX attribution table natively
 `reconagent/eval.py` calls `reconagent.fx.decompose_variance` directly and adds
@@ -48,6 +48,57 @@ the decomposition layer.
 `reconagent/eval.py`'s `COVERAGE_GAPS` reworded from a blanket "no
 FEE_MISMATCH/DATA_ENTRY_ERROR case in ground truth" (now false for main) to
 scope the still-true claim to the holdout set specifically.
+
+### Tier 1.5 fix 3 — throughput cliff, profiled, and neither original guess was right
+
+The 37x drop between 200 and 1,000 settlements was investigated by profiling
+(cProfile + instrumented pool sizes and DFS node counts), not by acting on
+either hypothesis on the table. Result: **it is neither** an unindexed O(n^2)
+comparison in the driving loop nor simply "the subset-sum pool grows" in the
+abstract -- both were measured directly and the driving loop's own rescan cost
+under 1% of wall time even at 1,000 settlements.
+
+The real mechanism: `scripts/generate_synthetic.py` packs a **fixed 31-day
+calendar regardless of `--scale`**, so a larger scale raises settlement
+density per day, and `_pool()`'s 30-day window admits denser candidate pools
+as a direct result. Measured: mean pool size rises from 30/64 at scale 200 to
+60/64 at scale 1,000 to 64/64 (truncating on 375 of 380 deferred credits) at
+scale 5,000; mean DFS nodes per deferred credit rises 1,915 -> 62,092 ->
+112,833. At scale 5,000 some credits hit `NODE_BUDGET` outright -- the search
+is being cut off, not finishing.
+
+One real inefficiency was found and fixed inside that search: `_enumerate`'s
+cardinality prune recomputed `sum(amounts[j+1:j+slots])` -- a fresh slice-sum
+-- on every DFS node, up to 8.18M calls at scale 1,000. Replaced with a
+prefix-sum array built once per search, an O(1) lookup per node instead.
+**Proven algebraically equivalent** (`prefix[hi]-prefix[j+1] == sum(...)`,
+verified in review) and empirically identical: 20,000 randomized trials with
+matching node counts, plus a field-for-field diff of every `MatchResult` on
+both splits (152 main + 53 holdout) showing zero mismatches. Headline numbers
+unchanged: main 152/152, false-match 0, false-clear 0; holdout 50/53, false-
+match 0, false-clear 3 (same 3 genuine ties as before). ~10-15% faster at
+1,000/5,000 settlements -- real, but modest, since the eliminated overhead
+was never the dominant cost; millions of DFS nodes still run.
+
+**Stated plainly, not papered over:** the remaining ceiling is structural.
+Stage 2 cost is O(D x f(pool_size)) where pool_size saturates at `MAX_POOL`
+well before 1,000 settlements given this generator's calendar, and `f` is the
+combinatorial DFS. For the spec's actual target volumes -- a merchant's
+monthly statement, hundreds to low thousands of records, not sustained
+high-frequency streaming -- a few hundred settlements is comfortably
+sub-second; ~1,000 is already multi-second; 5,000 starts hitting per-credit
+`NODE_BUDGET` truncation rather than a clean search. Documented in
+`reconagent/match.py`'s own module docstring so this doesn't need
+rediscovering from a profiler next time.
+
+**One pre-existing nondeterminism found, unrelated to this fix, flagged not
+fixed:** `_credit_references` returns a `set`, so which of two equally-valid
+reference fields gets reported in a Stage 1 result's `confidence`/`reason`/
+`evidence` can differ across separate process runs (hash randomization).
+Never affects `settlement_ids`/`resolution`, so no headline metric moves --
+but the *explanation text* for a small number of matches isn't stable across
+runs. Out of scope for a performance pass; noted for whoever touches Stage 1
+next.
 
 ### Tier 1 subagents
 | # | Unit | State | Commit | Notes |

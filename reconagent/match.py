@@ -81,6 +81,54 @@ confidence score is the thing Stage 5 has to hold the false-match budget
 with, since a spurious subset is arithmetically indistinguishable from a real
 one once found. Real bundles here score 0.55-0.90 and spurious ones 0.46-0.81
 -- overlapping, which is exactly what a calibration unit needs to know.
+
+THROUGHPUT AND SCALE -- MEASURED, NOT ASSUMED
+
+`match_all`'s driving loop is two passes: Stage 1 is O(C) lookups against an
+O(N)-built index (C = credit count, N = settlement count) -- cheap and flat
+with scale. Stage 2's driving loop rescans the still-open settlement list
+and re-pools it once per deferred credit (O(D x N), D = deferred-credit
+count); profiled with cProfile at N=1,000 this rescan-plus-pool cost is
+~0.01s out of a ~5.2s run -- under 1%, not the bottleneck the shape of the
+cliff might suggest.
+
+The cost is Stage 2's subset-sum search itself, and it is dense-pool cost,
+not driving-loop cost. `scripts/generate_synthetic.py` packs a fixed
+calendar (31 days) regardless of `--scale`, so settlement density per day
+rises with scale, and `_pool()`'s 30-day window admits a denser candidate
+set as a direct result. Measured (seed 20260903, this repo's synthetic
+generator, DFS node counts from `_Search.nodes`):
+
+  scale | settlements | deferred credits | mean pool size | pool truncated
+  200   | 202         | 13                | 30.2 (of 64)    | 0/13
+  1,000 | 1,004       | 77                | 60.3 (of 64)    | 70/77
+  5,000 | 5,003       | 380               | 63.7 (of 64)    | 375/380
+
+  scale | mean DFS nodes/deferred credit | total DFS nodes
+  200   | 1,915                           | 24,890
+  1,000 | 62,092                          | 4,781,094
+  5,000 | 112,833                         | 42,876,461
+
+By 1,000 settlements the pool is truncated at MAX_POOL almost every time;
+by 5,000 some individual deferred credits hit NODE_BUDGET outright (nodes
+== 2,000,001, i.e. the search gave up, not finished). So Stage 2 cost is
+O(D x f(pool_size)), pool_size saturating at MAX_POOL well before N=1,000
+given this calendar, and f is the combinatorial DFS from `_enumerate`
+above -- not a bound this module can flatten further without either
+raising MAX_POOL/NODE_BUDGET (more work, not less) or changing what gets
+pooled or searched (a behaviour change, out of scope for a performance
+pass). The driving loop's O(D x N) rescan was left as full re-filters, not
+because it is free, but because it is not where the time goes at these
+scales -- see `match_all`'s and `_pool`'s docstrings for what each pass
+actually costs.
+
+For the spec's stated volumes -- a merchant's monthly statement, hundreds
+to low thousands of records, not sustained high-frequency streaming -- a
+few hundred settlements is comfortably fast (sub-second). Something in the
+1,000-settlement neighbourhood, with this synthetic generator's density,
+is already multi-second per run; 5,000 is tens of seconds and starts
+hitting NODE_BUDGET per-credit truncation rather than a clean search. That
+ceiling is this module's honest answer, not a bug to chase further here.
 """
 
 from __future__ import annotations
@@ -409,6 +457,19 @@ def _enumerate(st: _Search) -> None:
     n = len(st.amounts)
     chosen: list[str] = []
 
+    # Prefix sums of `amounts` (fixed for the whole search -- the pool
+    # sorted descending doesn't change while dfs runs), so prune 2's "sum
+    # of the next `slots` largest remaining elements" below is an O(1)
+    # lookup instead of slicing and summing up to `slots` elements on
+    # every node visited. Same comparison, same prune decisions, same
+    # nodes visited -- just cheaper per node. This is the hot path: with
+    # a pool near MAX_POOL, dfs runs into the millions of nodes, and the
+    # old `sum(st.amounts[j + 1 : j + slots])` re-summed a fresh slice at
+    # every one of them.
+    prefix = [0] * (n + 1)
+    for i in range(n):
+        prefix[i + 1] = prefix[i] + st.amounts[i]
+
     def record(total: int) -> None:
         residual = abs(total - st.target)
         if residual > st.tolerance:
@@ -444,8 +505,12 @@ def _enumerate(st: _Search) -> None:
             if nxt > st.target + st.tolerance:
                 continue  # prune 1
             # prune 2: best case from here is the next `slots` largest, which
-            # (descending order) are amounts[j : j + slots].
-            if nxt + sum(st.amounts[j + 1 : j + slots]) < st.target - st.tolerance:
+            # (descending order) are amounts[j : j + slots]. Equivalent to
+            # sum(st.amounts[j + 1 : j + slots]) via the prefix array above.
+            hi = j + slots
+            if hi > n:
+                hi = n
+            if nxt + (prefix[hi] - prefix[j + 1]) < st.target - st.tolerance:
                 break
             chosen.append(st.ids[j])
             dfs(j + 1, nxt)

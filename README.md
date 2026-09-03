@@ -652,7 +652,35 @@ certainly Stage 2's pool crossing from sparse to dense as more settlements land
 inside the 30-day pooling window simultaneously. Past that transition
 (1,000→5,000) it is closer to linear-to-mildly-superlinear. The main and
 holdout datasets (100-202 settlements) never enter this regime, so the ceiling
-is invisible at the scale everything else in Tier 1 was measured against —
-flagged here rather than left for someone to discover in production. *(Root
-cause investigated separately at Tier 1.5 review — see below if that section
-exists yet, or PROGRESS.md for the latest.)*
+is invisible at the scale everything else in Tier 1 was measured against.
+
+**Root cause, found by profiling — and it was neither of the two obvious
+guesses.** Not an unindexed O(n²) comparison in the driving loop (measured:
+under 1% of wall time even at 1,000 settlements), and not simply "the pool
+grows" in the abstract. The actual mechanism: `scripts/generate_synthetic.py`
+packs a **fixed 31-day calendar regardless of `--scale`**, so a larger scale
+raises settlement density per day, and Stage 2's 30-day pooling window admits
+a denser candidate set as a direct result — mean pool size rises from 30/64
+settlements at scale 200 to a saturated 64/64 (truncating on 375 of 380
+deferred credits) at scale 5,000, and mean DFS nodes per credit rises from
+1,915 to 112,833. At scale 5,000 some individual credits hit `NODE_BUDGET`
+outright — the search is cut off, not finished.
+
+One real inefficiency turned up inside that search and was fixed: the
+cardinality prune recomputed a fresh slice-sum on every DFS node (up to 8.18M
+calls at scale 1,000); replaced with a prefix-sum array, O(1) per node.
+Proven equivalent — 20,000 randomized trials with identical node counts, and
+a field-for-field diff of every `MatchResult` on both splits showing zero
+mismatches; headline numbers unchanged (main 152/152, holdout 50/53, same 3
+holdout ties). ~10–15% faster at 1,000–5,000 settlements — real, but modest,
+since the eliminated cost was never the dominant term.
+
+**The remaining ceiling is structural, stated plainly rather than papered
+over:** Stage 2 cost is `O(D × f(pool_size))`, and pool size saturates at
+`MAX_POOL` well before 1,000 settlements given this generator's fixed
+calendar. For the spec's actual target volumes — a merchant's monthly
+statement, hundreds to low thousands of records, not sustained high-frequency
+streaming — a few hundred settlements is comfortably sub-second, ~1,000 is
+already multi-second, and 5,000 starts hitting per-credit `NODE_BUDGET`
+truncation rather than a clean search. Documented in `reconagent/match.py`'s
+own module docstring.

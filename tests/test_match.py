@@ -363,6 +363,49 @@ def test_a_pathological_pool_truncates_and_says_so() -> None:
         assert "truncated" in r.reason
 
 
+def test_dfs_cardinality_prune_is_not_a_per_node_resum(monkeypatch) -> None:
+    """Regression test for a throughput cliff traced to `_enumerate`: the
+    cardinality prune used to compute `sum(amounts[j + 1 : j + slots])` --
+    a fresh slice-and-sum -- on every DFS node. That is O(slots) work per
+    node, and once a pool is dense enough that the search runs into tens of
+    thousands of nodes (which happens well within MAX_POOL, see the pool
+    below), that per-node resum dominated wall time. The fix hoists a
+    prefix-sum array out of the node loop so the same prune is an O(1)
+    lookup. Assert the mechanism, not just the speed: builtin `sum()` calls
+    must stay tied to the pool size, not to how many nodes get visited."""
+    pool = [
+        CanonicalRecord(
+            source="razorpay_settlement", record_id=f"setl_{i:03d}", counterparty_name="",
+            narration="", amount_minor=100_000 + i * 37, currency="INR",
+            settled_at=date(2026, 8, 10),
+        )
+        for i in range(32)
+    ]
+    credit = CanonicalRecord(
+        source="bank_credit", record_id="BNK1", counterparty_name="", narration="",
+        amount_minor=500_555, currency="INR", value_date=date(2026, 8, 11),
+    )
+
+    sum_calls = []
+    real_sum = sum
+
+    def counting_sum(*a, **kw):
+        sum_calls.append(1)
+        return real_sum(*a, **kw)
+
+    monkeypatch.setattr("builtins.sum", counting_sum)
+    r = M.match_subset_sum(credit, pool, max_cardinality=8)
+
+    # The search legitimately visits tens of thousands of nodes on a pool
+    # this dense -- that cost is real and expected, not what this test
+    # objects to.
+    assert r.subsets_examined > 10_000
+    # sum() must not be called once per node visited (the old O(slots)
+    # per-node resum); a handful of calls (e.g. totalling the winning
+    # subset's net once, after the search) is all that is expected.
+    assert len(sum_calls) < 50
+
+
 def test_the_pool_cap_is_reported_as_truncation() -> None:
     pool = [
         CanonicalRecord(
