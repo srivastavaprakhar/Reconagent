@@ -3,7 +3,7 @@
 Updated after every integrated unit of work. Source of truth for scope:
 `reconagent-design-description.md`. Rules: `CLAUDE.md`.
 
-## Status: Tier 1 — A and B done, C and D next
+## Status: Tier 1 — A, B, D done; C in flight; F next
 
 ### Tier 1 subagents
 | # | Unit | State | Commit | Notes |
@@ -11,7 +11,7 @@ Updated after every integrated unit of work. Source of truth for scope:
 | A | Synthetic data generator + ground_truth.json | **done** | (this commit) | 153 main cases + 54 holdout; 40 tests pass |
 | B | Ingestion & parsing (Razorpay / MT103 / camt.053) | **done** | (this commit) | 96 tests pass; float rule enforced on the record type, not just the parsers |
 | C | Stage 1 deterministic + Stage 2 subset-sum | not started | — | |
-| D | FX tolerance, variance decomposition, EDPMS aging | not started | — | tolerance band = parameter |
+| D | FX tolerance, variance decomposition, EDPMS aging | **done** | (this commit) | 43 tests; band derived at 65 bps, 0 false-clear / 0 false-flag both splits |
 | F | Eval harness (false-match / false-clear headline, mutation test) | not started | — | runs last, against C+D output |
 | E | Exception taxonomy, abstention gate, LLM explanation | **deferred** | — | Tier 1.5 checkpoint decides |
 | G | FastAPI + hash-chained Postgres audit log | **deferred** | — | Tier 1.5 checkpoint decides |
@@ -22,6 +22,21 @@ Holdout: 54 cases, every defect knob hardened. Generator deterministic under
 `--seed`, verified by regenerate-and-diff. No float on any money path, verified
 programmatically. Subset-sum bundles verified unambiguous: the labelled subset is
 the unique minimum-|residual| candidate in all 19 bundles across both splits.
+
+### D results (verified independently against the answer key)
+Band 65 bps, derived from main-set labels (3σ-about-zero, rounded down), never
+read from the answer key. Main: FX drift 15/15, false-clear 0/5, false-flag 0/10,
+refund residuals 2/2, EDPMS exact, timing 3/3. Holdout: 11/11, 0/3, 0/8, 1/1,
+exact, 1/1. Decomposition identity closes to exactly zero on all 302 rows.
+
+Holdout margin is tighter than D's own report stated: D quoted 24.13 bps by
+measuring only `fx_drift_benign` cases, but the highest *legitimate* leg is a
+refund leg at 49.20 bps. True corridor: 49.20 (legit) < 65 (band) < 67.84
+(flagged) — 15.8 bps headroom, not 24.1. Still correct on every case; the margin
+is just thinner than claimed.
+
+Rounding down was pre-committed and turned out load-bearing: a 70 bps band
+(round-to-nearest) clears 2 of 3 holdout flagged cases as benign.
 
 ### Eval numbers
 None yet. Headline metrics once F lands: **false-match rate**, **false-clear rate**
@@ -81,6 +96,12 @@ record construction but passed the float to `parse_minor` first, so it re-tested
   and live on `.rows` with their own conversion rate. D owns refund-FX asymmetry.
 - Tolerances in `ground_truth.json.conventions` are labelling metadata only. C and D
   own their own bands as parameters; do not read them from the answer key.
+
+## Coverage gaps in the dataset (for F, and for the Tier 1.5 decision)
+- Neither split has a `FEE_MISMATCH` or `DATA_ENTRY_ERROR` case, and neither has
+  an overdue EDPMS receipt. D implements and unit-tests all three by mutating one
+  term of a real record, but they have no ground-truth validation. F cannot report
+  a real number for them. Closing this needs new labelled cases from A.
 
 ## Open decisions (flagged, not guessed)
 - LangChain is dropped from §11's tooling list for this build. If E is built, its single

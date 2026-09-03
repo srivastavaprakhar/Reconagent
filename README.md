@@ -303,3 +303,120 @@ the sum of parsed settlement nets equals `settlement_net_sum_minor`.
   construction and a debit is a different, out-of-scope record shape — not a
   malformed one. No such row currently exists in `data/`; this is a defensive
   default for real-world statements that do carry debits.
+
+## FX & compliance layer
+
+The cross-border module: is the applied rate defensible, what explains a
+variance, and is the export receipt's regulatory clock running out.
+
+### The tolerance band is derived, not copied
+
+Spec §5 says the band is "calibrated from labelled data". `ground_truth.json`
+publishes `fx_tolerance_bps: 50`, but that is the number the data was *labelled*
+with — reading it back would be grading our own homework. The default is derived
+from the main-set label distribution instead:
+
+```
+25 legitimate international legs (everything not labelled fx_drift_flagged)
+max |deviation|        = 43.62 bps
+sigma about zero (RMS) = 22.96 bps      # reference rate is the centre by
+3 sigma                = 68.87 bps      # construction, so not about the mean
+round DOWN to nearest 5 = 65 bps        -> DEFAULT_FX_TOLERANCE_BPS
+```
+
+Rounding **down** rather than to nearest was fixed as a principle before the
+holdout ran: §9 leads with false-clear rate, so when a 3σ band falls between two
+round numbers, take the tighter one. A borderline case in a review queue is
+cheap; a silently cleared bad rate is not.
+
+That choice turned out to be load-bearing. On the holdout the two classes hug
+the boundary from both sides:
+
+```
+highest legitimate leg   49.20 bps   (a refund leg, not a benign-drift case)
+      the band           65    bps
+lowest flagged leg       67.84 bps
+```
+
+A band of 70 — which is what rounding to nearest would have produced — clears
+two of the three holdout flagged cases as benign. The corridor between the
+highest legitimate and lowest flagged deviation is 18.6 bps wide, and the band
+sits inside it with 15.8 bps of headroom below and 2.84 bps above.
+
+### Variance decomposition
+
+```
+gross_reference = round(foreign_gross x reference_rate)
+gross_applied   = round(foreign_gross x applied_rate)     == booked base_amount
+FX_spread       = gross_reference - gross_applied
+expected_net    = gross_reference - MDR - GST - FX_spread - refund_adjustments
+                = gross_applied   - MDR - GST
+residual        = actual_net - expected_net
+```
+
+The FX spread cancels. That cancellation is itself the finding: it is why benign
+and flagged drift both leave residual zero and are separated by the *rate* check
+rather than by the money. The identity is written un-simplified in the code so a
+reader can watch it cancel. It closes to exactly zero on all 302 settlement rows
+across both splits.
+
+Each cause asks one question: *does restating my term, and only my term, close
+the residual exactly?*
+
+| Attribution | Arithmetic signature |
+|---|---|
+| `BENIGN_FX_DRIFT` / `FLAGGED_FX_DRIFT` | residual ≈ 0; cause decided by \|deviation\| against the band |
+| `FEE_MISMATCH` | `gst - round(MDR x 18%)` is non-zero and equals the residual |
+| `DATA_ENTRY_ERROR` | net is a power-of-ten shift of expected, or a digit transposition (difference a non-zero multiple of 9 *and* the two numbers are digit permutations) |
+| `NO_VARIANCE` | residual ≈ 0, no FX leg |
+| `UNRESOLVED` | nothing closes it — **or two or more things do** |
+
+Ambiguity is not resolved by rule order. Every candidate is collected and the
+attribution is set only when exactly one fires; otherwise `UNRESOLVED`, with the
+competing candidates listed. Residual tolerance is 1 minor unit — the half-up
+rounding budget of a single conversion — not the answer key's 100.
+
+### No reference rate means no verdict
+
+An unpublished value date returns `NO_REFERENCE_RATE`, and a decomposition whose
+money ties out but whose rate cannot be checked is `UNRESOLVED`, not benign.
+
+Carrying the last rate forward is wrong in both directions and invisible either
+way: a stale reference drifts from the market, so a legitimate rate gets flagged
+*and* a rate manipulated by less than the weekend's drift gets cleared — with
+output identical to a real validation. Refusing is louder and cheaper: it
+surfaces as a rate-feed problem rather than a merchant problem.
+
+### EDPMS aging
+
+`outstanding > 0 AND (partially realised OR overdue)` is an
+`OPEN_EDPMS_LINKAGE` exception; `outstanding > 0` with nothing realised and the
+deadline ahead is merely `AGING`. A freshly raised export invoice with months to
+run is a young receivable, not an exception — the alternative makes every export
+invoice an exception on the day it is issued, which is the over-reporting §5
+exists to prevent. A part-realised bill is different in kind: money has moved and
+the bill is half-closed in EDPMS. This reproduces the labels exactly on both
+splits.
+
+`as_of` is a required parameter everywhere, never `date.today()` — an aging
+report that changes with the wall clock is not reproducible.
+
+### Results
+
+Verified independently against the answer key, main set and adversarial holdout,
+band 65 bps, as of 2026-08-31:
+
+| | Main | Holdout |
+|---|---|---|
+| FX drift classified correctly | 15 / 15 | 11 / 11 |
+| false-clear (flagged read as benign) | 0 / 5 | 0 / 3 |
+| false-flag (benign read as flagged) | 0 / 10 | 0 / 8 |
+| refund FX asymmetry residuals | 2 / 2 | 1 / 1 |
+| EDPMS open set | exact | exact |
+| timing-pending held, not flagged | 3 / 3 | 1 / 1 |
+
+**Coverage gap, stated plainly:** neither split contains a `FEE_MISMATCH` or
+`DATA_ENTRY_ERROR` case, and neither contains an overdue EDPMS receipt. Those
+three paths are tested by mutating one term of a real record, so they are
+exercised but not ground-truth validated. That is a gap in the dataset, not
+something the tests can close.
