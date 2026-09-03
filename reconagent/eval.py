@@ -16,10 +16,11 @@ oversight -- restated in every report this module emits.
 
 COVERAGE GAP (already found by the FX unit, restated here because a
 reader of *this* report should not have to go find it elsewhere): the
-ground-truth set has no FEE_MISMATCH case, no DATA_ENTRY_ERROR case, and
-no overdue EDPMS receipt as of the statement date (2026-08-31). Those
-three paths have no ground-truth-validated accuracy number, in this
-harness or anywhere else.
+main split now carries one FEE_MISMATCH case and one DATA_ENTRY_ERROR
+case (MAIN-00154, MAIN-00155), but the holdout set still has neither, and
+no split has an overdue EDPMS receipt as of the statement date
+(2026-08-31). Those paths have no holdout-validated accuracy number, in
+this harness or anywhere else.
 
 -----------------------------------------------------------------------
 METRIC DEFINITIONS -- read this before trusting any number below.
@@ -142,8 +143,8 @@ DEFAULT_REPORT_MD = REPO / "reports" / "eval_report.md"
 ASSERTED = (MATCHED, PARTIAL)
 
 COVERAGE_GAPS = (
-    "no FEE_MISMATCH case in ground truth",
-    "no DATA_ENTRY_ERROR case in ground truth",
+    "no FEE_MISMATCH case in the holdout set",
+    "no DATA_ENTRY_ERROR case in the holdout set",
     "no overdue EDPMS receipt in ground truth as of 2026-08-31",
 )
 FX_METRICS_NOTE = (
@@ -205,8 +206,8 @@ def decomposition_breakdown(split: Split) -> dict[str, int]:
     """Count `decompose_variance` outcomes across every settlement in the
     split, keyed by attribution. All six category names are always
     present, zero-valued ones included, so a reader can see FEE_MISMATCH
-    and DATA_ENTRY_ERROR are real categories currently sitting at zero
-    rather than missing from the schema."""
+    and DATA_ENTRY_ERROR as real categories in the schema even on a split
+    (currently: holdout) where they happen to sit at zero."""
     reference = load_reference_rates(split.data_dir / f"{split.prefix}fx_reference_rates.csv")
     counts = {category: 0 for category in DECOMPOSITION_CATEGORIES}
     for record in split.settlements:

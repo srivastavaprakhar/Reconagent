@@ -16,7 +16,7 @@
     "tolerance_ownership": "amount_tolerance_minor and fx_tolerance_bps describe how THIS FILE was labelled. They are not a configuration input to the matcher or the FX validator, which own their own bands. They are published so a grader can see what the label means.",
     "case_fields": {
       "case_id": "stable id, unique within the split",
-      "defect_class": "one of clean_match, edpms_open, fx_drift_benign, fx_drift_flagged, missing_remitter, partial_payment, refund_fx_asymmetry, subset_sum_bundle, timing_pending",
+      "defect_class": "one of clean_match, edpms_open, fx_drift_benign, fx_drift_flagged, missing_remitter, partial_payment, refund_fx_asymmetry, subset_sum_bundle, timing_pending (main split only, appended after the weighted deck: fee_mismatch, data_entry_error)",
       "split": "main | holdout",
       "settlement_ids": "every settlement_id in razorpay_settlements.csv this case involves",
       "payment_ids": "every entity_id (pay_/rfnd_) this case involves",
@@ -35,14 +35,16 @@
     ]
   },
   "counts": {
-    "cases": 153,
-    "settlements": 200,
-    "settlement_rows": 202,
-    "bank_credits": 150,
-    "invoices": 200,
+    "cases": 155,
+    "settlements": 202,
+    "settlement_rows": 204,
+    "bank_credits": 152,
+    "invoices": 202,
     "by_defect_class": {
       "clean_match": 107,
+      "data_entry_error": 1,
       "edpms_open": 2,
+      "fee_mismatch": 1,
       "fx_drift_benign": 10,
       "fx_drift_flagged": 5,
       "missing_remitter": 6,
@@ -7290,6 +7292,87 @@
         "utr_present_in_narration": true
       },
       "notes": "Single settlement, single credit, UTR quoted verbatim in the narration."
+    },
+    {
+      "case_id": "MAIN-00154",
+      "defect_class": "fee_mismatch",
+      "split": "main",
+      "settlement_ids": [
+        "setl_dFDWWnBI7gfwmP"
+      ],
+      "payment_ids": [
+        "pay_WHgFdP5oCtBXoQ"
+      ],
+      "bank_txn_ids": [
+        "BNKM000151"
+      ],
+      "invoice_ids": [
+        "INV-2026-M00201"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKM000151",
+        "covers_settlement_ids": [
+          "setl_dFDWWnBI7gfwmP"
+        ],
+        "credit_amount_minor": 488200,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 488200,
+        "residual_minor": 0
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "FEE_MISMATCH",
+      "details": {
+        "gross_minor": 500000,
+        "fee_minor": 10000,
+        "correct_gst_minor": 1800,
+        "tax_booked_minor": 1200,
+        "gst_residual_minor": -600,
+        "actual_net_credited_minor": 488200,
+        "utr_present_in_narration": true
+      },
+      "notes": "Linkage is clean -- single settlement, single credit, UTR in the narration -- but the settlement export's own tax column books GST at 12% (1200) instead of the statutory 18% on the MDR (1800); the amount actually netted out used the correct rate, leaving a -600 minor-unit gap in the fee breakdown."
+    },
+    {
+      "case_id": "MAIN-00155",
+      "defect_class": "data_entry_error",
+      "split": "main",
+      "settlement_ids": [
+        "setl_n5eXZlX1WZ68z1"
+      ],
+      "payment_ids": [
+        "pay_i09p3zd9Uuzrux"
+      ],
+      "bank_txn_ids": [
+        "BNKM000152"
+      ],
+      "invoice_ids": [
+        "INV-2026-M00202"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKM000152",
+        "covers_settlement_ids": [
+          "setl_n5eXZlX1WZ68z1"
+        ],
+        "credit_amount_minor": 643660,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 643660,
+        "residual_minor": 0
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "DATA_ENTRY_ERROR",
+      "details": {
+        "gross_minor": 650000,
+        "fee_minor": 13000,
+        "tax_minor": 2340,
+        "expected_net_minor": 634660,
+        "actual_credited_minor": 643660,
+        "swapped_digit_positions": [
+          1,
+          2
+        ],
+        "residual_minor": 9000
+      },
+      "notes": "Linkage is clean -- single settlement, single credit, UTR in the narration -- and fee/GST are both booked correctly, but the amount actually credited (643660) transposes two adjacent digits of the correct net (634660): a fat-fingered payout, not a fee problem."
     }
   ]
 }

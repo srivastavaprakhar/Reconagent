@@ -16,7 +16,7 @@
     "tolerance_ownership": "amount_tolerance_minor and fx_tolerance_bps describe how THIS FILE was labelled. They are not a configuration input to the matcher or the FX validator, which own their own bands. They are published so a grader can see what the label means.",
     "case_fields": {
       "case_id": "stable id, unique within the split",
-      "defect_class": "one of clean_match, edpms_open, fx_drift_benign, fx_drift_flagged, missing_remitter, partial_payment, refund_fx_asymmetry, subset_sum_bundle, timing_pending",
+      "defect_class": "one of clean_match, edpms_open, fx_drift_benign, fx_drift_flagged, missing_remitter, partial_payment, refund_fx_asymmetry, subset_sum_bundle, timing_pending (main split only, appended after the weighted deck: fee_mismatch, data_entry_error)",
       "split": "main | holdout",
       "settlement_ids": "every settlement_id in razorpay_settlements.csv this case involves",
       "payment_ids": "every entity_id (pay_/rfnd_) this case involves",

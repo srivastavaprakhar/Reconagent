@@ -3,28 +3,74 @@
 Updated after every integrated unit of work. Source of truth for scope:
 `reconagent-design-description.md`. Rules: `CLAUDE.md`.
 
-## Status: Tier 1 complete (A-D-F built and committed). AT THE TIER 1.5 CHECKPOINT — holding for a decision on E and G.
+## Status: Tier 1.5 review in progress — closing four gaps found at checkpoint, one commit each
+
+### Tier 1.5 fix 1 — F now reports the FX attribution table natively
+`reconagent/eval.py` calls `reconagent.fx.decompose_variance` directly and adds
+a "FX variance attribution" table to `reports/eval_report.md` (all six
+categories always shown, zeros included) instead of that breakdown only being
+reconstructable by hand-calling the FX module. Descriptive tally, not graded
+against ground truth's `expected_exception_category` -- the existing note that
+matching accuracy and FX accuracy are separate failure surfaces stays in place,
+unchanged, directly above the new table.
+
+### Tier 1.5 fix 2 — closed the FEE_MISMATCH/DATA_ENTRY_ERROR ground-truth gap (main split)
+A's generator gained two case-builder functions, appended strictly *after* the
+existing weighted-deck loop and consuming the same seeded RNG in its
+then-current state -- verified via `git diff data/`: every existing settlement,
+invoice, bank entry, and case is byte-identical; only new rows/entries/cases
+were added, plus the totals and closing balance that describe them.
+
+- **MAIN-00154 / `fee_mismatch`** (`setl_dFDWWnBI7gfwmP`): fee booked correctly
+  at 2% MDR (INR 100.00 on INR 5,000.00 gross); the settlement export's own `tax`
+  column is stale at the pre-rate-change 12% (INR 12.00) instead of the statutory
+  18% (INR 18.00), while the amount actually credited used the correct 18%.
+  Verified: `decompose_variance` returns `attribution=FEE_MISMATCH`,
+  `candidates=('FEE_MISMATCH',)`, residual âˆ’600 minor units, no ambiguity.
+- **MAIN-00155 / `data_entry_error`** (`setl_n5eXZlX1WZ68z1`): fee and GST both
+  correct; the credited amount is the correct net (INR 6,346.60) with two adjacent
+  digits transposed (INR 6,436.60) -- a swap that is mathematically guaranteed to
+  be a multiple-of-9, digit-permutation difference, exactly the fingerprint
+  `_is_transposition` checks for. Verified: `attribution=DATA_ENTRY_ERROR`,
+  single candidate, residual 9000 minor units.
+
+New main-split totals: 155 cases / 202 settlements / 152 bank credits / 202
+invoices. Holdout is unchanged -- this gap remains open there deliberately
+(scoped out of this fix, not forgotten; see Open decisions below).
+
+New decomposition breakdown, main: `NO_VARIANCE=172, BENIGN_FX_DRIFT=23,
+FLAGGED_FX_DRIFT=5, FEE_MISMATCH=1, DATA_ENTRY_ERROR=1, UNRESOLVED=0` (sums to
+202). Matching accuracy unaffected: re-verified 152/152 correct, false-match 0,
+false-clear 0 -- both new settlements are single-settlement, single-credit,
+UTR-quoted clean matches at Stage 1, by design, so the anomaly lives only in
+the decomposition layer.
+
+`reconagent/eval.py`'s `COVERAGE_GAPS` reworded from a blanket "no
+FEE_MISMATCH/DATA_ENTRY_ERROR case in ground truth" (now false for main) to
+scope the still-true claim to the holdout set specifically.
 
 ### Tier 1 subagents
 | # | Unit | State | Commit | Notes |
 |---|------|-------|--------|-------|
-| A | Synthetic data generator + ground_truth.json | **done** | (this commit) | 153 main cases + 54 holdout; 40 tests pass |
+| A | Synthetic data generator + ground_truth.json | **done** | (this commit) | 153 main cases + 54 holdout; 40 tests pass. Extended post-Tier-1.5 to 155 main cases (see below). |
 | B | Ingestion & parsing (Razorpay / MT103 / camt.053) | **done** | (this commit) | 96 tests pass; float rule enforced on the record type, not just the parsers |
-| C | Stage 1 deterministic + Stage 2 subset-sum | **done** | (this commit) | main 150/150, holdout 50/53, false-match 0 on both, 0 decoys picked |
+| C | Stage 1 deterministic + Stage 2 subset-sum | **done** | (this commit) | main 150/150 at commit time, now 152/152 against the extended dataset (unchanged code); holdout 50/53, false-match 0 on both, 0 decoys picked |
 | D | FX tolerance, variance decomposition, EDPMS aging | **done** | (this commit) | 43 tests; band derived at 65 bps, 0 false-clear / 0 false-flag both splits |
 | F | Eval harness (false-match / false-clear headline, mutation test) | **done** | (this commit) | 184 total tests; numbers below |
 | E | Exception taxonomy, abstention gate, LLM explanation | **deferred** | — | Tier 1.5 checkpoint decides |
 | G | FastAPI + hash-chained Postgres audit log | **deferred** | — | Tier 1.5 checkpoint decides |
 
 ### Dataset (A)
-Main: 153 cases / 200 settlements / 150 bank credits / 200 invoices.
+Main (at A's original commit): 153 cases / 200 settlements / 150 bank credits / 200 invoices.
+Extended below to 155 / 202 / 152 / 202 once FEE_MISMATCH/DATA_ENTRY_ERROR cases landed.
 Holdout: 54 cases, every defect knob hardened. Generator deterministic under
 `--seed`, verified by regenerate-and-diff. No float on any money path, verified
 programmatically. Subset-sum bundles verified unambiguous: the labelled subset is
 the unique minimum-|residual| candidate in all 19 bundles across both splits.
 
 ### C results (verified independently against the answer key)
-Main: 150/150 credits correct, false-match 0, false-clear 0, 0.02s.
+Main (at C's original commit): 150/150 credits correct, false-match 0, false-clear 0, 0.02s.
+Re-verified 152/152 against the extended main dataset, still false-match 0, false-clear 0.
 Holdout: 50/53, false-match 0, 3 abstentions, 0.84s.
 Zero decoys picked on either split; a first-fit control posts the wrong subset on
 8/12 main and 7/7 holdout bundles, so min-residual is load-bearing, not decorative.
@@ -46,6 +92,8 @@ cleanly separate the two.
 |---|---|---|---|
 | main | **0.00%** (0/150) | **0.00%** (0/150) | 150/150 |
 | holdout | **0.00%** (0/53) | **5.66%** (3/53) | 50/53 |
+
+(Superseded below by the Tier 1.5 rerun against the extended 152-credit main set: still 152/152, 0.00%/0.00%.)
 
 Mutation test proves the metric moves: 0%/5%/20%/50% corruption of the
 matcher's *output* -> 0.00%/5.33%/20.00%/50.00% false-match, monotonic,

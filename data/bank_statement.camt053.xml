@@ -47,7 +47,7 @@
             <Cd>CLBD</Cd>
           </CdOrPrtry>
         </Tp>
-        <Amt Ccy="INR">62741500.31</Amt>
+        <Amt Ccy="INR">62752818.91</Amt>
         <CdtDbtInd>CRDT</CdtDbtInd>
         <Dt>
           <Dt>2026-08-31</Dt>
@@ -55,8 +55,8 @@
       </Bal>
       <TxsSummry>
         <TtlCdtNtries>
-          <NbOfNtries>150</NbOfNtries>
-          <Sum>61741500.31</Sum>
+          <NbOfNtries>152</NbOfNtries>
+          <Sum>61752818.91</Sum>
         </TtlCdtNtries>
       </TxsSummry>
       <Ntry>
@@ -2028,6 +2028,71 @@
             </RltdPties>
             <RmtInf>
               <Ustrd>NEFT CR-RATN0000088-RAZORPAY SOFTWARE PVT LTD-CQCYEYQ13EP11P1H-INV-2026-M00184</Ustrd>
+            </RmtInf>
+          </TxDtls>
+        </NtryDtls>
+      </Ntry>
+      <Ntry>
+        <NtryRef>BNKM000152</NtryRef>
+        <Amt Ccy="INR">6436.60</Amt>
+        <CdtDbtInd>CRDT</CdtDbtInd>
+        <Sts>BOOK</Sts>
+        <BookgDt>
+          <Dt>2026-08-08</Dt>
+        </BookgDt>
+        <ValDt>
+          <Dt>2026-08-08</Dt>
+        </ValDt>
+        <AcctSvcrRef>FT845961021548</AcctSvcrRef>
+        <BkTxCd>
+          <Domn>
+            <Cd>PMNT</Cd>
+            <Fmly>
+              <Cd>RCDT</Cd>
+              <SubFmlyCd>DMCT</SubFmlyCd>
+            </Fmly>
+          </Domn>
+        </BkTxCd>
+        <NtryDtls>
+          <TxDtls>
+            <Refs>
+              <MsgId>FT845961021548</MsgId>
+              <EndToEndId>FT845961021548</EndToEndId>
+              <TxId>BNKM000152</TxId>
+            </Refs>
+            <Amt Ccy="INR">6436.60</Amt>
+            <CdtDbtInd>CRDT</CdtDbtInd>
+            <RltdAgts>
+              <DbtrAgt>
+                <FinInstnId>
+                  <BIC>RATNINBBXXX</BIC>
+                </FinInstnId>
+              </DbtrAgt>
+            </RltdAgts>
+            <RltdPties>
+              <Dbtr>
+                <Nm>RAZORPAY SOFTWARE PVT LTD</Nm>
+              </Dbtr>
+              <DbtrAcct>
+                <Id>
+                  <Othr>
+                    <Id>Razorpay Settlement Account</Id>
+                  </Othr>
+                </Id>
+              </DbtrAcct>
+              <Cdtr>
+                <Nm>GLOBEX EXPORTS PRIVATE LIMITED</Nm>
+              </Cdtr>
+              <CdtrAcct>
+                <Id>
+                  <Othr>
+                    <Id>50200087654321</Id>
+                  </Othr>
+                </Id>
+              </CdtrAcct>
+            </RltdPties>
+            <RmtInf>
+              <Ustrd>NEFT CR-RATN0000088-RAZORPAY SOFTWARE PVT LTD-K5WVVIBXVBXIBN5M-INV-2026-M00202</Ustrd>
             </RmtInf>
           </TxDtls>
         </NtryDtls>
@@ -8143,6 +8208,71 @@
             </RltdPties>
             <RmtInf>
               <Ustrd>NEFT CR-RATN0000088-RAZORPAY SOFTWARE PVT LTD-RZ7EPLALCBV76IC1-PART SETTLEMENT</Ustrd>
+            </RmtInf>
+          </TxDtls>
+        </NtryDtls>
+      </Ntry>
+      <Ntry>
+        <NtryRef>BNKM000151</NtryRef>
+        <Amt Ccy="INR">4882.00</Amt>
+        <CdtDbtInd>CRDT</CdtDbtInd>
+        <Sts>BOOK</Sts>
+        <BookgDt>
+          <Dt>2026-08-22</Dt>
+        </BookgDt>
+        <ValDt>
+          <Dt>2026-08-22</Dt>
+        </ValDt>
+        <AcctSvcrRef>FT521556830514</AcctSvcrRef>
+        <BkTxCd>
+          <Domn>
+            <Cd>PMNT</Cd>
+            <Fmly>
+              <Cd>RCDT</Cd>
+              <SubFmlyCd>DMCT</SubFmlyCd>
+            </Fmly>
+          </Domn>
+        </BkTxCd>
+        <NtryDtls>
+          <TxDtls>
+            <Refs>
+              <MsgId>FT521556830514</MsgId>
+              <EndToEndId>FT521556830514</EndToEndId>
+              <TxId>BNKM000151</TxId>
+            </Refs>
+            <Amt Ccy="INR">4882.00</Amt>
+            <CdtDbtInd>CRDT</CdtDbtInd>
+            <RltdAgts>
+              <DbtrAgt>
+                <FinInstnId>
+                  <BIC>RATNINBBXXX</BIC>
+                </FinInstnId>
+              </DbtrAgt>
+            </RltdAgts>
+            <RltdPties>
+              <Dbtr>
+                <Nm>RAZORPAY SOFTWARE PVT LTD</Nm>
+              </Dbtr>
+              <DbtrAcct>
+                <Id>
+                  <Othr>
+                    <Id>Razorpay Settlement Account</Id>
+                  </Othr>
+                </Id>
+              </DbtrAcct>
+              <Cdtr>
+                <Nm>GLOBEX EXPORTS PRIVATE LIMITED</Nm>
+              </Cdtr>
+              <CdtrAcct>
+                <Id>
+                  <Othr>
+                    <Id>50200087654321</Id>
+                  </Othr>
+                </Id>
+              </CdtrAcct>
+            </RltdPties>
+            <RmtInf>
+              <Ustrd>NEFT CR-RATN0000088-RAZORPAY SOFTWARE PVT LTD-6O05NGUVKZ5EP45L-INV-2026-M00201</Ustrd>
             </RmtInf>
           </TxDtls>
         </NtryDtls>

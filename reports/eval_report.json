@@ -1,7 +1,7 @@
 {
   "coverage_gaps": [
-    "no FEE_MISMATCH case in ground truth",
-    "no DATA_ENTRY_ERROR case in ground truth",
+    "no FEE_MISMATCH case in the holdout set",
+    "no DATA_ENTRY_ERROR case in the holdout set",
     "no overdue EDPMS receipt in ground truth as of 2026-08-31"
   ],
   "decomposition": {
@@ -15,8 +15,8 @@
     },
     "main": {
       "BENIGN_FX_DRIFT": 23,
-      "DATA_ENTRY_ERROR": 0,
-      "FEE_MISMATCH": 0,
+      "DATA_ENTRY_ERROR": 1,
+      "FEE_MISMATCH": 1,
       "FLAGGED_FX_DRIFT": 5,
       "NO_VARIANCE": 172,
       "UNRESOLVED": 0
@@ -45,18 +45,18 @@
         "mutation_rate": 0.0
       },
       {
-        "false_match_rate": 0.05333333333333334,
+        "false_match_rate": 0.05263157894736842,
         "mutated_count": 8,
         "mutation_rate": 0.05
       },
       {
-        "false_match_rate": 0.2,
+        "false_match_rate": 0.19736842105263158,
         "mutated_count": 30,
         "mutation_rate": 0.2
       },
       {
         "false_match_rate": 0.5,
-        "mutated_count": 75,
+        "mutated_count": 76,
         "mutation_rate": 0.5
       }
     ]
@@ -135,7 +135,7 @@
       "true_link_count": 53
     },
     "main": {
-      "asserted_count": 150,
+      "asserted_count": 152,
       "by_defect_class": {
         "clean_match": {
           "correct": 107,
@@ -144,12 +144,26 @@
           "match_rate": 1.0,
           "total": 107
         },
+        "data_entry_error": {
+          "correct": 1,
+          "false_clear": 0,
+          "false_match": 0,
+          "match_rate": 1.0,
+          "total": 1
+        },
         "edpms_open": {
           "correct": 2,
           "false_clear": 0,
           "false_match": 0,
           "match_rate": 1.0,
           "total": 2
+        },
+        "fee_mismatch": {
+          "correct": 1,
+          "false_clear": 0,
+          "false_match": 0,
+          "match_rate": 1.0,
+          "total": 1
         },
         "fx_drift_benign": {
           "correct": 10,
@@ -194,7 +208,7 @@
           "total": 12
         }
       },
-      "correct": 150,
+      "correct": 152,
       "false_clear": 0,
       "false_clear_rate": 0.0,
       "false_match": 0,
@@ -203,8 +217,8 @@
       "precision": 1.0,
       "recall": 1.0,
       "split": "main",
-      "total_linked": 150,
-      "true_link_count": 150
+      "total_linked": 152,
+      "true_link_count": 152
     }
   },
   "threshold_sweep": {
@@ -302,17 +316,17 @@
         "threshold": 0.6
       },
       {
-        "false_clear_rate": 0.06,
+        "false_clear_rate": 0.05921052631578947,
         "false_match_rate": 0.0,
         "threshold": 0.7
       },
       {
-        "false_clear_rate": 0.06,
+        "false_clear_rate": 0.05921052631578947,
         "false_match_rate": 0.0,
         "threshold": 0.8
       },
       {
-        "false_clear_rate": 0.14,
+        "false_clear_rate": 0.13815789473684212,
         "false_match_rate": 0.0,
         "threshold": 0.9
       },
@@ -325,25 +339,25 @@
   },
   "throughput": [
     {
-      "credits": 150,
-      "records_per_sec": 11139.027992522413,
+      "credits": 152,
+      "records_per_sec": 11269.764349722996,
       "scale": 200,
-      "seconds": 0.013466165997670032,
-      "settlements": 200
+      "seconds": 0.013487415999406949,
+      "settlements": 202
     },
     {
-      "credits": 749,
-      "records_per_sec": 298.8942259657327,
+      "credits": 751,
+      "records_per_sec": 300.1878572413283,
       "scale": 1000,
-      "seconds": 2.5059032090030087,
-      "settlements": 1002
+      "seconds": 2.5017667499996605,
+      "settlements": 1004
     },
     {
-      "credits": 3726,
-      "records_per_sec": 163.67044786698614,
+      "credits": 3728,
+      "records_per_sec": 163.39122788634052,
       "scale": 5000,
-      "seconds": 22.765258166997228,
-      "settlements": 5001
+      "seconds": 22.816402374999598,
+      "settlements": 5003
     }
   ]
 }

@@ -130,8 +130,8 @@ def holdout() -> E.Split:
 
 def test_main_reproduces_known_headline_numbers(main: E.Split):
     m = E.compute_metrics(main)
-    assert m.total_linked == 150
-    assert m.correct == 150
+    assert m.total_linked == 152
+    assert m.correct == 152
     assert m.false_match == 0
     assert m.false_clear == 0
     assert m.false_match_rate == 0.0
@@ -250,11 +250,11 @@ def test_decomposition_breakdown_reproduces_known_main_numbers(main: E.Split):
         "NO_VARIANCE": 172,
         "BENIGN_FX_DRIFT": 23,
         "FLAGGED_FX_DRIFT": 5,
-        "FEE_MISMATCH": 0,
-        "DATA_ENTRY_ERROR": 0,
+        "FEE_MISMATCH": 1,
+        "DATA_ENTRY_ERROR": 1,
         "UNRESOLVED": 0,
     }
-    assert sum(breakdown.values()) == 200 == len(main.settlements)
+    assert sum(breakdown.values()) == 202 == len(main.settlements)
 
 
 def test_decomposition_breakdown_reproduces_known_holdout_numbers(holdout: E.Split):

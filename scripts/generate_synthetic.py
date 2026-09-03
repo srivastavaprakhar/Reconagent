@@ -949,6 +949,143 @@ def case_edpms_open(w: World) -> None:
     )
 
 
+def case_fee_mismatch(w: World) -> None:
+    """Main split only, appended after the weighted deck (see `generate()`) --
+    a real, labelled FEE_MISMATCH case for `reconagent.fx.decompose_variance`
+    (spec section 6), which had zero coverage against generated data before
+    this. The fee itself is booked correctly; the settlement export's own tax
+    column is stale (a pre-rate-change 12% instead of the statutory 18% GST
+    on the MDR), while the amount actually netted out used the correct 18%.
+    Fully matchable at Stage 1 -- the anomaly lives only in the fee/tax
+    breakdown, not the linkage."""
+    rng = w.rng
+    cust, country = _pick_domestic(w)
+    d = _settle_date(w)
+    gross = 500_000  # INR 5,000.00; sized so the GST gap is a clean few
+    # hundred paise, comfortably outside decompose_variance's 1-minor-unit
+    # NO_VARIANCE tolerance and inside its FEE_MISMATCH candidate check.
+    inv = w.add_invoice(
+        currency="INR", amount_minor=gross, issue_date=d - timedelta(days=rng.randint(1, 12)),
+        customer=cust, country=country, export=False,
+    )
+    st = w.add_settlement(
+        invoice=inv, gross_minor=gross, settled_at=d, international=False,
+        method=rng.choice(["card", "upi", "netbanking"]),
+    )
+    fee = st["fee_minor"]
+    correct_gst = st["tax_minor"]  # add_settlement already applied GST_PCT_ON_FEE (18%)
+    tax_booked = pct_minor(fee, 12, 100)  # the stale rate mistakenly booked in the export
+    w.settlement_rows[-1]["tax"] = money_str(tax_booked)
+    residual = tax_booked - correct_gst  # what decompose_variance's residual will equal
+
+    cr = w.add_credit(
+        value_date=d, inr_minor=st["net_minor"],
+        narration=clean_narration(inv, st["utr"], domestic=True),
+        debtor_name="RAZORPAY SOFTWARE PVT LTD", swift=False,
+        debtor_account="Razorpay Settlement Account",
+    )
+    w.add_case(
+        "fee_mismatch",
+        settlement_ids=[st["settlement_id"]], payment_ids=[st["payment_id"]],
+        bank_txn_ids=[cr["bank_txn_id"]], invoice_ids=[inv["invoice_id"]],
+        expected_link={
+            "bank_txn_id": cr["bank_txn_id"],
+            "covers_settlement_ids": [st["settlement_id"]],
+            "credit_amount_minor": cr["amount_minor"],
+            "credit_currency": "INR",
+            "settlement_net_sum_minor": st["net_minor"],
+            "residual_minor": 0,
+        },
+        expected_link_resolution="MATCHED",
+        expected_exception_category="FEE_MISMATCH",
+        details={
+            "gross_minor": gross,
+            "fee_minor": fee,
+            "correct_gst_minor": correct_gst,
+            "tax_booked_minor": tax_booked,
+            "gst_residual_minor": residual,
+            "actual_net_credited_minor": st["net_minor"],
+            "utr_present_in_narration": True,
+        },
+        notes=(
+            "Linkage is clean -- single settlement, single credit, UTR in the "
+            "narration -- but the settlement export's own tax column books GST "
+            f"at 12% ({tax_booked}) instead of the statutory 18% on the MDR "
+            f"({correct_gst}); the amount actually netted out used the correct "
+            f"rate, leaving a {residual:+d} minor-unit gap in the fee breakdown."
+        ),
+    )
+
+
+def case_data_entry_error(w: World) -> None:
+    """Main split only, appended after the weighted deck (see `generate()`) --
+    a real, labelled DATA_ENTRY_ERROR case for `decompose_variance`. Fee and
+    GST are both booked correctly, so the fee arithmetic ties out exactly;
+    the anomaly is a fat-fingered payout -- two adjacent digits of the
+    correct net transposed in the amount actually credited. That is exactly
+    the fingerprint `_is_transposition` looks for (a non-zero multiple of 9,
+    a digit permutation of the correct net). Fully matchable at Stage 1."""
+    rng = w.rng
+    cust, country = _pick_domestic(w)
+    d = _settle_date(w)
+    gross = 650_000  # INR 6,500.00
+    inv = w.add_invoice(
+        currency="INR", amount_minor=gross, issue_date=d - timedelta(days=rng.randint(1, 12)),
+        customer=cust, country=country, export=False,
+    )
+    st = w.add_settlement(
+        invoice=inv, gross_minor=gross, settled_at=d, international=False,
+        method=rng.choice(["card", "upi", "netbanking"]),
+    )
+    expected_net = st["net_minor"]
+    digits = list(str(expected_net))
+    i = 1  # never the leading digit, so the digit count and sign can't change
+    while digits[i] == digits[i + 1]:
+        i += 1
+    digits[i], digits[i + 1] = digits[i + 1], digits[i]
+    actual_net = int("".join(digits))
+    assert actual_net != expected_net
+    w.settlement_rows[-1]["credit"] = money_str(actual_net)
+
+    cr = w.add_credit(
+        value_date=d, inr_minor=actual_net,
+        narration=clean_narration(inv, st["utr"], domestic=True),
+        debtor_name="RAZORPAY SOFTWARE PVT LTD", swift=False,
+        debtor_account="Razorpay Settlement Account",
+    )
+    w.add_case(
+        "data_entry_error",
+        settlement_ids=[st["settlement_id"]], payment_ids=[st["payment_id"]],
+        bank_txn_ids=[cr["bank_txn_id"]], invoice_ids=[inv["invoice_id"]],
+        expected_link={
+            "bank_txn_id": cr["bank_txn_id"],
+            "covers_settlement_ids": [st["settlement_id"]],
+            "credit_amount_minor": cr["amount_minor"],
+            "credit_currency": "INR",
+            "settlement_net_sum_minor": actual_net,
+            "residual_minor": 0,
+        },
+        expected_link_resolution="MATCHED",
+        expected_exception_category="DATA_ENTRY_ERROR",
+        details={
+            "gross_minor": gross,
+            "fee_minor": st["fee_minor"],
+            "tax_minor": st["tax_minor"],
+            "expected_net_minor": expected_net,
+            "actual_credited_minor": actual_net,
+            "swapped_digit_positions": [i, i + 1],
+            "residual_minor": actual_net - expected_net,
+        },
+        notes=(
+            "Linkage is clean -- single settlement, single credit, UTR in the "
+            "narration -- and fee/GST are both booked correctly, but the amount "
+            f"actually credited ({actual_net}) transposes two adjacent digits of "
+            f"the correct net ({expected_net}): a fat-fingered payout, not a fee "
+            "problem."
+        ),
+    )
+
+
 BUILDERS = {
     "clean_match": case_clean_match,
     "subset_sum_bundle": case_subset_sum_bundle,
@@ -1200,7 +1337,11 @@ CONVENTIONS = {
     ),
     "case_fields": {
         "case_id": "stable id, unique within the split",
-        "defect_class": "one of " + ", ".join(sorted(BUILDERS)),
+        "defect_class": (
+            "one of " + ", ".join(sorted(BUILDERS))
+            + " (main split only, appended after the weighted deck: fee_mismatch, "
+            "data_entry_error)"
+        ),
         "split": "main | holdout",
         "settlement_ids": "every settlement_id in razorpay_settlements.csv this case involves",
         "payment_ids": "every entity_id (pay_/rfnd_) this case involves",
@@ -1284,6 +1425,15 @@ def emit(w: World, out_dir: Path, prefix: str, seed: int, scale: int) -> None:
 
 def generate(seed: int, scale: int, data_dir: Path) -> dict[str, dict[str, int]]:
     main = build(seed, scale, "main", harden=False)
+    # Main split only: two hand-specified cases appended strictly after the
+    # weighted-deck loop above, consuming the seeded rng in its current state
+    # (never rewound), so every settlement/case the deck loop already built
+    # stays byte-identical -- see reconagent-design-description.md section 6
+    # / CLAUDE.md build discipline. These close the only two decompose_variance
+    # categories (FEE_MISMATCH, DATA_ENTRY_ERROR) that had no real generated
+    # coverage.
+    case_fee_mismatch(main)
+    case_data_entry_error(main)
     emit(main, data_dir, "", seed, scale)
 
     holdout_scale = max(60, scale // 2)

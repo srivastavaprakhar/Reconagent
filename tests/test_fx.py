@@ -290,14 +290,46 @@ def test_no_false_clears_or_false_flags_across_every_labelled_fx_case(split, mai
 @pytest.mark.parametrize("split", ["main", "holdout"])
 def test_identity_holds_for_every_settlement_in_the_split(split, main, holdout):
     """`net = gross - MDR - GST - FX_spread - refunds` must close to zero on
-    every record in the file. If it does not, every attribution downstream is
-    built on a broken identity."""
+    every record in the file, except the settlements whose ground-truth
+    defect class is itself a deliberate break in that identity
+    (fee_mismatch, data_entry_error) -- exactly the two categories
+    `test_fee_mismatch_and_data_entry_error_cases_are_labelled_correctly`
+    below exists to cover. If a non-exempt record fails this, every
+    attribution downstream is built on a broken identity."""
     bundle = main if split == "main" else holdout
+    exempt = {
+        sid
+        for c in bundle["cases"]
+        if c["defect_class"] in ("fee_mismatch", "data_entry_error")
+        for sid in c["settlement_ids"]
+    }
     for record in bundle["records"].values():
+        if record.record_id in exempt:
+            continue
         dec = decompose_variance(record, bundle["rates"])
         assert dec.residual_minor == 0, (record.record_id, dec.signature)
         assert dec.attribution in (NO_VARIANCE, BENIGN_FX_DRIFT, FLAGGED_FX_DRIFT), record.record_id
         assert dec.expected_net_minor == dec.gross_applied_minor - dec.mdr_minor - dec.gst_minor
+
+
+def test_fee_mismatch_and_data_entry_error_cases_are_labelled_correctly(main):
+    """The main split's one FEE_MISMATCH case and one DATA_ENTRY_ERROR case
+    (the settlements `test_identity_holds_for_every_settlement_in_the_split`
+    exempts above): confirm `decompose_variance` actually lands on each
+    category, uniquely, with the residual ground truth records."""
+    fee_case = cases_of(main, "fee_mismatch")[0]
+    fee_rec = main["records"][fee_case["settlement_ids"][0]]
+    fee_dec = decompose_variance(fee_rec, main["rates"])
+    assert fee_dec.attribution == FEE_MISMATCH
+    assert fee_dec.candidates == (FEE_MISMATCH,)
+    assert fee_dec.residual_minor == fee_case["details"]["gst_residual_minor"]
+
+    der_case = cases_of(main, "data_entry_error")[0]
+    der_rec = main["records"][der_case["settlement_ids"][0]]
+    der_dec = decompose_variance(der_rec, main["rates"])
+    assert der_dec.attribution == DATA_ENTRY_ERROR
+    assert der_dec.candidates == (DATA_ENTRY_ERROR,)
+    assert der_dec.residual_minor == der_case["details"]["residual_minor"]
 
 
 def test_decomposition_terms_match_the_answer_key(main):

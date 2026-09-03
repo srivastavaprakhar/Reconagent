@@ -447,9 +447,24 @@ def test_money_columns_are_exact_two_dp_decimal_strings(dataset, split):
 
 @pytest.mark.parametrize("split", SPLITS)
 def test_settlement_rows_are_internally_consistent(dataset, split):
-    """net credit == base_amount - fee - tax, in integer minor units."""
+    """net credit == base_amount - fee - tax, in integer minor units --
+    except for settlements whose ground-truth defect class is exactly a
+    booked-figure mismatch (fee_mismatch: the tax column itself is stale;
+    data_entry_error: the credited amount itself is transposed), where the
+    whole point of the case is that this identity does NOT hold. Sourced
+    from ground truth rather than skipped ad hoc, so the exemption stays
+    exactly as large as the deliberately-broken rows and no larger."""
+    gt = ground_truth(dataset, split)
+    exempt = {
+        sid
+        for case in gt["cases"]
+        if case["defect_class"] in ("fee_mismatch", "data_entry_error")
+        for sid in case["settlement_ids"]
+    }
     for r in read_csv(load(dataset, split, "razorpay_settlements.csv")):
         minor = lambda c: int(Decimal(r[c]).scaleb(2))
+        if r["settlement_id"] in exempt:
+            continue
         if r["type"] == "payment":
             assert minor("credit") == minor("base_amount") - minor("fee") - minor("tax")
             if r["international"] == "Y":

@@ -84,7 +84,18 @@ at realistic volume.
 | `refund_fx_asymmetry` | 2 | 1 | Full refund converting at its *own* FX event, so INR does not net to zero |
 | `timing_pending` | 3 | 1 | Settled inside the T+2..T+7 nostro window — a hold, not a break |
 | `edpms_open` | 2 | 2 | Export receipt with an open shipping-bill obligation against its FEMA deadline |
-| **Total cases** | **153** | **54** | |
+| `fee_mismatch` | 1 | 0 | Settlement export's own tax column is stale; the amount actually credited used the correct GST |
+| `data_entry_error` | 1 | 0 | Credited amount is a digit transposition of the correct net |
+| **Total cases** | **155** | **54** | |
+
+The two `fee_mismatch`/`data_entry_error` cases were added after Tier 1.5 review
+to close a coverage gap: both are implemented and unit-tested in
+`reconagent.fx.decompose_variance`, but had zero ground-truth-labelled cases to
+validate against until now. Added strictly *after* the original generation
+loop, consuming the same seeded RNG in its then-current state, so every
+originally-generated case, settlement, and record stays byte-identical —
+verified directly via `git diff`. Main only; the holdout gap is still open,
+deliberately, pending a decision on whether it's worth closing there too.
 
 ### The subset-sum cases are decoyed on purpose
 
@@ -560,17 +571,43 @@ failure surfaces, and averaging them into one number would hide both.
 
 | split | false-match rate | false-clear rate | correct |
 |---|---|---|---|
-| main | **0.00%** (0/150) | **0.00%** (0/150) | 150/150 |
+| main | **0.00%** (0/152) | **0.00%** (0/152) | 152/152 |
 | holdout | **0.00%** (0/53) | **5.66%** (3/53) | 50/53 |
 
 The holdout's 3 false clears are the genuine subset-sum ties C already found and
 documented — the labelled subset is among several that hit the credit at
 residual exactly zero, and abstaining is the correct call, not a solver defect.
 
-**Coverage gap, stated in the report itself:** no `FEE_MISMATCH` case, no
-`DATA_ENTRY_ERROR` case, and no overdue EDPMS receipt exist in either split, so
-neither this harness nor D's own tests can report a real accuracy number for
-those three paths.
+**Coverage gap, narrowed at Tier 1.5 review:** main now has one labelled
+`FEE_MISMATCH` case and one `DATA_ENTRY_ERROR` case (see the dataset section
+above), so those two paths have a real accuracy check on generated data, not
+just hand-mutated unit tests. The holdout still has neither, and no overdue
+EDPMS receipt exists in either split — those two gaps remain open.
+
+### FX variance attribution — reported natively, not hand-reconstructed
+
+`reports/eval_report.md` now includes the full decomposition breakdown by
+calling `reconagent.fx.decompose_variance` directly over every settlement in
+each split, rather than that table only being reconstructable by hand-calling
+the FX module outside the harness. It is a **descriptive tally**, not a
+matching-accuracy score — it is not graded against ground truth's
+`expected_exception_category`; the note above (matching accuracy and FX
+accuracy are separate failure surfaces) still holds, directly above the table.
+
+| attribution | main | holdout |
+|---|---|---|
+| `NO_VARIANCE` | 172 | 79 |
+| `BENIGN_FX_DRIFT` | 23 | 18 |
+| `FLAGGED_FX_DRIFT` | 5 | 3 |
+| `FEE_MISMATCH` | 1 | 0 |
+| `DATA_ENTRY_ERROR` | 1 | 0 |
+| `UNRESOLVED` | 0 | 0 |
+
+`UNRESOLVED` does no unearned work on real data — it never fires on either
+split. The two new main-split categories are exactly the two cases added
+above, verified directly: `decompose_variance` returns `FEE_MISMATCH` and
+`DATA_ENTRY_ERROR` respectively, each with a single candidate cause and no
+ambiguity.
 
 ### Mutation testing — proving the metric is sensitive to real error
 
@@ -583,9 +620,9 @@ whether the metric itself responds:
 | mutation rate | credits mutated | false-match rate |
 |---|---|---|
 | 0% | 0 | 0.00% |
-| 5% | 8 | 5.33% |
-| 20% | 30 | 20.00% |
-| 50% | 75 | 50.00% |
+| 5% | 8 | 5.26% |
+| 20% | 30 | 19.74% |
+| 50% | 76 | 50.00% |
 
 Monotonic, and asserted so in a test. A dedicated case swaps a real bundle's
 labelled subset for its labelled decoy (`MAIN-00003`): verdict flips from
@@ -614,6 +651,8 @@ settlements — throughput drops ~37x for a 5x increase in scale — almost
 certainly Stage 2's pool crossing from sparse to dense as more settlements land
 inside the 30-day pooling window simultaneously. Past that transition
 (1,000→5,000) it is closer to linear-to-mildly-superlinear. The main and
-holdout datasets (150-200 settlements) never enter this regime, so the ceiling
+holdout datasets (100-202 settlements) never enter this regime, so the ceiling
 is invisible at the scale everything else in Tier 1 was measured against —
-flagged here rather than left for someone to discover in production.
+flagged here rather than left for someone to discover in production. *(Root
+cause investigated separately at Tier 1.5 review — see below if that section
+exists yet, or PROGRESS.md for the latest.)*
