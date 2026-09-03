@@ -569,14 +569,24 @@ failure surfaces, and averaging them into one number would hide both.
 
 ### Results
 
-| split | false-match rate | false-clear rate | correct |
-|---|---|---|---|
-| main | **0.00%** (0/152) | **0.00%** (0/152) | 152/152 |
-| holdout | **0.00%** (0/53) | **5.66%** (3/53) | 50/53 |
+A fourth verdict, `tie_ambiguous`, was added at Tier 1.5 review: when ground
+truth has a link and Stage 2's answer is a genuine tie between several
+distinct subsets at the identical minimum residual, that is not the same
+failure as "found no evidence at all" — it's the matcher finding the right
+answer among mathematically indistinguishable siblings and honestly declining
+to guess. It is reported on its own, alongside false-clear rate at the same
+denominator, rather than folded into it or silently dropped from the tally.
 
-The holdout's 3 false clears are the genuine subset-sum ties C already found and
+| split | false-match rate | false-clear rate | tie-ambiguous rate | correct |
+|---|---|---|---|---|
+| main | **0.00%** (0/152) | **0.00%** (0/152) | 0.00% (0/152) | 152/152 |
+| holdout | **0.00%** (0/53) | **0.00%** (0/53) | 5.66% (3/53) | 50/53 |
+
+The 3 holdout cases are the genuine subset-sum ties C already found and
 documented — the labelled subset is among several that hit the credit at
-residual exactly zero, and abstaining is the correct call, not a solver defect.
+residual exactly zero, and abstaining is the correct call, not a solver
+defect. `correct + false_match + false_clear + tie_ambiguous == total_linked`
+holds exactly on both splits — verified, not asserted.
 
 **Coverage gap, narrowed at Tier 1.5 review:** main now has one labelled
 `FEE_MISMATCH` case and one `DATA_ENTRY_ERROR` case (see the dataset section

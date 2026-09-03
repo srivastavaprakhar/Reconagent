@@ -70,6 +70,7 @@
           "false_clear": 0,
           "false_match": 0,
           "match_rate": 1.0,
+          "tie_ambiguous": 0,
           "total": 22
         },
         "edpms_open": {
@@ -77,6 +78,7 @@
           "false_clear": 0,
           "false_match": 0,
           "match_rate": 1.0,
+          "tie_ambiguous": 0,
           "total": 2
         },
         "fx_drift_benign": {
@@ -84,6 +86,7 @@
           "false_clear": 0,
           "false_match": 0,
           "match_rate": 1.0,
+          "tie_ambiguous": 0,
           "total": 8
         },
         "fx_drift_flagged": {
@@ -91,6 +94,7 @@
           "false_clear": 0,
           "false_match": 0,
           "match_rate": 1.0,
+          "tie_ambiguous": 0,
           "total": 3
         },
         "missing_remitter": {
@@ -98,6 +102,7 @@
           "false_clear": 0,
           "false_match": 0,
           "match_rate": 1.0,
+          "tie_ambiguous": 0,
           "total": 6
         },
         "partial_payment": {
@@ -105,6 +110,7 @@
           "false_clear": 0,
           "false_match": 0,
           "match_rate": 1.0,
+          "tie_ambiguous": 0,
           "total": 4
         },
         "refund_fx_asymmetry": {
@@ -112,25 +118,29 @@
           "false_clear": 0,
           "false_match": 0,
           "match_rate": 1.0,
+          "tie_ambiguous": 0,
           "total": 1
         },
         "subset_sum_bundle": {
           "correct": 4,
-          "false_clear": 3,
+          "false_clear": 0,
           "false_match": 0,
           "match_rate": 0.5714285714285714,
+          "tie_ambiguous": 3,
           "total": 7
         }
       },
       "correct": 50,
-      "false_clear": 3,
-      "false_clear_rate": 0.05660377358490566,
+      "false_clear": 0,
+      "false_clear_rate": 0.0,
       "false_match": 0,
       "false_match_rate": 0.0,
       "match_rate": 0.9433962264150944,
       "precision": 1.0,
       "recall": 0.9433962264150944,
       "split": "holdout",
+      "tie_ambiguous": 3,
+      "tie_ambiguous_rate": 0.05660377358490566,
       "total_linked": 53,
       "true_link_count": 53
     },
@@ -142,6 +152,7 @@
           "false_clear": 0,
           "false_match": 0,
           "match_rate": 1.0,
+          "tie_ambiguous": 0,
           "total": 107
         },
         "data_entry_error": {
@@ -149,6 +160,7 @@
           "false_clear": 0,
           "false_match": 0,
           "match_rate": 1.0,
+          "tie_ambiguous": 0,
           "total": 1
         },
         "edpms_open": {
@@ -156,6 +168,7 @@
           "false_clear": 0,
           "false_match": 0,
           "match_rate": 1.0,
+          "tie_ambiguous": 0,
           "total": 2
         },
         "fee_mismatch": {
@@ -163,6 +176,7 @@
           "false_clear": 0,
           "false_match": 0,
           "match_rate": 1.0,
+          "tie_ambiguous": 0,
           "total": 1
         },
         "fx_drift_benign": {
@@ -170,6 +184,7 @@
           "false_clear": 0,
           "false_match": 0,
           "match_rate": 1.0,
+          "tie_ambiguous": 0,
           "total": 10
         },
         "fx_drift_flagged": {
@@ -177,6 +192,7 @@
           "false_clear": 0,
           "false_match": 0,
           "match_rate": 1.0,
+          "tie_ambiguous": 0,
           "total": 5
         },
         "missing_remitter": {
@@ -184,6 +200,7 @@
           "false_clear": 0,
           "false_match": 0,
           "match_rate": 1.0,
+          "tie_ambiguous": 0,
           "total": 6
         },
         "partial_payment": {
@@ -191,6 +208,7 @@
           "false_clear": 0,
           "false_match": 0,
           "match_rate": 1.0,
+          "tie_ambiguous": 0,
           "total": 6
         },
         "refund_fx_asymmetry": {
@@ -198,6 +216,7 @@
           "false_clear": 0,
           "false_match": 0,
           "match_rate": 1.0,
+          "tie_ambiguous": 0,
           "total": 2
         },
         "subset_sum_bundle": {
@@ -205,6 +224,7 @@
           "false_clear": 0,
           "false_match": 0,
           "match_rate": 1.0,
+          "tie_ambiguous": 0,
           "total": 12
         }
       },
@@ -217,6 +237,8 @@
       "precision": 1.0,
       "recall": 1.0,
       "split": "main",
+      "tie_ambiguous": 0,
+      "tie_ambiguous_rate": 0.0,
       "total_linked": 152,
       "true_link_count": 152
     }
@@ -224,57 +246,57 @@
   "threshold_sweep": {
     "holdout": [
       {
-        "false_clear_rate": 0.05660377358490566,
+        "false_clear_rate": 0.0,
         "false_match_rate": 0.0,
         "threshold": 0.0
       },
       {
-        "false_clear_rate": 0.05660377358490566,
+        "false_clear_rate": 0.0,
         "false_match_rate": 0.0,
         "threshold": 0.1
       },
       {
-        "false_clear_rate": 0.05660377358490566,
+        "false_clear_rate": 0.0,
         "false_match_rate": 0.0,
         "threshold": 0.2
       },
       {
-        "false_clear_rate": 0.05660377358490566,
+        "false_clear_rate": 0.0,
         "false_match_rate": 0.0,
         "threshold": 0.3
       },
       {
-        "false_clear_rate": 0.05660377358490566,
+        "false_clear_rate": 0.0,
         "false_match_rate": 0.0,
         "threshold": 0.4
       },
       {
-        "false_clear_rate": 0.05660377358490566,
+        "false_clear_rate": 0.0,
         "false_match_rate": 0.0,
         "threshold": 0.5
       },
       {
-        "false_clear_rate": 0.1320754716981132,
+        "false_clear_rate": 0.07547169811320754,
         "false_match_rate": 0.0,
         "threshold": 0.6
       },
       {
-        "false_clear_rate": 0.1320754716981132,
+        "false_clear_rate": 0.07547169811320754,
         "false_match_rate": 0.0,
         "threshold": 0.7
       },
       {
-        "false_clear_rate": 0.1320754716981132,
+        "false_clear_rate": 0.07547169811320754,
         "false_match_rate": 0.0,
         "threshold": 0.8
       },
       {
-        "false_clear_rate": 0.2830188679245283,
+        "false_clear_rate": 0.22641509433962265,
         "false_match_rate": 0.0,
         "threshold": 0.9
       },
       {
-        "false_clear_rate": 1.0,
+        "false_clear_rate": 0.9433962264150944,
         "false_match_rate": 0.0,
         "threshold": 1.0
       }
@@ -340,23 +362,23 @@
   "throughput": [
     {
       "credits": 152,
-      "records_per_sec": 11269.764349722996,
+      "records_per_sec": 11906.937568337173,
       "scale": 200,
-      "seconds": 0.013487415999406949,
+      "seconds": 0.012765667001076508,
       "settlements": 202
     },
     {
       "credits": 751,
-      "records_per_sec": 300.1878572413283,
+      "records_per_sec": 329.60864345216413,
       "scale": 1000,
-      "seconds": 2.5017667499996605,
+      "seconds": 2.2784596669989696,
       "settlements": 1004
     },
     {
       "credits": 3728,
-      "records_per_sec": 163.39122788634052,
+      "records_per_sec": 172.44478007240326,
       "scale": 5000,
-      "seconds": 22.816402374999598,
+      "seconds": 21.61851462499908,
       "settlements": 5003
     }
   ]

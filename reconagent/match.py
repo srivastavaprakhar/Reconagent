@@ -43,12 +43,13 @@ below are chosen here and justified here:
       one -- and nothing distinguishes it from a right answer, so it posts a
       false match. Set it too HIGH and extra subsets enter the space; the
       ones that matter are the ones that also hit the target exactly, and
-      those show up as a detected tie, which abstains (see AMBIGUOUS below).
-      Too low fails silently and wrong; too high fails loudly and honestly.
-      Spec section 9 is explicit about which of those costs more, so the
-      bound goes as high as the work budget tolerates rather than as low as
-      the observed data allows. 8 keeps the worst pool this matcher will
-      accept (64) under ~0.1s per credit; the node budget is the real stop.
+      those show up as a detected tie, which abstains (see TIE_AMBIGUOUS
+      below). Too low fails silently and wrong; too high fails loudly and
+      honestly. Spec section 9 is explicit about which of those costs more,
+      so the bound goes as high as the work budget tolerates rather than as
+      low as the observed data allows. 8 keeps the
+      worst pool this matcher will accept (64) under ~0.1s per credit; the
+      node budget is the real stop.
 
   POOL_WINDOW_DAYS = 30, MAX_POOL = 64, NODE_BUDGET = 2_000_000
       See the pooling and bounding notes on `match_subset_sum`.
@@ -62,14 +63,15 @@ roughly whenever a near-miss is enumerated first, and a false match silently
 corrupts the books (spec section 9). So Stage 2 enumerates every admissible
 subset and keeps the one with the smallest absolute residual. When two
 distinct subsets tie at that minimum, there is no arithmetic reason to prefer
-either, so the result is AMBIGUOUS with both attached -- an honest
-"I don't know" rather than a coin flip.
+either, so the result is TIE_AMBIGUOUS with both attached -- an honest
+"I don't know" rather than a coin flip. (This is a different situation from
+Stage 1's AMBIGUOUS, below -- see the resolutions block.)
 
 MEASURED CEILING
 
 Subset sums get dense. Probing 40 amounts that correspond to no real sweep
 against the settlements still open after Stage 1 (main: pool of 27) returns
-37 UNMATCHED, 2 AMBIGUOUS and 1 spurious MATCHED at confidence 0.46. The
+37 UNMATCHED, 2 TIE_AMBIGUOUS and 1 spurious MATCHED at confidence 0.46. The
 holdout's residual pool is denser (34 open, and its real bundles run to 7
 members) and the same probe returns 14 / 18 / 8. Against all 200 settlements
 with no open-status pruning at all, roughly a sixth of arbitrary amounts find
@@ -149,11 +151,19 @@ _EPOCH = date(1970, 1, 1)  # sort sentinel for a credit with no date at all
 
 # --- resolutions ---
 # MATCHED / PARTIAL / UNMATCHED mirror the ground-truth vocabulary.
-# AMBIGUOUS is ours: the search found candidates it cannot choose between.
-# Downstream, AMBIGUOUS is "unresolved with candidates attached", never a match.
+# AMBIGUOUS and TIE_AMBIGUOUS are ours, and are two different situations that
+# both refuse to guess:
+#   AMBIGUOUS      Stage 1 only. The credit's narration quotes references
+#                  belonging to several settlements -- a reference collision,
+#                  nothing to do with subset-sum.
+#   TIE_AMBIGUOUS  Stage 2 only. Several distinct subsets of settlements tie
+#                  at the identical minimum absolute residual -- a genuine
+#                  subset-sum tie.
+# Downstream, both are "unresolved with candidates attached", never a match.
 MATCHED = "MATCHED"
 PARTIAL = "PARTIAL"
 AMBIGUOUS = "AMBIGUOUS"
+TIE_AMBIGUOUS = "TIE_AMBIGUOUS"
 UNMATCHED = "UNMATCHED"
 
 AMOUNT_TOLERANCE_MINOR = 100
@@ -228,7 +238,7 @@ class MatchResult:
     pool_size: int = 0
     subsets_examined: int = 0
     truncated: bool = False
-    # Rival candidates: the tied subsets when AMBIGUOUS, or the runner-up
+    # Rival candidates: the tied subsets when TIE_AMBIGUOUS, or the runner-up
     # (the near-miss the min-residual rule rejected) when MATCHED.
     rival_settlement_ids: tuple[tuple[str, ...], ...] = ()
     rival_residual_minor: int | None = None
@@ -609,9 +619,9 @@ def match_subset_sum(
     """Stage 2. Which subset of the still-open settlements sums to `credit`?
 
     Always returns a result: UNMATCHED with the pool size and the work done is
-    a finding, not a failure. AMBIGUOUS means two or more distinct subsets tie
-    at the minimum absolute residual and the arithmetic gives no reason to
-    prefer either -- reported, never broken arbitrarily.
+    a finding, not a failure. TIE_AMBIGUOUS means two or more distinct
+    subsets tie at the minimum absolute residual and the arithmetic gives no
+    reason to prefer either -- reported, never broken arbitrarily.
     """
     pool, pool_truncated = _pool(
         credit,
@@ -679,7 +689,7 @@ def match_subset_sum(
 
     if st.best_count > 1:
         return MatchResult(
-            resolution=AMBIGUOUS,
+            resolution=TIE_AMBIGUOUS,
             settlement_ids=tuple(sorted(subset)),
             settlement_net_sum_minor=net,
             residual_minor=residual,

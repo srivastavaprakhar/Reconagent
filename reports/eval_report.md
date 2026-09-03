@@ -2,10 +2,12 @@
 
 ## Headline: false-match rate and false-clear rate
 
-| split | false-match rate | false-clear rate |
-|---|---|---|
-| main | 0.00% (0/152) | 0.00% (0/152) |
-| holdout | 0.00% (0/53) | 5.66% (3/53) |
+tie-ambiguous rate is reported alongside false-clear rate, not folded into it: it is the same denominator (cases ground truth says are linked) but a different failure mode -- Stage 2 found the right settlements among several that tied on residual and honestly declined to guess, rather than finding no evidence at all.
+
+| split | false-match rate | false-clear rate | tie-ambiguous rate |
+|---|---|---|---|
+| main | 0.00% (0/152) | 0.00% (0/152) | 0.00% (0/152) |
+| holdout | 0.00% (0/53) | 0.00% (0/53) | 5.66% (3/53) |
 
 ## Match rate, precision, recall
 
@@ -37,26 +39,26 @@ This table counts what `decompose_variance` produced for every settlement in the
 
 ## Per-defect-class breakdown (main)
 
-| defect class | total | correct | false match | false clear | match rate |
-|---|---|---|---|---|---|
-| clean_match | 107 | 107 | 0 | 0 | 100.00% |
-| data_entry_error | 1 | 1 | 0 | 0 | 100.00% |
-| edpms_open | 2 | 2 | 0 | 0 | 100.00% |
-| fee_mismatch | 1 | 1 | 0 | 0 | 100.00% |
-| fx_drift_benign | 10 | 10 | 0 | 0 | 100.00% |
-| fx_drift_flagged | 5 | 5 | 0 | 0 | 100.00% |
-| missing_remitter | 6 | 6 | 0 | 0 | 100.00% |
-| partial_payment | 6 | 6 | 0 | 0 | 100.00% |
-| refund_fx_asymmetry | 2 | 2 | 0 | 0 | 100.00% |
-| subset_sum_bundle | 12 | 12 | 0 | 0 | 100.00% |
+| defect class | total | correct | false match | false clear | tie ambiguous | match rate |
+|---|---|---|---|---|---|---|
+| clean_match | 107 | 107 | 0 | 0 | 0 | 100.00% |
+| data_entry_error | 1 | 1 | 0 | 0 | 0 | 100.00% |
+| edpms_open | 2 | 2 | 0 | 0 | 0 | 100.00% |
+| fee_mismatch | 1 | 1 | 0 | 0 | 0 | 100.00% |
+| fx_drift_benign | 10 | 10 | 0 | 0 | 0 | 100.00% |
+| fx_drift_flagged | 5 | 5 | 0 | 0 | 0 | 100.00% |
+| missing_remitter | 6 | 6 | 0 | 0 | 0 | 100.00% |
+| partial_payment | 6 | 6 | 0 | 0 | 0 | 100.00% |
+| refund_fx_asymmetry | 2 | 2 | 0 | 0 | 0 | 100.00% |
+| subset_sum_bundle | 12 | 12 | 0 | 0 | 0 | 100.00% |
 
 ## Throughput
 
 | scale (settlements) | credits | seconds | records/sec |
 |---|---|---|---|
-| 200 | 152 | 0.0135 | 11270 |
-| 1000 | 751 | 2.5018 | 300 |
-| 5000 | 3728 | 22.8164 | 163 |
+| 200 | 152 | 0.0128 | 11907 |
+| 1000 | 751 | 2.2785 | 330 |
+| 5000 | 3728 | 21.6185 | 172 |
 
 ## Mutation test (harness credibility check, not a matcher metric)
 
@@ -75,14 +77,14 @@ Bundle wrong-subset check (MAIN-00003): true subset ['setl_ZkaJ0x6iq3cGOZ', 'set
 
 | threshold | main false-match | main false-clear | holdout false-match | holdout false-clear |
 |---|---|---|---|---|
-| 0.0 | 0.00% | 0.00% | 0.00% | 5.66% |
-| 0.1 | 0.00% | 0.00% | 0.00% | 5.66% |
-| 0.2 | 0.00% | 0.00% | 0.00% | 5.66% |
-| 0.3 | 0.00% | 0.00% | 0.00% | 5.66% |
-| 0.4 | 0.00% | 0.00% | 0.00% | 5.66% |
-| 0.5 | 0.00% | 0.00% | 0.00% | 5.66% |
-| 0.6 | 0.00% | 0.00% | 0.00% | 13.21% |
-| 0.7 | 0.00% | 5.92% | 0.00% | 13.21% |
-| 0.8 | 0.00% | 5.92% | 0.00% | 13.21% |
-| 0.9 | 0.00% | 13.82% | 0.00% | 28.30% |
-| 1.0 | 0.00% | 100.00% | 0.00% | 100.00% |
+| 0.0 | 0.00% | 0.00% | 0.00% | 0.00% |
+| 0.1 | 0.00% | 0.00% | 0.00% | 0.00% |
+| 0.2 | 0.00% | 0.00% | 0.00% | 0.00% |
+| 0.3 | 0.00% | 0.00% | 0.00% | 0.00% |
+| 0.4 | 0.00% | 0.00% | 0.00% | 0.00% |
+| 0.5 | 0.00% | 0.00% | 0.00% | 0.00% |
+| 0.6 | 0.00% | 0.00% | 0.00% | 7.55% |
+| 0.7 | 0.00% | 5.92% | 0.00% | 7.55% |
+| 0.8 | 0.00% | 5.92% | 0.00% | 7.55% |
+| 0.9 | 0.00% | 13.82% | 0.00% | 22.64% |
+| 1.0 | 0.00% | 100.00% | 0.00% | 94.34% |

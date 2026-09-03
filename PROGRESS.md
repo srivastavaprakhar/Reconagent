@@ -3,7 +3,7 @@
 Updated after every integrated unit of work. Source of truth for scope:
 `reconagent-design-description.md`. Rules: `CLAUDE.md`.
 
-## Status: Tier 1.5 review in progress — 3 of 4 gaps closed, one commit each
+## Status: Tier 1.5 review — all 4 gaps closed. Holding for a decision on E and G.
 
 ### Tier 1.5 fix 1 — F now reports the FX attribution table natively
 `reconagent/eval.py` calls `reconagent.fx.decompose_variance` directly and adds
@@ -99,6 +99,62 @@ Never affects `settlement_ids`/`resolution`, so no headline metric moves --
 but the *explanation text* for a small number of matches isn't stable across
 runs. Out of scope for a performance pass; noted for whoever touches Stage 1
 next.
+
+### Tier 1.5 fix 4 — the 3 holdout ties now report as TIE_AMBIGUOUS, not a miss
+
+Scoped exactly to Stage 2's genuine subset-sum tie, per instruction -- Stage 1
+already has a different, unrelated `AMBIGUOUS` case (a credit's narration
+referencing several settlements' UTRs, a reference collision) that stays
+`AMBIGUOUS`, untouched, still scored as a false clear if it ever fires (it
+doesn't, on either split, today).
+
+`reconagent/match.py` gained a `TIE_AMBIGUOUS` constant, used only in Stage 2's
+existing tie branch (`if st.best_count > 1:` -- one line changed, confirmed by
+diff: line 344's Stage 1 `resolution=AMBIGUOUS` untouched, line 692's Stage 2
+branch is the only occurrence changed to `TIE_AMBIGUOUS`). No new routing or
+queue mechanism was built -- E stays out of scope; a `TIE_AMBIGUOUS` result is
+simply not in `ASSERTED = (MATCHED, PARTIAL)`, the same "not a match" status
+`AMBIGUOUS`/`UNMATCHED` already had.
+
+`reconagent/eval.py`'s `classify()` gained a fourth verdict, `"tie_ambiguous"`:
+returned when ground truth has a link and the system's resolution is
+`TIE_AMBIGUOUS`. False-clear rate's **denominator is unchanged**
+(`true_link_count` -- the population that could have been missed doesn't
+shrink); only the numerator excludes honest ties. A new `tie_ambiguous_rate`,
+same denominator, is reported alongside it in the headline table -- not
+silently subtracted away.
+
+Verified independently (not just via the unit's own tests): the exact 3
+holdout cases (`HOLDOUT-00032`, `HOLDOUT-00014`, `HOLDOUT-00041`,
+`bank_txn_id`s `BNKH000013`/`BNKH000031`/`BNKH000040`) now classify as
+`TIE_AMBIGUOUS`. Tally invariant `correct + false_match + false_clear +
+tie_ambiguous == total_linked` holds exactly on both splits (main
+152+0+0+0=152; holdout 50+0+0+3=53). Main is completely unaffected (main has
+no ties).
+
+**Corrected headline, both splits:**
+
+| split | false-match rate | false-clear rate | tie-ambiguous rate |
+|---|---|---|---|
+| main | 0.00% (0/152) | 0.00% (0/152) | 0.00% (0/152) |
+| holdout | 0.00% (0/53) | **0.00% (0/53)** | 5.66% (3/53) |
+
+Holdout false-clear rate moves from 5.66% to 0.00% -- not because anything got
+easier, but because those 3 cases were never misses. They were the matcher
+finding the correct answer among mathematically indistinguishable siblings and
+honestly declining to guess, and they were being scored identically to "found
+no evidence at all" before this fix.
+
+**One process note, on record:** the dispatch that built this fix was killed
+mid-response by a transient DNS/network failure (not a rate limit) right after
+its final regeneration step. Nothing partial was committed -- verified via
+`git status` and `git log` before touching anything further. The interrupted
+work was inspected directly rather than assumed broken or discarded on
+reflex: syntax-checked, diffed line-by-line (confirming the Stage 1/Stage 2
+split held exactly as scoped), the full suite re-run (192 green), and every
+headline number above re-derived independently through a second call path.
+It was complete and correct -- only the agent's own final report-back message
+was lost -- so it was salvaged rather than re-run from scratch.
 
 ### Tier 1 subagents
 | # | Unit | State | Commit | Notes |

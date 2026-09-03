@@ -18,7 +18,7 @@ from decimal import Decimal
 import pytest
 
 from reconagent import eval as E
-from reconagent.match import AMBIGUOUS, MATCHED, PARTIAL, UNMATCHED, MatchResult
+from reconagent.match import AMBIGUOUS, MATCHED, PARTIAL, TIE_AMBIGUOUS, UNMATCHED, MatchResult
 
 
 def _result(resolution: str, settlement_ids: tuple[str, ...], confidence: str = "0.9") -> MatchResult:
@@ -68,12 +68,33 @@ def test_classify_false_clear_system_said_unmatched():
 
 
 def test_classify_ambiguous_counted_as_unresolved_not_matched():
-    """AMBIGUOUS is the matcher's own vocabulary for candidates-with-no-
-    verdict. It must never be scored as a match, even when the rival
-    settlement ids happen to include the true answer."""
+    """AMBIGUOUS is Stage 1's vocabulary for candidates-with-no-verdict
+    (a reference collision). It must never be scored as a match, even when
+    the rival settlement ids happen to include the true answer, and it is
+    still a false_clear -- only TIE_AMBIGUOUS (Stage 2's genuine subset-sum
+    tie) gets its own verdict, see below."""
     r = _result(AMBIGUOUS, ("setl_A",))
     c = _case(MATCHED, ["setl_A"])
     assert E.classify(r, c) == "false_clear"
+
+
+def test_classify_tie_ambiguous_is_its_own_verdict_when_truth_has_link():
+    """A genuine Stage 2 tie (TIE_AMBIGUOUS) where ground truth says a link
+    exists is not the same failure as false_clear -- the matcher found the
+    right settlements among several that tied on residual and honestly
+    declined to guess. classify() must report that distinctly."""
+    r = _result(TIE_AMBIGUOUS, ("setl_A",))
+    c = _case(MATCHED, ["setl_A"])
+    assert E.classify(r, c) == "tie_ambiguous"
+
+
+def test_classify_tie_ambiguous_still_correct_when_truth_has_no_link():
+    """The other direction is not what this task changes: when ground truth
+    says no link exists at all, TIE_AMBIGUOUS is scored exactly like
+    AMBIGUOUS/UNMATCHED -- "correct", since nothing was asserted."""
+    r = _result(TIE_AMBIGUOUS, ("setl_A", "setl_B"))
+    c = _case(UNMATCHED, [])
+    assert E.classify(r, c) == "correct"
 
 
 def test_classify_partial_vs_matched_mismatch_counts_as_false_match():
@@ -134,17 +155,28 @@ def test_main_reproduces_known_headline_numbers(main: E.Split):
     assert m.correct == 152
     assert m.false_match == 0
     assert m.false_clear == 0
+    assert m.tie_ambiguous == 0
     assert m.false_match_rate == 0.0
     assert m.false_clear_rate == 0.0
+    assert m.tie_ambiguous_rate == 0.0
+    assert m.correct + m.false_match + m.false_clear + m.tie_ambiguous == m.total_linked
 
 
 def test_holdout_reproduces_known_headline_numbers(holdout: E.Split):
+    """The holdout set carries the three known subset-sum ties
+    (HOLDOUT-00032, HOLDOUT-00014, HOLDOUT-00041). Those must land as
+    tie_ambiguous, not false_clear -- see classify()'s TIE_AMBIGUOUS
+    handling."""
     m = E.compute_metrics(holdout)
     assert m.total_linked == 53
     assert m.correct == 50
     assert m.false_match == 0
-    assert m.false_clear == 3
+    assert m.false_clear == 0
+    assert m.tie_ambiguous == 3
     assert m.false_match_rate == 0.0
+    assert m.false_clear_rate == 0.0
+    assert round(m.tie_ambiguous_rate, 4) == round(3 / m.true_link_count, 4)
+    assert m.correct + m.false_match + m.false_clear + m.tie_ambiguous == m.total_linked
 
 
 def test_threshold_sweep_shape(main: E.Split):
@@ -207,13 +239,15 @@ def test_writes_report_to_a_normal_path(tmp_path):
     report = {
         "splits": {
             "main": {
-                "false_match_rate": 0.0, "false_clear_rate": 0.0, "match_rate": 1.0,
-                "precision": 1.0, "recall": 1.0, "false_match": 0, "false_clear": 0,
+                "false_match_rate": 0.0, "false_clear_rate": 0.0, "tie_ambiguous_rate": 0.0,
+                "match_rate": 1.0, "precision": 1.0, "recall": 1.0, "false_match": 0,
+                "false_clear": 0, "tie_ambiguous": 0,
                 "total_linked": 1, "true_link_count": 1, "by_defect_class": {},
             },
             "holdout": {
-                "false_match_rate": 0.0, "false_clear_rate": 0.0, "match_rate": 1.0,
-                "precision": 1.0, "recall": 1.0, "false_match": 0, "false_clear": 0,
+                "false_match_rate": 0.0, "false_clear_rate": 0.0, "tie_ambiguous_rate": 0.0,
+                "match_rate": 1.0, "precision": 1.0, "recall": 1.0, "false_match": 0,
+                "false_clear": 0, "tie_ambiguous": 0,
                 "total_linked": 1, "true_link_count": 1, "by_defect_class": {},
             },
         },
@@ -277,13 +311,15 @@ def test_render_markdown_shows_zero_valued_categories_not_just_nonzero_ones():
     report = {
         "splits": {
             "main": {
-                "false_match_rate": 0.0, "false_clear_rate": 0.0, "match_rate": 1.0,
-                "precision": 1.0, "recall": 1.0, "false_match": 0, "false_clear": 0,
+                "false_match_rate": 0.0, "false_clear_rate": 0.0, "tie_ambiguous_rate": 0.0,
+                "match_rate": 1.0, "precision": 1.0, "recall": 1.0, "false_match": 0,
+                "false_clear": 0, "tie_ambiguous": 0,
                 "total_linked": 1, "true_link_count": 1, "by_defect_class": {},
             },
             "holdout": {
-                "false_match_rate": 0.0, "false_clear_rate": 0.0, "match_rate": 1.0,
-                "precision": 1.0, "recall": 1.0, "false_match": 0, "false_clear": 0,
+                "false_match_rate": 0.0, "false_clear_rate": 0.0, "tie_ambiguous_rate": 0.0,
+                "match_rate": 1.0, "precision": 1.0, "recall": 1.0, "false_match": 0,
+                "false_clear": 0, "tie_ambiguous": 0,
                 "total_linked": 1, "true_link_count": 1, "by_defect_class": {},
             },
         },

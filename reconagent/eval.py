@@ -33,11 +33,16 @@ matcher to have gotten right or wrong about it, so it is excluded from
 these counts entirely (spec section 5 territory, not section 9's).
 
 For each linked case, `classify()` compares the system's MatchResult for
-that bank_txn_id against ground truth and returns one of three verdicts:
+that bank_txn_id against ground truth and returns one of four verdicts:
 
   "correct"      system asserted MATCHED/PARTIAL, with the exact
                  settlement-id subset ground truth names AND the same
                  resolution label (MATCHED vs PARTIAL) ground truth gives.
+                 Also returned when ground truth says no link exists and
+                 the system did not assert one, regardless of which
+                 non-asserting resolution it gave (UNMATCHED, AMBIGUOUS, or
+                 TIE_AMBIGUOUS) -- that direction is not what this task
+                 distinguishes.
 
   "false_match"  system asserted MATCHED/PARTIAL and got any of:
                    - wrong settlement subset (includes the empty case:
@@ -48,10 +53,23 @@ that bank_txn_id against ground truth and returns one of three verdicts:
 
   "false_clear"  ground truth says a link exists (MATCHED or PARTIAL)
                  and the system did not assert one -- resolution is
-                 UNMATCHED, or AMBIGUOUS. AMBIGUOUS is the matcher's own
-                 vocabulary for "candidates found, none defensible"; it
-                 is scored as unresolved here, never as a match, per its
-                 own docstring in reconagent.match.
+                 UNMATCHED, or AMBIGUOUS. AMBIGUOUS is Stage 1's own
+                 vocabulary for "the narration references several
+                 settlements, none defensible"; it is scored as unresolved
+                 here, never as a match, per its own docstring in
+                 reconagent.match. Note TIE_AMBIGUOUS -- Stage 2's genuine
+                 subset-sum tie -- is NOT scored false_clear; see the next
+                 verdict.
+
+  "tie_ambiguous" ground truth says a link exists and the system's
+                 resolution is TIE_AMBIGUOUS: Stage 2 found several
+                 distinct subsets tied at the identical minimum residual
+                 and had no arithmetic basis to pick one. This is not the
+                 same failure as false_clear ("no evidence at all") -- it
+                 is the matcher finding the right answer among
+                 indistinguishable siblings and honestly declining to
+                 guess, so it is tallied separately rather than folded
+                 into false_clear.
 
 MATCHED/PARTIAL LABEL MISMATCH -- WHY IT COUNTS AS A FALSE MATCH, NOT A
 FALSE CLEAR OR ITS OWN BUCKET. The system found the right settlement and
@@ -79,11 +97,20 @@ FALSE-MATCH RATE (headline #1)
   purpose).
 
 FALSE-CLEAR RATE (headline #2)
-  numerator:   count of "false_clear" verdicts
+  numerator:   count of "false_clear" verdicts (tie_ambiguous EXCLUDED --
+               see TIE-AMBIGUOUS RATE below)
   denominator: linked cases where ground truth is MATCHED or PARTIAL
                (the population that could possibly be falsely cleared;
                in this dataset that is every linked case, since none of
                them have ground truth UNMATCHED)
+
+TIE-AMBIGUOUS RATE (reported alongside the headline, same denominator)
+  numerator:   count of "tie_ambiguous" verdicts
+  denominator: same as false-clear rate above (true_link_count)
+  Kept separate from false-clear rate rather than folded into it, so a
+  reader can see how much of "the system didn't assert a link ground
+  truth says exists" is an honest, arithmetic-forced abstention (a
+  detected tie) versus a genuine miss.
 
 MATCH RATE (below the headlines, not above)
   correct / total linked cases.
@@ -94,9 +121,10 @@ PRECISION / RECALL (below match rate)
   None if the relevant denominator is zero.
 
 PER-DEFECT-CLASS BREAKDOWN
-  The same three-way tally (correct / false_match / false_clear), grouped
-  by `defect_class`, so a reader can see whether failures cluster in one
-  defect family rather than spreading evenly.
+  The same four-way tally (correct / false_match / false_clear /
+  tie_ambiguous), grouped by `defect_class`, so a reader can see whether
+  failures (or honest ties) cluster in one defect family rather than
+  spreading evenly.
 """
 
 from __future__ import annotations
@@ -122,7 +150,7 @@ from reconagent.fx import (
     decompose_variance,
     load_reference_rates,
 )
-from reconagent.match import AMBIGUOUS, MATCHED, PARTIAL, MatchResult, match_all
+from reconagent.match import AMBIGUOUS, MATCHED, PARTIAL, TIE_AMBIGUOUS, MatchResult, match_all
 from reconagent.razorpay import parse_razorpay_settlements
 
 # Fixed order, all six named every time -- see decomposition_breakdown().
@@ -223,18 +251,34 @@ def decomposition_breakdown(split: Split) -> dict[str, int]:
 
 
 def classify(result: MatchResult | None, case: dict) -> str:
-    """"correct" | "false_match" | "false_clear" for one (system result,
-    ground-truth case) pair. See the module docstring for the exact rule.
+    """"correct" | "false_match" | "false_clear" | "tie_ambiguous" for one
+    (system result, ground-truth case) pair. See the module docstring for
+    the exact rule.
 
     `result=None` means "the system asserted nothing for this credit" --
     used directly by the real run (an AMBIGUOUS/UNMATCHED result) and by
-    the threshold sweep (a result withheld for low confidence)."""
+    the threshold sweep (a result withheld for low confidence).
+
+    TIE_AMBIGUOUS is Stage 2's genuine subset-sum tie (see
+    reconagent.match): several distinct subsets landed on the identical
+    minimum residual and there is no arithmetic basis to choose. When
+    ground truth says a link exists, that is a different failure mode from
+    "no evidence at all" (UNMATCHED) or Stage 1's reference collision
+    (AMBIGUOUS) -- the matcher found the right answer among indistinguishable
+    siblings and honestly refused to guess, so it gets its own verdict
+    rather than being folded into false_clear. When ground truth says no
+    link exists at all, a TIE_AMBIGUOUS result is scored the same as any
+    other non-assertion -- "correct" -- exactly like AMBIGUOUS/UNMATCHED."""
     truth_resolution = case["expected_link_resolution"]
     truth_has_link = truth_resolution in (MATCHED, PARTIAL)
 
     asserted = result is not None and result.resolution in ASSERTED
     if not asserted:
-        return "false_clear" if truth_has_link else "correct"
+        if not truth_has_link:
+            return "correct"
+        if result is not None and result.resolution == TIE_AMBIGUOUS:
+            return "tie_ambiguous"
+        return "false_clear"
 
     if not truth_has_link:
         return "false_match"
@@ -259,8 +303,10 @@ class Metrics:
     correct: int
     false_match: int
     false_clear: int
+    tie_ambiguous: int
     false_match_rate: float
     false_clear_rate: float
+    tie_ambiguous_rate: float
     match_rate: float
     precision: float | None
     recall: float | None
@@ -269,7 +315,7 @@ class Metrics:
 
 def _tally(cases: list[dict], results: dict[str, MatchResult]) -> dict[str, int]:
     out = {"total": 0, "correct": 0, "false_match": 0, "false_clear": 0,
-           "true_link": 0, "asserted": 0}
+           "tie_ambiguous": 0, "true_link": 0, "asserted": 0}
     for c in cases:
         out["total"] += 1
         if c["expected_link_resolution"] in (MATCHED, PARTIAL):
@@ -296,6 +342,7 @@ def compute_metrics(split: Split) -> Metrics:
             "correct": ct["correct"],
             "false_match": ct["false_match"],
             "false_clear": ct["false_clear"],
+            "tie_ambiguous": ct["tie_ambiguous"],
             "match_rate": _ratio(ct["correct"], ct["total"]),
         }
 
@@ -307,8 +354,10 @@ def compute_metrics(split: Split) -> Metrics:
         correct=t["correct"],
         false_match=t["false_match"],
         false_clear=t["false_clear"],
+        tie_ambiguous=t["tie_ambiguous"],
         false_match_rate=_ratio(t["false_match"], t["total"]),
         false_clear_rate=_ratio(t["false_clear"], t["true_link"]),
+        tie_ambiguous_rate=_ratio(t["tie_ambiguous"], t["true_link"]),
         match_rate=_ratio(t["correct"], t["total"]),
         precision=_ratio(t["correct"], t["asserted"]) if t["asserted"] else None,
         recall=_ratio(t["correct"], t["true_link"]) if t["true_link"] else None,
@@ -533,12 +582,21 @@ def render_markdown(report: dict) -> str:
         "",
         "## Headline: false-match rate and false-clear rate",
         "",
-        "| split | false-match rate | false-clear rate |",
-        "|---|---|---|",
+        "tie-ambiguous rate is reported alongside false-clear rate, not "
+        "folded into it: it is the same denominator (cases ground truth "
+        "says are linked) but a different failure mode -- Stage 2 found "
+        "the right settlements among several that tied on residual and "
+        "honestly declined to guess, rather than finding no evidence at "
+        "all.",
+        "",
+        "| split | false-match rate | false-clear rate | tie-ambiguous rate |",
+        "|---|---|---|---|",
         f"| main | {_pct(m['false_match_rate'])} ({m['false_match']}/{m['total_linked']}) "
-        f"| {_pct(m['false_clear_rate'])} ({m['false_clear']}/{m['true_link_count']}) |",
+        f"| {_pct(m['false_clear_rate'])} ({m['false_clear']}/{m['true_link_count']}) "
+        f"| {_pct(m['tie_ambiguous_rate'])} ({m['tie_ambiguous']}/{m['true_link_count']}) |",
         f"| holdout | {_pct(h['false_match_rate'])} ({h['false_match']}/{h['total_linked']}) "
-        f"| {_pct(h['false_clear_rate'])} ({h['false_clear']}/{h['true_link_count']}) |",
+        f"| {_pct(h['false_clear_rate'])} ({h['false_clear']}/{h['true_link_count']}) "
+        f"| {_pct(h['tie_ambiguous_rate'])} ({h['tie_ambiguous']}/{h['true_link_count']}) |",
         "",
         "## Match rate, precision, recall",
         "",
@@ -583,13 +641,13 @@ def render_markdown(report: dict) -> str:
     lines += [
         "## Per-defect-class breakdown (main)",
         "",
-        "| defect class | total | correct | false match | false clear | match rate |",
-        "|---|---|---|---|---|---|",
+        "| defect class | total | correct | false match | false clear | tie ambiguous | match rate |",
+        "|---|---|---|---|---|---|---|",
     ]
     for dc, row in m["by_defect_class"].items():
         lines.append(
             f"| {dc} | {row['total']} | {row['correct']} | {row['false_match']} "
-            f"| {row['false_clear']} | {_pct(row['match_rate'])} |"
+            f"| {row['false_clear']} | {row['tie_ambiguous']} | {_pct(row['match_rate'])} |"
         )
     lines += [
         "",
@@ -672,8 +730,8 @@ def main() -> None:
 
     m = report["splits"]["main"]
     h = report["splits"]["holdout"]
-    print(f"main:    false-match {m['false_match_rate']:.2%}  false-clear {m['false_clear_rate']:.2%}")
-    print(f"holdout: false-match {h['false_match_rate']:.2%}  false-clear {h['false_clear_rate']:.2%}")
+    print(f"main:    false-match {m['false_match_rate']:.2%}  false-clear {m['false_clear_rate']:.2%}  tie-ambiguous {m['tie_ambiguous_rate']:.2%}")
+    print(f"holdout: false-match {h['false_match_rate']:.2%}  false-clear {h['false_clear_rate']:.2%}  tie-ambiguous {h['tie_ambiguous_rate']:.2%}")
 
 
 if __name__ == "__main__":

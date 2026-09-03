@@ -313,8 +313,8 @@ def test_first_fit_variant_does_pick_decoys(main: Split) -> None:
 
 def test_a_genuine_tie_abstains_instead_of_guessing() -> None:
     """Two distinct subsets landing on the same absolute residual give the
-    arithmetic no reason to prefer either, so the answer is AMBIGUOUS with
-    both attached -- never a coin flip recorded as a match."""
+    arithmetic no reason to prefer either, so the answer is TIE_AMBIGUOUS
+    with both attached -- never a coin flip recorded as a match."""
     pool = [
         CanonicalRecord(
             source="razorpay_settlement", record_id=f"setl_{i}", counterparty_name="",
@@ -327,7 +327,7 @@ def test_a_genuine_tie_abstains_instead_of_guessing() -> None:
         amount_minor=1000, currency="INR", value_date=date(2026, 8, 11),
     )
     r = M.match_subset_sum(credit, pool, amount_tolerance_minor=0)
-    assert r.resolution == M.AMBIGUOUS
+    assert r.resolution == M.TIE_AMBIGUOUS
     assert len(r.rival_settlement_ids) >= 2
     assert r.confidence < Decimal("0.5")
 
@@ -358,7 +358,7 @@ def test_a_pathological_pool_truncates_and_says_so() -> None:
     assert r.truncated
     assert r.subsets_examined <= 50_001
     assert r.pool_size <= M.MAX_POOL  # pool cap bit as well
-    assert r.resolution in (M.MATCHED, M.AMBIGUOUS, M.UNMATCHED)
+    assert r.resolution in (M.MATCHED, M.TIE_AMBIGUOUS, M.UNMATCHED)
     if r.resolution == M.UNMATCHED:
         assert "truncated" in r.reason
 
@@ -494,7 +494,8 @@ def test_spurious_subset_risk_on_arbitrary_amounts_is_measured_not_assumed(
 
       1. against the settlements still open after Stage 1 (the pool Stage 2
          actually gets), the overwhelming majority come back UNMATCHED or
-         AMBIGUOUS: the pooling rules are load-bearing, not an optimisation;
+         TIE_AMBIGUOUS: the pooling rules are load-bearing, not an
+         optimisation;
       2. whatever does slip through scores low, so Stage 5 has something to
          threshold on.
 
