@@ -3,7 +3,7 @@
 Updated after every integrated unit of work. Source of truth for scope:
 `reconagent-design-description.md`. Rules: `CLAUDE.md`.
 
-## Status: Tier 1 — A, B, C, D done; F next, then the Tier 1.5 checkpoint
+## Status: Tier 1 complete (A-D-F built and committed). AT THE TIER 1.5 CHECKPOINT — holding for a decision on E and G.
 
 ### Tier 1 subagents
 | # | Unit | State | Commit | Notes |
@@ -12,7 +12,7 @@ Updated after every integrated unit of work. Source of truth for scope:
 | B | Ingestion & parsing (Razorpay / MT103 / camt.053) | **done** | (this commit) | 96 tests pass; float rule enforced on the record type, not just the parsers |
 | C | Stage 1 deterministic + Stage 2 subset-sum | **done** | (this commit) | main 150/150, holdout 50/53, false-match 0 on both, 0 decoys picked |
 | D | FX tolerance, variance decomposition, EDPMS aging | **done** | (this commit) | 43 tests; band derived at 65 bps, 0 false-clear / 0 false-flag both splits |
-| F | Eval harness (false-match / false-clear headline, mutation test) | not started | — | runs last, against C+D output |
+| F | Eval harness (false-match / false-clear headline, mutation test) | **done** | (this commit) | 184 total tests; numbers below |
 | E | Exception taxonomy, abstention gate, LLM explanation | **deferred** | — | Tier 1.5 checkpoint decides |
 | G | FastAPI + hash-chained Postgres audit log | **deferred** | — | Tier 1.5 checkpoint decides |
 
@@ -39,6 +39,30 @@ spurious subset is arithmetically indistinguishable from a real one, and the
 confidence bands overlap (genuine 0.55-0.90, spurious 0.46 in my probe). Stage 2
 is only safe because Stage 1 empties the pool first. Any threshold E picks cannot
 cleanly separate the two.
+
+### F results — TIER 1.5 HEADLINE NUMBERS (verified independently, reproduced via a second call path)
+
+| split | false-match rate | false-clear rate | correct |
+|---|---|---|---|
+| main | **0.00%** (0/150) | **0.00%** (0/150) | 150/150 |
+| holdout | **0.00%** (0/53) | **5.66%** (3/53) | 50/53 |
+
+Mutation test proves the metric moves: 0%/5%/20%/50% corruption of the
+matcher's *output* -> 0.00%/5.33%/20.00%/50.00% false-match, monotonic,
+plus a dedicated bundle-decoy swap that flips a real case from correct to
+false_match. Confidence threshold sweep produced (input for a future
+abstention gate, not a recommendation).
+
+Throughput is **not linear**: 11,169 rec/s at 200 settlements, 299 at 1,000,
+162 at 5,000 -- a sharp phase transition as Stage 2's pool goes from sparse to
+dense. Neither dataset used elsewhere in Tier 1 (150-200 settlements) enters
+this regime.
+
+Coverage gap carried forward from D, now stated in the eval report's own
+output: no FEE_MISMATCH, no DATA_ENTRY_ERROR, no overdue EDPMS case in either
+split -- no real accuracy number exists for those three paths.
+
+**Full report:** `reports/eval_report.md` / `reports/eval_report.json`.
 
 ### D results (verified independently against the answer key)
 Band 65 bps, derived from main-set labels (3σ-about-zero, rounded down), never

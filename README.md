@@ -514,3 +514,106 @@ Credits are solved oldest-first and greedily: a wrong Stage 2 match can lock awa
 a settlement a later credit needed. This is what produced a cascading holdout
 failure at `MAX_CARDINALITY=6`. At 8 it does not bite, but the vulnerability is
 structural and the fix is a global assignment pass, which is out of Tier 1 scope.
+
+## Evaluation harness
+
+`reconagent/eval.py` scores the matching cascade against `ground_truth.json` on
+both splits, leading with the two metrics spec §9 asks for.
+
+### Metric definitions
+
+Every credit that has a real ground-truth link is one *linked case*. A
+`timing_pending` case has no bank credit yet, so it is excluded from these
+counts rather than scored as a miss — the settlement genuinely has nothing to
+be matched against.
+
+For each linked case, `classify(result, case)` returns one of three verdicts:
+
+- **`false_clear`** — the system asserted nothing (`UNMATCHED`/`AMBIGUOUS`, or a
+  result withheld by the confidence threshold) where a real link exists.
+- **`false_match`** — the system asserted a link that is wrong: the wrong
+  subset of settlements, a link where truth says `UNMATCHED`, **or the right
+  subset with the wrong resolution** — `MATCHED` claimed where truth is
+  `PARTIAL`, or vice versa. That third case is bucketed as a false match, not a
+  false clear or its own category, on purpose: claiming a settlement is fully
+  covered when it is only partly covered is a concrete false statement about
+  the books, the opposite of "asserted nothing." `AMBIGUOUS` is always
+  unresolved, never a match.
+- **`correct`** — otherwise.
+
+```
+false-match rate = false_match / total linked cases
+false-clear rate = false_clear / linked cases where truth is MATCHED or PARTIAL
+```
+
+The false-clear denominator is deliberately narrower than the false-match one —
+it is only defined over cases where a real link exists to be missed.
+
+Match rate, precision and recall are reported, but below the two headline
+numbers, not above — §9 is explicit that raw match rate is not the story.
+
+**FX attribution accuracy is out of this pass**, stated in the report output
+itself rather than only here: matching and FX attribution are different
+failure surfaces, and averaging them into one number would hide both.
+
+### Results
+
+| split | false-match rate | false-clear rate | correct |
+|---|---|---|---|
+| main | **0.00%** (0/150) | **0.00%** (0/150) | 150/150 |
+| holdout | **0.00%** (0/53) | **5.66%** (3/53) | 50/53 |
+
+The holdout's 3 false clears are the genuine subset-sum ties C already found and
+documented — the labelled subset is among several that hit the credit at
+residual exactly zero, and abstaining is the correct call, not a solver defect.
+
+**Coverage gap, stated in the report itself:** no `FEE_MISMATCH` case, no
+`DATA_ENTRY_ERROR` case, and no overdue EDPMS receipt exist in either split, so
+neither this harness nor D's own tests can report a real accuracy number for
+those three paths.
+
+### Mutation testing — proving the metric is sensitive to real error
+
+A "0% false-match" claim is worthless unless the metric demonstrably moves when
+real errors are introduced. The harness corrupts the **matcher's output**, not
+the input data — swapping in a wrong settlement id after the fact — because
+corrupting the input would re-test the matcher; the point here is to test
+whether the metric itself responds:
+
+| mutation rate | credits mutated | false-match rate |
+|---|---|---|
+| 0% | 0 | 0.00% |
+| 5% | 8 | 5.33% |
+| 20% | 30 | 20.00% |
+| 50% | 75 | 50.00% |
+
+Monotonic, and asserted so in a test. A dedicated case swaps a real bundle's
+labelled subset for its labelled decoy (`MAIN-00003`): verdict flips from
+`correct` to `false_match`, confirming the metric catches exactly the failure
+mode Stage 2 exists to prevent.
+
+### Confidence threshold sweep
+
+Not a recommendation — the input the abstention-gate unit needs. For a range of
+thresholds, what false-match/false-clear rates would result if matches below
+that confidence were withheld. False-match stays at 0% on both splits across
+nearly the whole range (the matcher rarely asserts a wrong link to begin with),
+while false-clear rises as confident matches get withheld, reaching 100% once
+the threshold excludes everything. Full table in `reports/eval_report.md`.
+
+### Throughput — and a real ceiling, found not assumed
+
+| settlements | credits | wall time | records/sec |
+|---|---|---|---|
+| 200 | 150 | 0.013 s | 11,169 |
+| 1,000 | 749 | 2.50 s | 299 |
+| 5,000 | 3,726 | 23.0 s | 162 |
+
+**Not linear.** There is a sharp phase transition between 200 and 1,000
+settlements — throughput drops ~37x for a 5x increase in scale — almost
+certainly Stage 2's pool crossing from sparse to dense as more settlements land
+inside the 30-day pooling window simultaneously. Past that transition
+(1,000→5,000) it is closer to linear-to-mildly-superlinear. The main and
+holdout datasets (150-200 settlements) never enter this regime, so the ceiling
+is invisible at the scale everything else in Tier 1 was measured against —
+flagged here rather than left for someone to discover in production.

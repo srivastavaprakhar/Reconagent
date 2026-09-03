@@ -1,0 +1,331 @@
+{
+  "coverage_gaps": [
+    "no FEE_MISMATCH case in ground truth",
+    "no DATA_ENTRY_ERROR case in ground truth",
+    "no overdue EDPMS receipt in ground truth as of 2026-08-31"
+  ],
+  "fx_metrics_note": "FX attribution accuracy is not included in this pass -- matching accuracy and FX attribution accuracy are different failure surfaces and this harness reports the former only.",
+  "mutation_test": {
+    "bundle_wrong_subset": {
+      "bank_txn_id": "BNKM000003",
+      "case_id": "MAIN-00003",
+      "true_subset": [
+        "setl_ZkaJ0x6iq3cGOZ",
+        "setl_lmavHcmYTngV5s"
+      ],
+      "verdict_after": "false_match",
+      "verdict_before": "correct",
+      "wrong_subset_used": [
+        "setl_NmPpS9Eus5hL6n",
+        "setl_hnBbv1PsmFGOad"
+      ]
+    },
+    "sweep": [
+      {
+        "false_match_rate": 0.0,
+        "mutated_count": 0,
+        "mutation_rate": 0.0
+      },
+      {
+        "false_match_rate": 0.05333333333333334,
+        "mutated_count": 8,
+        "mutation_rate": 0.05
+      },
+      {
+        "false_match_rate": 0.2,
+        "mutated_count": 30,
+        "mutation_rate": 0.2
+      },
+      {
+        "false_match_rate": 0.5,
+        "mutated_count": 75,
+        "mutation_rate": 0.5
+      }
+    ]
+  },
+  "splits": {
+    "holdout": {
+      "asserted_count": 50,
+      "by_defect_class": {
+        "clean_match": {
+          "correct": 22,
+          "false_clear": 0,
+          "false_match": 0,
+          "match_rate": 1.0,
+          "total": 22
+        },
+        "edpms_open": {
+          "correct": 2,
+          "false_clear": 0,
+          "false_match": 0,
+          "match_rate": 1.0,
+          "total": 2
+        },
+        "fx_drift_benign": {
+          "correct": 8,
+          "false_clear": 0,
+          "false_match": 0,
+          "match_rate": 1.0,
+          "total": 8
+        },
+        "fx_drift_flagged": {
+          "correct": 3,
+          "false_clear": 0,
+          "false_match": 0,
+          "match_rate": 1.0,
+          "total": 3
+        },
+        "missing_remitter": {
+          "correct": 6,
+          "false_clear": 0,
+          "false_match": 0,
+          "match_rate": 1.0,
+          "total": 6
+        },
+        "partial_payment": {
+          "correct": 4,
+          "false_clear": 0,
+          "false_match": 0,
+          "match_rate": 1.0,
+          "total": 4
+        },
+        "refund_fx_asymmetry": {
+          "correct": 1,
+          "false_clear": 0,
+          "false_match": 0,
+          "match_rate": 1.0,
+          "total": 1
+        },
+        "subset_sum_bundle": {
+          "correct": 4,
+          "false_clear": 3,
+          "false_match": 0,
+          "match_rate": 0.5714285714285714,
+          "total": 7
+        }
+      },
+      "correct": 50,
+      "false_clear": 3,
+      "false_clear_rate": 0.05660377358490566,
+      "false_match": 0,
+      "false_match_rate": 0.0,
+      "match_rate": 0.9433962264150944,
+      "precision": 1.0,
+      "recall": 0.9433962264150944,
+      "split": "holdout",
+      "total_linked": 53,
+      "true_link_count": 53
+    },
+    "main": {
+      "asserted_count": 150,
+      "by_defect_class": {
+        "clean_match": {
+          "correct": 107,
+          "false_clear": 0,
+          "false_match": 0,
+          "match_rate": 1.0,
+          "total": 107
+        },
+        "edpms_open": {
+          "correct": 2,
+          "false_clear": 0,
+          "false_match": 0,
+          "match_rate": 1.0,
+          "total": 2
+        },
+        "fx_drift_benign": {
+          "correct": 10,
+          "false_clear": 0,
+          "false_match": 0,
+          "match_rate": 1.0,
+          "total": 10
+        },
+        "fx_drift_flagged": {
+          "correct": 5,
+          "false_clear": 0,
+          "false_match": 0,
+          "match_rate": 1.0,
+          "total": 5
+        },
+        "missing_remitter": {
+          "correct": 6,
+          "false_clear": 0,
+          "false_match": 0,
+          "match_rate": 1.0,
+          "total": 6
+        },
+        "partial_payment": {
+          "correct": 6,
+          "false_clear": 0,
+          "false_match": 0,
+          "match_rate": 1.0,
+          "total": 6
+        },
+        "refund_fx_asymmetry": {
+          "correct": 2,
+          "false_clear": 0,
+          "false_match": 0,
+          "match_rate": 1.0,
+          "total": 2
+        },
+        "subset_sum_bundle": {
+          "correct": 12,
+          "false_clear": 0,
+          "false_match": 0,
+          "match_rate": 1.0,
+          "total": 12
+        }
+      },
+      "correct": 150,
+      "false_clear": 0,
+      "false_clear_rate": 0.0,
+      "false_match": 0,
+      "false_match_rate": 0.0,
+      "match_rate": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "split": "main",
+      "total_linked": 150,
+      "true_link_count": 150
+    }
+  },
+  "threshold_sweep": {
+    "holdout": [
+      {
+        "false_clear_rate": 0.05660377358490566,
+        "false_match_rate": 0.0,
+        "threshold": 0.0
+      },
+      {
+        "false_clear_rate": 0.05660377358490566,
+        "false_match_rate": 0.0,
+        "threshold": 0.1
+      },
+      {
+        "false_clear_rate": 0.05660377358490566,
+        "false_match_rate": 0.0,
+        "threshold": 0.2
+      },
+      {
+        "false_clear_rate": 0.05660377358490566,
+        "false_match_rate": 0.0,
+        "threshold": 0.3
+      },
+      {
+        "false_clear_rate": 0.05660377358490566,
+        "false_match_rate": 0.0,
+        "threshold": 0.4
+      },
+      {
+        "false_clear_rate": 0.05660377358490566,
+        "false_match_rate": 0.0,
+        "threshold": 0.5
+      },
+      {
+        "false_clear_rate": 0.1320754716981132,
+        "false_match_rate": 0.0,
+        "threshold": 0.6
+      },
+      {
+        "false_clear_rate": 0.1320754716981132,
+        "false_match_rate": 0.0,
+        "threshold": 0.7
+      },
+      {
+        "false_clear_rate": 0.1320754716981132,
+        "false_match_rate": 0.0,
+        "threshold": 0.8
+      },
+      {
+        "false_clear_rate": 0.2830188679245283,
+        "false_match_rate": 0.0,
+        "threshold": 0.9
+      },
+      {
+        "false_clear_rate": 1.0,
+        "false_match_rate": 0.0,
+        "threshold": 1.0
+      }
+    ],
+    "main": [
+      {
+        "false_clear_rate": 0.0,
+        "false_match_rate": 0.0,
+        "threshold": 0.0
+      },
+      {
+        "false_clear_rate": 0.0,
+        "false_match_rate": 0.0,
+        "threshold": 0.1
+      },
+      {
+        "false_clear_rate": 0.0,
+        "false_match_rate": 0.0,
+        "threshold": 0.2
+      },
+      {
+        "false_clear_rate": 0.0,
+        "false_match_rate": 0.0,
+        "threshold": 0.3
+      },
+      {
+        "false_clear_rate": 0.0,
+        "false_match_rate": 0.0,
+        "threshold": 0.4
+      },
+      {
+        "false_clear_rate": 0.0,
+        "false_match_rate": 0.0,
+        "threshold": 0.5
+      },
+      {
+        "false_clear_rate": 0.0,
+        "false_match_rate": 0.0,
+        "threshold": 0.6
+      },
+      {
+        "false_clear_rate": 0.06,
+        "false_match_rate": 0.0,
+        "threshold": 0.7
+      },
+      {
+        "false_clear_rate": 0.06,
+        "false_match_rate": 0.0,
+        "threshold": 0.8
+      },
+      {
+        "false_clear_rate": 0.14,
+        "false_match_rate": 0.0,
+        "threshold": 0.9
+      },
+      {
+        "false_clear_rate": 1.0,
+        "false_match_rate": 0.0,
+        "threshold": 1.0
+      }
+    ]
+  },
+  "throughput": [
+    {
+      "credits": 150,
+      "records_per_sec": 11168.95554592227,
+      "scale": 200,
+      "seconds": 0.013430082999548176,
+      "settlements": 200
+    },
+    {
+      "credits": 749,
+      "records_per_sec": 299.1100527085309,
+      "scale": 1000,
+      "seconds": 2.5040950420006993,
+      "settlements": 1002
+    },
+    {
+      "credits": 3726,
+      "records_per_sec": 161.8164669962629,
+      "scale": 5000,
+      "seconds": 23.026086709000083,
+      "settlements": 5001
+    }
+  ]
+}
