@@ -73,6 +73,60 @@ inertly as display text only.
 being set, which it isn't in this environment) — suite unaffected outside
 `reconagent/explain.py`/`tests/test_explain.py`.
 
+### Tier 2, unit 2 — Splink probabilistic pass (Stage 3)
+
+`reconagent/probabilistic.py` — Splink 4.0.17, DuckDB-backed. Comparisons:
+amount (exact / 0.5% / 1.5% / 3% bands), date (settled_at vs value/booking
+date, 1/3/10-day bands), counterparty name (Jaro-Winkler, `NameComparison`).
+Currency + a 30-day window is blocking, never a fuzzy comparison, mirroring
+Tier 1's own pooling discipline. A razorpay_settlement record carries no
+counterparty name of its own (Razorpay is the counterparty on that feed) --
+the settlement-side name is resolved by joining through the invoice ledger,
+which is why `invoices` is a required-in-practice parameter beyond Tier 1's
+own contract.
+
+**Training population and threshold, both derived from `data/` only, never
+`stress_test/` or `data/holdout/`** -- verified two ways: independently
+confirmed `match_with_tier2`'s default model is lazily trained from
+`DEFAULT_DATA_DIR` (main) regardless of what split it's later asked to score,
+and a source-level test (`test_probabilistic_module_never_reads_stress_or_holdout_ground_truth`)
+regex-scans the module's actual string literals -- not its prose -- for a
+`ground_truth.json` path naming either forbidden split. 140 single-settlement
+training pairs from main's 152 linked cases (bundles excluded from m-training
+as a wrong lesson for a pairwise model). Threshold `0.25`, sitting strictly
+between the known-negative ceiling (0.213390) and the known-positive floor
+(0.288721) -- both numbers reproduced independently, not taken from the
+report.
+
+**A real bug found and fixed mid-build, not papered over:** an early
+per-credit design (one Splink `predict()` call per deferred credit) silently
+corrupted the name comparison's term-frequency adjustment -- a 1-row credit
+table makes every name look maximally rare -- and measurably cost recall
+(9/40 vs 15/40 on the stress set, same model, same threshold). Fixed by
+batching every deferred credit into one `predict()` call per invocation.
+
+**Results, independently reproduced (not taken from the unit's own report):**
+
+| | Main (`data/`) | Stress test |
+|---|---|---|
+| Tier 1 alone vs Tier 1+2 | 152/152 identical | -- |
+| Stage 3 invoked at all | 0 times (nothing left unresolved) | 40 credits |
+| Resolved correctly | -- | 15/40 |
+| Resolved wrong | -- | **0/40** |
+| Correctly deferred | -- | 25/40 |
+
+Per-category: `legal_vs_trading_name` defers all 8 (weakest name signal, as
+expected -- genuinely different strings for the same entity); `ocr_typo`/
+`transliteration` resolve best (5/8 each); `abbreviation_variant` mostly
+defers (1/8); `invoice_description_mismatch` splits evenly (4/8). Zero false
+matches across the entire stress set -- the one number that had to hold for
+this stage to be worth using at all.
+
+**Composed entry point** (the interface the next two units build on):
+`match_with_tier2(credits, settlements, *, invoices=(), splink_model=None) -> list[MatchResult | ProbabilisticMatchResult]`.
+Runs Tier 1 unmodified first; escalates only what it leaves
+UNMATCHED/AMBIGUOUS/TIE_AMBIGUOUS.
+
 ### Tier 1.5 fix 1 — F now reports the FX attribution table natively
 `reconagent/eval.py` calls `reconagent.fx.decompose_variance` directly and adds
 a "FX variance attribution" table to `reports/eval_report.md` (all six
