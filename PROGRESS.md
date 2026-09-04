@@ -3,7 +3,52 @@
 Updated after every integrated unit of work. Source of truth for scope:
 `reconagent-design-description.md`. Rules: `CLAUDE.md`.
 
-## Status: Tier 1.5 review — all 4 gaps closed. Holding for a decision on E and G.
+## Status: Tier 2 in progress — built proactively, not reactively
+
+Tier 1's own evaluation showed no recall gap on the existing synthetic set
+that would trigger Tier 2 under the design spec's own stated condition (§12).
+Tier 2 is being built anyway, on a different, explicit basis: genuine ML
+depth appropriate to this submission, and robustness against real-world
+messiness the current clean dataset doesn't exercise. This is a proactive
+build, not a reaction to a gap Tier 1 didn't have — recorded here so the
+framing doesn't drift as later units land, and repeated in `ARCHITECTURE.md`
+once the Tier 2 section is written there.
+
+### Tier 2, unit 1 — stress-test dataset (`stress_test/`)
+
+Separate from `data/` and `data/holdout/`, same `ground_truth.json` schema
+(so `reconagent.eval`'s scoring machinery works against it unmodified —
+verified directly: `compute_metrics` ran with no changes). 40 cases, 8 each
+across five categories designed to defeat Tier 1's deterministic and
+subset-sum matching specifically: transliteration variants, abbreviations
+beyond the existing narration-mangling function's coverage, legal-name-vs-
+trading-name mismatches, OCR-style narration typos, and invoice descriptions
+sharing zero tokens with the settlement/bank text. Real MT103 text and real
+camt.053 XML throughout, consistent with the rest of the project.
+
+**Proof the dataset is genuinely hard, not asserted:** ran the unmodified
+Tier 1 cascade (`reconagent.match.match_all`) against it directly —
+**40/40 UNMATCHED, 0 accidentally resolved.** Locked into a test
+(`test_tier1_cannot_resolve_the_overwhelming_majority_of_stress_cases`), not
+left as a one-off claim.
+
+**One real bug found in review, fixed before commit:** the amount-delta
+generator (a signed mismatch meant to sit outside Tier 1's 100-minor-unit
+tolerance but "close" — 0.20%-2.50% of the settlement net) also capped the
+delta at a flat 8,000 minor units. Against this dataset's settlement range
+(~INR 73K-50L), even the *lowest* bps draw already exceeded that cap, so
+**all 40 deltas silently collapsed to the identical value 8000** regardless
+of the random bps drawn — verified directly by computing every case's actual
+delta, not by trusting the subagent's own report (which claimed a
+300-8,000-unit range, i.e. real variation, that the generated data didn't
+actually show). Ceiling removed in favour of a true sanity backstop far
+above this dataset's amounts; regenerated; re-verified 40 distinct delta
+values (973-106,862 rupees) and the 40/40-UNMATCHED proof still holds
+post-fix. A regression test now asserts the distribution itself isn't
+suspiciously uniform, not just that individual values look plausible in
+isolation -- the existing per-case tolerance test would not have caught a
+constant value, since a constant delta is still nonzero and still outside
+tolerance.
 
 ### Tier 1.5 fix 1 — F now reports the FX attribution table natively
 `reconagent/eval.py` calls `reconagent.fx.decompose_variance` directly and adds

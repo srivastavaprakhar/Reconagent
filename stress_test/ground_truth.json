@@ -1,0 +1,3158 @@
+{
+  "schema_version": "1.0",
+  "generator": {
+    "script": "scripts/generate_stress_test.py",
+    "seed": 20260904,
+    "scale": 40,
+    "split": "stress_test",
+    "adversarial_holdout": false,
+    "deterministic": "same seed => byte-identical output; no wall-clock input"
+  },
+  "conventions": {
+    "purpose": "Stress test for Tier 2 (spec section 4, Stages 3-4: Fellegi-Sunter probabilistic linkage and hybrid fuzzy text matching), built proactively for genuine ML depth and robustness against real-world messiness -- not because Tier 1's own evaluation found a recall gap needing it. It didn't (0.00% false-clear on both data/ and data/holdout/, once genuine subset-sum ties are separated from misses). Every case here is constructed so Tier 1's deterministic reference match and bounded subset-sum solver (reconagent.match) have nothing exact to land on: no settlement reference appears as a whole token in the narration, and any amount relationship is deliberately outside Tier 1's amount tolerance. The identifying signal lives in the counterparty name and free-text narration.",
+    "money": "Every *_minor field in this file is an integer count of currency minor units (paise for INR, cents for USD/EUR/GBP/SGD/AED). Never a float. The emitted CSV / MT103 / camt.053 carry the same values as exact fixed-point decimal strings.",
+    "not_a_realistic_proportions_dataset": "Unlike data/ and data/holdout/, this is not weighted toward clean matches. Every case is deliberately hard; do not compute a production-style match-rate expectation from it.",
+    "case_fields": {
+      "case_id": "stable id, unique within this dataset",
+      "defect_class": "one of transliteration_variant, abbreviation_variant, legal_vs_trading_name, ocr_typo_narration, invoice_description_mismatch",
+      "split": "stress_test",
+      "settlement_ids": "every settlement_id in razorpay_settlements.csv this case involves",
+      "payment_ids": "every entity_id (pay_) this case involves",
+      "bank_txn_ids": "every NtryRef in the camt.053 (and TxId) this case involves",
+      "invoice_ids": "every invoice_id in invoice_ledger.csv this case involves",
+      "expected_link": "the correct linkage a Tier 2 matcher should recover: which bank credit covers which settlement, the credit amount, the settlement net, and the residual between them",
+      "expected_link_resolution": "MATCHED for every case in this dataset",
+      "expected_exception_category": "the defect_class, upper-cased",
+      "details": "class-specific: the true (pre-degradation) name/text, the degraded/alternate name/text actually on the wire, why Tier 1 cannot resolve it, and the amount delta",
+      "notes": "plain-English statement of what the case simulates"
+    },
+    "period": [
+      "2026-08-01",
+      "2026-08-31"
+    ]
+  },
+  "counts": {
+    "cases": 40,
+    "settlements": 40,
+    "settlement_rows": 40,
+    "bank_credits": 40,
+    "invoices": 40,
+    "by_defect_class": {
+      "abbreviation_variant": 8,
+      "invoice_description_mismatch": 8,
+      "legal_vs_trading_name": 8,
+      "ocr_typo_narration": 8,
+      "transliteration_variant": 8
+    }
+  },
+  "fx_reference_rates": [
+    {
+      "value_date": "2026-07-22",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.8047"
+    },
+    {
+      "value_date": "2026-07-22",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.1978"
+    },
+    {
+      "value_date": "2026-07-22",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4892"
+    },
+    {
+      "value_date": "2026-07-22",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.7910"
+    },
+    {
+      "value_date": "2026-07-22",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3911"
+    },
+    {
+      "value_date": "2026-07-23",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.8167"
+    },
+    {
+      "value_date": "2026-07-23",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.1842"
+    },
+    {
+      "value_date": "2026-07-23",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4978"
+    },
+    {
+      "value_date": "2026-07-23",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.7889"
+    },
+    {
+      "value_date": "2026-07-23",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3862"
+    },
+    {
+      "value_date": "2026-07-24",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.8032"
+    },
+    {
+      "value_date": "2026-07-24",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.1833"
+    },
+    {
+      "value_date": "2026-07-24",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4912"
+    },
+    {
+      "value_date": "2026-07-24",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.7938"
+    },
+    {
+      "value_date": "2026-07-24",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3915"
+    },
+    {
+      "value_date": "2026-07-25",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7921"
+    },
+    {
+      "value_date": "2026-07-25",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.1749"
+    },
+    {
+      "value_date": "2026-07-25",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4803"
+    },
+    {
+      "value_date": "2026-07-25",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.7805"
+    },
+    {
+      "value_date": "2026-07-25",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3908"
+    },
+    {
+      "value_date": "2026-07-26",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7776"
+    },
+    {
+      "value_date": "2026-07-26",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.1648"
+    },
+    {
+      "value_date": "2026-07-26",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4679"
+    },
+    {
+      "value_date": "2026-07-26",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.7873"
+    },
+    {
+      "value_date": "2026-07-26",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.4015"
+    },
+    {
+      "value_date": "2026-07-27",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7764"
+    },
+    {
+      "value_date": "2026-07-27",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.1732"
+    },
+    {
+      "value_date": "2026-07-27",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4743"
+    },
+    {
+      "value_date": "2026-07-27",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.7732"
+    },
+    {
+      "value_date": "2026-07-27",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3992"
+    },
+    {
+      "value_date": "2026-07-28",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7775"
+    },
+    {
+      "value_date": "2026-07-28",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.1723"
+    },
+    {
+      "value_date": "2026-07-28",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4688"
+    },
+    {
+      "value_date": "2026-07-28",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.7644"
+    },
+    {
+      "value_date": "2026-07-28",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3968"
+    },
+    {
+      "value_date": "2026-07-29",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7870"
+    },
+    {
+      "value_date": "2026-07-29",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.1850"
+    },
+    {
+      "value_date": "2026-07-29",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4833"
+    },
+    {
+      "value_date": "2026-07-29",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.7534"
+    },
+    {
+      "value_date": "2026-07-29",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.4068"
+    },
+    {
+      "value_date": "2026-07-30",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7929"
+    },
+    {
+      "value_date": "2026-07-30",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.1873"
+    },
+    {
+      "value_date": "2026-07-30",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4692"
+    },
+    {
+      "value_date": "2026-07-30",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.7562"
+    },
+    {
+      "value_date": "2026-07-30",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3985"
+    },
+    {
+      "value_date": "2026-07-31",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7831"
+    },
+    {
+      "value_date": "2026-07-31",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.1887"
+    },
+    {
+      "value_date": "2026-07-31",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4659"
+    },
+    {
+      "value_date": "2026-07-31",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.7707"
+    },
+    {
+      "value_date": "2026-07-31",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3839"
+    },
+    {
+      "value_date": "2026-08-01",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7742"
+    },
+    {
+      "value_date": "2026-08-01",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.1974"
+    },
+    {
+      "value_date": "2026-08-01",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4629"
+    },
+    {
+      "value_date": "2026-08-01",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.7625"
+    },
+    {
+      "value_date": "2026-08-01",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3827"
+    },
+    {
+      "value_date": "2026-08-02",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7744"
+    },
+    {
+      "value_date": "2026-08-02",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2099"
+    },
+    {
+      "value_date": "2026-08-02",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4537"
+    },
+    {
+      "value_date": "2026-08-02",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.7688"
+    },
+    {
+      "value_date": "2026-08-02",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3863"
+    },
+    {
+      "value_date": "2026-08-03",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7853"
+    },
+    {
+      "value_date": "2026-08-03",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2205"
+    },
+    {
+      "value_date": "2026-08-03",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4673"
+    },
+    {
+      "value_date": "2026-08-03",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.7593"
+    },
+    {
+      "value_date": "2026-08-03",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3956"
+    },
+    {
+      "value_date": "2026-08-04",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7807"
+    },
+    {
+      "value_date": "2026-08-04",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2086"
+    },
+    {
+      "value_date": "2026-08-04",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4783"
+    },
+    {
+      "value_date": "2026-08-04",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.7666"
+    },
+    {
+      "value_date": "2026-08-04",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.4070"
+    },
+    {
+      "value_date": "2026-08-05",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7781"
+    },
+    {
+      "value_date": "2026-08-05",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2110"
+    },
+    {
+      "value_date": "2026-08-05",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4835"
+    },
+    {
+      "value_date": "2026-08-05",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.7767"
+    },
+    {
+      "value_date": "2026-08-05",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.4056"
+    },
+    {
+      "value_date": "2026-08-06",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7766"
+    },
+    {
+      "value_date": "2026-08-06",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2051"
+    },
+    {
+      "value_date": "2026-08-06",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4870"
+    },
+    {
+      "value_date": "2026-08-06",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.7897"
+    },
+    {
+      "value_date": "2026-08-06",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.4020"
+    },
+    {
+      "value_date": "2026-08-07",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7782"
+    },
+    {
+      "value_date": "2026-08-07",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2011"
+    },
+    {
+      "value_date": "2026-08-07",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4724"
+    },
+    {
+      "value_date": "2026-08-07",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.7827"
+    },
+    {
+      "value_date": "2026-08-07",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.4142"
+    },
+    {
+      "value_date": "2026-08-08",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7645"
+    },
+    {
+      "value_date": "2026-08-08",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2082"
+    },
+    {
+      "value_date": "2026-08-08",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4862"
+    },
+    {
+      "value_date": "2026-08-08",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.7909"
+    },
+    {
+      "value_date": "2026-08-08",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.4132"
+    },
+    {
+      "value_date": "2026-08-09",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7637"
+    },
+    {
+      "value_date": "2026-08-09",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2156"
+    },
+    {
+      "value_date": "2026-08-09",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4777"
+    },
+    {
+      "value_date": "2026-08-09",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8005"
+    },
+    {
+      "value_date": "2026-08-09",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.4011"
+    },
+    {
+      "value_date": "2026-08-10",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7565"
+    },
+    {
+      "value_date": "2026-08-10",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2188"
+    },
+    {
+      "value_date": "2026-08-10",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4777"
+    },
+    {
+      "value_date": "2026-08-10",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8061"
+    },
+    {
+      "value_date": "2026-08-10",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3929"
+    },
+    {
+      "value_date": "2026-08-11",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7654"
+    },
+    {
+      "value_date": "2026-08-11",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2139"
+    },
+    {
+      "value_date": "2026-08-11",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4747"
+    },
+    {
+      "value_date": "2026-08-11",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8004"
+    },
+    {
+      "value_date": "2026-08-11",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3824"
+    },
+    {
+      "value_date": "2026-08-12",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7618"
+    },
+    {
+      "value_date": "2026-08-12",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2136"
+    },
+    {
+      "value_date": "2026-08-12",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4674"
+    },
+    {
+      "value_date": "2026-08-12",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8068"
+    },
+    {
+      "value_date": "2026-08-12",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3858"
+    },
+    {
+      "value_date": "2026-08-13",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7583"
+    },
+    {
+      "value_date": "2026-08-13",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2270"
+    },
+    {
+      "value_date": "2026-08-13",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4708"
+    },
+    {
+      "value_date": "2026-08-13",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8112"
+    },
+    {
+      "value_date": "2026-08-13",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3865"
+    },
+    {
+      "value_date": "2026-08-14",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7690"
+    },
+    {
+      "value_date": "2026-08-14",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2244"
+    },
+    {
+      "value_date": "2026-08-14",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4645"
+    },
+    {
+      "value_date": "2026-08-14",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8154"
+    },
+    {
+      "value_date": "2026-08-14",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3966"
+    },
+    {
+      "value_date": "2026-08-15",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7686"
+    },
+    {
+      "value_date": "2026-08-15",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2301"
+    },
+    {
+      "value_date": "2026-08-15",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4558"
+    },
+    {
+      "value_date": "2026-08-15",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8035"
+    },
+    {
+      "value_date": "2026-08-15",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3843"
+    },
+    {
+      "value_date": "2026-08-16",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7833"
+    },
+    {
+      "value_date": "2026-08-16",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2213"
+    },
+    {
+      "value_date": "2026-08-16",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4660"
+    },
+    {
+      "value_date": "2026-08-16",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8093"
+    },
+    {
+      "value_date": "2026-08-16",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3793"
+    },
+    {
+      "value_date": "2026-08-17",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7871"
+    },
+    {
+      "value_date": "2026-08-17",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2362"
+    },
+    {
+      "value_date": "2026-08-17",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4510"
+    },
+    {
+      "value_date": "2026-08-17",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8136"
+    },
+    {
+      "value_date": "2026-08-17",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3852"
+    },
+    {
+      "value_date": "2026-08-18",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7885"
+    },
+    {
+      "value_date": "2026-08-18",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2249"
+    },
+    {
+      "value_date": "2026-08-18",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4505"
+    },
+    {
+      "value_date": "2026-08-18",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8060"
+    },
+    {
+      "value_date": "2026-08-18",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3838"
+    },
+    {
+      "value_date": "2026-08-19",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7934"
+    },
+    {
+      "value_date": "2026-08-19",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2166"
+    },
+    {
+      "value_date": "2026-08-19",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4608"
+    },
+    {
+      "value_date": "2026-08-19",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8061"
+    },
+    {
+      "value_date": "2026-08-19",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3702"
+    },
+    {
+      "value_date": "2026-08-20",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7985"
+    },
+    {
+      "value_date": "2026-08-20",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2164"
+    },
+    {
+      "value_date": "2026-08-20",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4566"
+    },
+    {
+      "value_date": "2026-08-20",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.7919"
+    },
+    {
+      "value_date": "2026-08-20",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3643"
+    },
+    {
+      "value_date": "2026-08-21",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7939"
+    },
+    {
+      "value_date": "2026-08-21",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2212"
+    },
+    {
+      "value_date": "2026-08-21",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4434"
+    },
+    {
+      "value_date": "2026-08-21",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.7842"
+    },
+    {
+      "value_date": "2026-08-21",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3785"
+    },
+    {
+      "value_date": "2026-08-22",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7979"
+    },
+    {
+      "value_date": "2026-08-22",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2294"
+    },
+    {
+      "value_date": "2026-08-22",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4473"
+    },
+    {
+      "value_date": "2026-08-22",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.7987"
+    },
+    {
+      "value_date": "2026-08-22",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3765"
+    },
+    {
+      "value_date": "2026-08-23",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7983"
+    },
+    {
+      "value_date": "2026-08-23",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2158"
+    },
+    {
+      "value_date": "2026-08-23",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4501"
+    },
+    {
+      "value_date": "2026-08-23",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.7877"
+    },
+    {
+      "value_date": "2026-08-23",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3911"
+    },
+    {
+      "value_date": "2026-08-24",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7849"
+    },
+    {
+      "value_date": "2026-08-24",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2116"
+    },
+    {
+      "value_date": "2026-08-24",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4454"
+    },
+    {
+      "value_date": "2026-08-24",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.7942"
+    },
+    {
+      "value_date": "2026-08-24",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.4004"
+    },
+    {
+      "value_date": "2026-08-25",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7968"
+    },
+    {
+      "value_date": "2026-08-25",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2226"
+    },
+    {
+      "value_date": "2026-08-25",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4467"
+    },
+    {
+      "value_date": "2026-08-25",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.7864"
+    },
+    {
+      "value_date": "2026-08-25",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3990"
+    },
+    {
+      "value_date": "2026-08-26",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7876"
+    },
+    {
+      "value_date": "2026-08-26",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2363"
+    },
+    {
+      "value_date": "2026-08-26",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4339"
+    },
+    {
+      "value_date": "2026-08-26",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.7953"
+    },
+    {
+      "value_date": "2026-08-26",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3885"
+    },
+    {
+      "value_date": "2026-08-27",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7764"
+    },
+    {
+      "value_date": "2026-08-27",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2471"
+    },
+    {
+      "value_date": "2026-08-27",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4378"
+    },
+    {
+      "value_date": "2026-08-27",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.7992"
+    },
+    {
+      "value_date": "2026-08-27",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3797"
+    },
+    {
+      "value_date": "2026-08-28",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7628"
+    },
+    {
+      "value_date": "2026-08-28",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2391"
+    },
+    {
+      "value_date": "2026-08-28",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4489"
+    },
+    {
+      "value_date": "2026-08-28",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8098"
+    },
+    {
+      "value_date": "2026-08-28",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3844"
+    },
+    {
+      "value_date": "2026-08-29",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7773"
+    },
+    {
+      "value_date": "2026-08-29",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2312"
+    },
+    {
+      "value_date": "2026-08-29",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4584"
+    },
+    {
+      "value_date": "2026-08-29",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8130"
+    },
+    {
+      "value_date": "2026-08-29",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3981"
+    },
+    {
+      "value_date": "2026-08-30",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7757"
+    },
+    {
+      "value_date": "2026-08-30",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2250"
+    },
+    {
+      "value_date": "2026-08-30",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4440"
+    },
+    {
+      "value_date": "2026-08-30",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.8022"
+    },
+    {
+      "value_date": "2026-08-30",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.4056"
+    },
+    {
+      "value_date": "2026-08-31",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.7872"
+    },
+    {
+      "value_date": "2026-08-31",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2168"
+    },
+    {
+      "value_date": "2026-08-31",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4378"
+    },
+    {
+      "value_date": "2026-08-31",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.7897"
+    },
+    {
+      "value_date": "2026-08-31",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3912"
+    },
+    {
+      "value_date": "2026-09-01",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.8006"
+    },
+    {
+      "value_date": "2026-09-01",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2260"
+    },
+    {
+      "value_date": "2026-09-01",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4411"
+    },
+    {
+      "value_date": "2026-09-01",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.7843"
+    },
+    {
+      "value_date": "2026-09-01",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3952"
+    },
+    {
+      "value_date": "2026-09-02",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.8099"
+    },
+    {
+      "value_date": "2026-09-02",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2336"
+    },
+    {
+      "value_date": "2026-09-02",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4552"
+    },
+    {
+      "value_date": "2026-09-02",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.7910"
+    },
+    {
+      "value_date": "2026-09-02",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3827"
+    },
+    {
+      "value_date": "2026-09-03",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.8220"
+    },
+    {
+      "value_date": "2026-09-03",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2202"
+    },
+    {
+      "value_date": "2026-09-03",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4605"
+    },
+    {
+      "value_date": "2026-09-03",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.7922"
+    },
+    {
+      "value_date": "2026-09-03",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.3898"
+    },
+    {
+      "value_date": "2026-09-04",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.8268"
+    },
+    {
+      "value_date": "2026-09-04",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2205"
+    },
+    {
+      "value_date": "2026-09-04",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4625"
+    },
+    {
+      "value_date": "2026-09-04",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.7980"
+    },
+    {
+      "value_date": "2026-09-04",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.4022"
+    },
+    {
+      "value_date": "2026-09-05",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.8253"
+    },
+    {
+      "value_date": "2026-09-05",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2308"
+    },
+    {
+      "value_date": "2026-09-05",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4687"
+    },
+    {
+      "value_date": "2026-09-05",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.7868"
+    },
+    {
+      "value_date": "2026-09-05",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.4131"
+    },
+    {
+      "value_date": "2026-09-06",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.8182"
+    },
+    {
+      "value_date": "2026-09-06",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2445"
+    },
+    {
+      "value_date": "2026-09-06",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4732"
+    },
+    {
+      "value_date": "2026-09-06",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.7743"
+    },
+    {
+      "value_date": "2026-09-06",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.4246"
+    },
+    {
+      "value_date": "2026-09-07",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.8127"
+    },
+    {
+      "value_date": "2026-09-07",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2477"
+    },
+    {
+      "value_date": "2026-09-07",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4652"
+    },
+    {
+      "value_date": "2026-09-07",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.7722"
+    },
+    {
+      "value_date": "2026-09-07",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.4187"
+    },
+    {
+      "value_date": "2026-09-08",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.8083"
+    },
+    {
+      "value_date": "2026-09-08",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2422"
+    },
+    {
+      "value_date": "2026-09-08",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4516"
+    },
+    {
+      "value_date": "2026-09-08",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.7659"
+    },
+    {
+      "value_date": "2026-09-08",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.4104"
+    },
+    {
+      "value_date": "2026-09-09",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.8062"
+    },
+    {
+      "value_date": "2026-09-09",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2437"
+    },
+    {
+      "value_date": "2026-09-09",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4493"
+    },
+    {
+      "value_date": "2026-09-09",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.7555"
+    },
+    {
+      "value_date": "2026-09-09",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.4176"
+    },
+    {
+      "value_date": "2026-09-10",
+      "currency_pair": "AED/INR",
+      "source": "FBIL",
+      "reference_rate": "23.8143"
+    },
+    {
+      "value_date": "2026-09-10",
+      "currency_pair": "EUR/INR",
+      "source": "FBIL",
+      "reference_rate": "95.2511"
+    },
+    {
+      "value_date": "2026-09-10",
+      "currency_pair": "GBP/INR",
+      "source": "FBIL",
+      "reference_rate": "111.4610"
+    },
+    {
+      "value_date": "2026-09-10",
+      "currency_pair": "SGD/INR",
+      "source": "FBIL",
+      "reference_rate": "64.7445"
+    },
+    {
+      "value_date": "2026-09-10",
+      "currency_pair": "USD/INR",
+      "source": "FBIL",
+      "reference_rate": "87.4233"
+    }
+  ],
+  "cases": [
+    {
+      "case_id": "STRESS_TEST-00001",
+      "defect_class": "transliteration_variant",
+      "split": "stress_test",
+      "settlement_ids": [
+        "setl_o0kWzbKHGpmV1p"
+      ],
+      "payment_ids": [
+        "pay_n9ouR8lm0JchgR"
+      ],
+      "bank_txn_ids": [
+        "BNKM000001"
+      ],
+      "invoice_ids": [
+        "INV-2026-M00001"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKM000001",
+        "covers_settlement_ids": [
+          "setl_o0kWzbKHGpmV1p"
+        ],
+        "credit_amount_minor": 390387990,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 400233740,
+        "residual_minor": 9845750
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "TRANSLITERATION_VARIANT",
+      "details": {
+        "category": "transliteration_variant",
+        "true_counterparty_name": "MUELLER INDUSTRIES GMBH",
+        "wire_counterparty_name": "MULLER INDUSTRIES GMBH",
+        "narration_as_sent": "/RFB/EXPORT PROCEEDS MULLER INDUSTRIES GMBH",
+        "clean_signal_before_degradation": "Same legal entity as 'MUELLER INDUSTRIES GMBH'; the wire spells it 'MULLER INDUSTRIES GMBH', a different but equally plausible ASCII transliteration of the same underlying name.",
+        "amount_delta_minor": 9845750,
+        "reason_tier1_cannot_resolve": "No settlement reference (UTR / invoice id / order id / payment id) appears as a whole token anywhere in the narration, so Stage 1's deterministic reference match has nothing to key on and defers. The credited amount misses the settlement net by more than Stage 1/2's amount tolerance, so Stage 2's minimum-residual subset-sum search does not land on it either."
+      },
+      "notes": "Stress-test case (transliteration_variant): Same legal entity as 'MUELLER INDUSTRIES GMBH'; the wire spells it 'MULLER INDUSTRIES GMBH', a different but equally plausible ASCII transliteration of the same underlying name."
+    },
+    {
+      "case_id": "STRESS_TEST-00002",
+      "defect_class": "transliteration_variant",
+      "split": "stress_test",
+      "settlement_ids": [
+        "setl_0nmD0rkHFNRxPH"
+      ],
+      "payment_ids": [
+        "pay_0F9QliOG51uHrL"
+      ],
+      "bank_txn_ids": [
+        "BNKM000002"
+      ],
+      "invoice_ids": [
+        "INV-2026-M00002"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKM000002",
+        "covers_settlement_ids": [
+          "setl_0nmD0rkHFNRxPH"
+        ],
+        "credit_amount_minor": 50598743,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 51583997,
+        "residual_minor": 985254
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "TRANSLITERATION_VARIANT",
+      "details": {
+        "category": "transliteration_variant",
+        "true_counterparty_name": "SCHMIDT PRAZISIONSTECHNIK AG",
+        "wire_counterparty_name": "SHMIDT PRAZISIONSTECHNIK AG",
+        "narration_as_sent": "/RFB/EXPORT PROCEEDS SHMIDT PRAZISIONSTECHNIK AG",
+        "clean_signal_before_degradation": "Same legal entity as 'SCHMIDT PRAZISIONSTECHNIK AG'; the wire spells it 'SHMIDT PRAZISIONSTECHNIK AG', a different but equally plausible ASCII transliteration of the same underlying name.",
+        "amount_delta_minor": 985254,
+        "reason_tier1_cannot_resolve": "No settlement reference (UTR / invoice id / order id / payment id) appears as a whole token anywhere in the narration, so Stage 1's deterministic reference match has nothing to key on and defers. The credited amount misses the settlement net by more than Stage 1/2's amount tolerance, so Stage 2's minimum-residual subset-sum search does not land on it either."
+      },
+      "notes": "Stress-test case (transliteration_variant): Same legal entity as 'SCHMIDT PRAZISIONSTECHNIK AG'; the wire spells it 'SHMIDT PRAZISIONSTECHNIK AG', a different but equally plausible ASCII transliteration of the same underlying name."
+    },
+    {
+      "case_id": "STRESS_TEST-00003",
+      "defect_class": "transliteration_variant",
+      "split": "stress_test",
+      "settlement_ids": [
+        "setl_h1OpZ2cm2UkmJO"
+      ],
+      "payment_ids": [
+        "pay_lYfScXkEj4w1hb"
+      ],
+      "bank_txn_ids": [
+        "BNKM000003"
+      ],
+      "invoice_ids": [
+        "INV-2026-M00003"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKM000003",
+        "covers_settlement_ids": [
+          "setl_h1OpZ2cm2UkmJO"
+        ],
+        "credit_amount_minor": 13422193,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 13519534,
+        "residual_minor": 97341
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "TRANSLITERATION_VARIANT",
+      "details": {
+        "category": "transliteration_variant",
+        "true_counterparty_name": "YEVGENIY KOVALENKO TRADING LTD",
+        "wire_counterparty_name": "EVGENY KOVALENKO TRADING LTD",
+        "narration_as_sent": "/RFB/EXPORT PROCEEDS EVGENY KOVALENKO TRADING LTD",
+        "clean_signal_before_degradation": "Same legal entity as 'YEVGENIY KOVALENKO TRADING LTD'; the wire spells it 'EVGENY KOVALENKO TRADING LTD', a different but equally plausible ASCII transliteration of the same underlying name.",
+        "amount_delta_minor": 97341,
+        "reason_tier1_cannot_resolve": "No settlement reference (UTR / invoice id / order id / payment id) appears as a whole token anywhere in the narration, so Stage 1's deterministic reference match has nothing to key on and defers. The credited amount misses the settlement net by more than Stage 1/2's amount tolerance, so Stage 2's minimum-residual subset-sum search does not land on it either."
+      },
+      "notes": "Stress-test case (transliteration_variant): Same legal entity as 'YEVGENIY KOVALENKO TRADING LTD'; the wire spells it 'EVGENY KOVALENKO TRADING LTD', a different but equally plausible ASCII transliteration of the same underlying name."
+    },
+    {
+      "case_id": "STRESS_TEST-00004",
+      "defect_class": "transliteration_variant",
+      "split": "stress_test",
+      "settlement_ids": [
+        "setl_mmwaDLGs2N9N5j"
+      ],
+      "payment_ids": [
+        "pay_4AB5D1fieasazD"
+      ],
+      "bank_txn_ids": [
+        "BNKM000004"
+      ],
+      "invoice_ids": [
+        "INV-2026-M00004"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKM000004",
+        "covers_settlement_ids": [
+          "setl_mmwaDLGs2N9N5j"
+        ],
+        "credit_amount_minor": 181843408,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 183568956,
+        "residual_minor": 1725548
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "TRANSLITERATION_VARIANT",
+      "details": {
+        "category": "transliteration_variant",
+        "true_counterparty_name": "DMITRIY SOKOLOV IMPORTS LLC",
+        "wire_counterparty_name": "DMITRI SOKOLOV IMPORTS LLC",
+        "narration_as_sent": "/RFB/EXPORT PROCEEDS DMITRI SOKOLOV IMPORTS LLC",
+        "clean_signal_before_degradation": "Same legal entity as 'DMITRIY SOKOLOV IMPORTS LLC'; the wire spells it 'DMITRI SOKOLOV IMPORTS LLC', a different but equally plausible ASCII transliteration of the same underlying name.",
+        "amount_delta_minor": 1725548,
+        "reason_tier1_cannot_resolve": "No settlement reference (UTR / invoice id / order id / payment id) appears as a whole token anywhere in the narration, so Stage 1's deterministic reference match has nothing to key on and defers. The credited amount misses the settlement net by more than Stage 1/2's amount tolerance, so Stage 2's minimum-residual subset-sum search does not land on it either."
+      },
+      "notes": "Stress-test case (transliteration_variant): Same legal entity as 'DMITRIY SOKOLOV IMPORTS LLC'; the wire spells it 'DMITRI SOKOLOV IMPORTS LLC', a different but equally plausible ASCII transliteration of the same underlying name."
+    },
+    {
+      "case_id": "STRESS_TEST-00005",
+      "defect_class": "transliteration_variant",
+      "split": "stress_test",
+      "settlement_ids": [
+        "setl_2hO0658Axzhzfn"
+      ],
+      "payment_ids": [
+        "pay_YzDKzub3ke0nFz"
+      ],
+      "bank_txn_ids": [
+        "BNKM000005"
+      ],
+      "invoice_ids": [
+        "INV-2026-M00005"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKM000005",
+        "covers_settlement_ids": [
+          "setl_2hO0658Axzhzfn"
+        ],
+        "credit_amount_minor": 44224818,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 44680560,
+        "residual_minor": 455742
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "TRANSLITERATION_VARIANT",
+      "details": {
+        "category": "transliteration_variant",
+        "true_counterparty_name": "AL RASHEED GENERAL TRADING LLC",
+        "wire_counterparty_name": "AL RASHID GENERAL TRADING LLC",
+        "narration_as_sent": "/RFB/EXPORT PROCEEDS AL RASHID GENERAL TRADING LLC",
+        "clean_signal_before_degradation": "Same legal entity as 'AL RASHEED GENERAL TRADING LLC'; the wire spells it 'AL RASHID GENERAL TRADING LLC', a different but equally plausible ASCII transliteration of the same underlying name.",
+        "amount_delta_minor": 455742,
+        "reason_tier1_cannot_resolve": "No settlement reference (UTR / invoice id / order id / payment id) appears as a whole token anywhere in the narration, so Stage 1's deterministic reference match has nothing to key on and defers. The credited amount misses the settlement net by more than Stage 1/2's amount tolerance, so Stage 2's minimum-residual subset-sum search does not land on it either."
+      },
+      "notes": "Stress-test case (transliteration_variant): Same legal entity as 'AL RASHEED GENERAL TRADING LLC'; the wire spells it 'AL RASHID GENERAL TRADING LLC', a different but equally plausible ASCII transliteration of the same underlying name."
+    },
+    {
+      "case_id": "STRESS_TEST-00006",
+      "defect_class": "transliteration_variant",
+      "split": "stress_test",
+      "settlement_ids": [
+        "setl_A44dU1nX30Kmkr"
+      ],
+      "payment_ids": [
+        "pay_nDNY9i5TIOAm8t"
+      ],
+      "bank_txn_ids": [
+        "BNKM000006"
+      ],
+      "invoice_ids": [
+        "INV-2026-M00006"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKM000006",
+        "covers_settlement_ids": [
+          "setl_A44dU1nX30Kmkr"
+        ],
+        "credit_amount_minor": 270265828,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 277195721,
+        "residual_minor": 6929893
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "TRANSLITERATION_VARIANT",
+      "details": {
+        "category": "transliteration_variant",
+        "true_counterparty_name": "MOHAMMED AL FARSI ENTERPRISES",
+        "wire_counterparty_name": "MUHAMMAD AL FARSI ENTERPRISES",
+        "narration_as_sent": "/RFB/EXPORT PROCEEDS MUHAMMAD AL FARSI ENTERPRISES",
+        "clean_signal_before_degradation": "Same legal entity as 'MOHAMMED AL FARSI ENTERPRISES'; the wire spells it 'MUHAMMAD AL FARSI ENTERPRISES', a different but equally plausible ASCII transliteration of the same underlying name.",
+        "amount_delta_minor": 6929893,
+        "reason_tier1_cannot_resolve": "No settlement reference (UTR / invoice id / order id / payment id) appears as a whole token anywhere in the narration, so Stage 1's deterministic reference match has nothing to key on and defers. The credited amount misses the settlement net by more than Stage 1/2's amount tolerance, so Stage 2's minimum-residual subset-sum search does not land on it either."
+      },
+      "notes": "Stress-test case (transliteration_variant): Same legal entity as 'MOHAMMED AL FARSI ENTERPRISES'; the wire spells it 'MUHAMMAD AL FARSI ENTERPRISES', a different but equally plausible ASCII transliteration of the same underlying name."
+    },
+    {
+      "case_id": "STRESS_TEST-00007",
+      "defect_class": "transliteration_variant",
+      "split": "stress_test",
+      "settlement_ids": [
+        "setl_nqwQxeNy8Ceep5"
+      ],
+      "payment_ids": [
+        "pay_BbQyJshnXpu1GW"
+      ],
+      "bank_txn_ids": [
+        "BNKM000007"
+      ],
+      "invoice_ids": [
+        "INV-2026-M00007"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKM000007",
+        "covers_settlement_ids": [
+          "setl_nqwQxeNy8Ceep5"
+        ],
+        "credit_amount_minor": 97696757,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 98753419,
+        "residual_minor": 1056662
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "TRANSLITERATION_VARIANT",
+      "details": {
+        "category": "transliteration_variant",
+        "true_counterparty_name": "NIKOLAI VOLKOV LOGISTICS BV",
+        "wire_counterparty_name": "NIKOLAY VOLKOV LOGISTICS BV",
+        "narration_as_sent": "/RFB/EXPORT PROCEEDS NIKOLAY VOLKOV LOGISTICS BV",
+        "clean_signal_before_degradation": "Same legal entity as 'NIKOLAI VOLKOV LOGISTICS BV'; the wire spells it 'NIKOLAY VOLKOV LOGISTICS BV', a different but equally plausible ASCII transliteration of the same underlying name.",
+        "amount_delta_minor": 1056662,
+        "reason_tier1_cannot_resolve": "No settlement reference (UTR / invoice id / order id / payment id) appears as a whole token anywhere in the narration, so Stage 1's deterministic reference match has nothing to key on and defers. The credited amount misses the settlement net by more than Stage 1/2's amount tolerance, so Stage 2's minimum-residual subset-sum search does not land on it either."
+      },
+      "notes": "Stress-test case (transliteration_variant): Same legal entity as 'NIKOLAI VOLKOV LOGISTICS BV'; the wire spells it 'NIKOLAY VOLKOV LOGISTICS BV', a different but equally plausible ASCII transliteration of the same underlying name."
+    },
+    {
+      "case_id": "STRESS_TEST-00008",
+      "defect_class": "transliteration_variant",
+      "split": "stress_test",
+      "settlement_ids": [
+        "setl_GUxA3OcdlaJKbD"
+      ],
+      "payment_ids": [
+        "pay_7kVsJuUn70Wk2q"
+      ],
+      "bank_txn_ids": [
+        "BNKM000008"
+      ],
+      "invoice_ids": [
+        "INV-2026-M00008"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKM000008",
+        "covers_settlement_ids": [
+          "setl_GUxA3OcdlaJKbD"
+        ],
+        "credit_amount_minor": 455778722,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 461969108,
+        "residual_minor": 6190386
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "TRANSLITERATION_VARIANT",
+      "details": {
+        "category": "transliteration_variant",
+        "true_counterparty_name": "KRISTOF NOWACK EXPORT SP",
+        "wire_counterparty_name": "CHRISTOPH NOVAK EXPORT SP",
+        "narration_as_sent": "/RFB/EXPORT PROCEEDS CHRISTOPH NOVAK EXPORT SP",
+        "clean_signal_before_degradation": "Same legal entity as 'KRISTOF NOWACK EXPORT SP'; the wire spells it 'CHRISTOPH NOVAK EXPORT SP', a different but equally plausible ASCII transliteration of the same underlying name.",
+        "amount_delta_minor": 6190386,
+        "reason_tier1_cannot_resolve": "No settlement reference (UTR / invoice id / order id / payment id) appears as a whole token anywhere in the narration, so Stage 1's deterministic reference match has nothing to key on and defers. The credited amount misses the settlement net by more than Stage 1/2's amount tolerance, so Stage 2's minimum-residual subset-sum search does not land on it either."
+      },
+      "notes": "Stress-test case (transliteration_variant): Same legal entity as 'KRISTOF NOWACK EXPORT SP'; the wire spells it 'CHRISTOPH NOVAK EXPORT SP', a different but equally plausible ASCII transliteration of the same underlying name."
+    },
+    {
+      "case_id": "STRESS_TEST-00009",
+      "defect_class": "abbreviation_variant",
+      "split": "stress_test",
+      "settlement_ids": [
+        "setl_I2Vqy9ZtRWIAOC"
+      ],
+      "payment_ids": [
+        "pay_0FNfpS8tDl3Uij"
+      ],
+      "bank_txn_ids": [
+        "BNKM000009"
+      ],
+      "invoice_ids": [
+        "INV-2026-M00009"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKM000009",
+        "covers_settlement_ids": [
+          "setl_I2Vqy9ZtRWIAOC"
+        ],
+        "credit_amount_minor": 189135236,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 184702379,
+        "residual_minor": -4432857
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "ABBREVIATION_VARIANT",
+      "details": {
+        "category": "abbreviation_variant",
+        "true_counterparty_name": "NORTHWIND SOFTWARE INTERNATIONAL LLC",
+        "wire_counterparty_name": "NORTHWIND SOFTWARE INTL LLC",
+        "narration_as_sent": "/RFB/EXPORT PROCEEDS NORTHWIND SOFTWARE INTL LLC",
+        "clean_signal_before_degradation": "Same counterparty as 'NORTHWIND SOFTWARE INTERNATIONAL LLC'; the wire abbreviates it to 'NORTHWIND SOFTWARE INTL LLC' -- corporate-suffix and multi-word abbreviation beyond what the main generator's mangle() covers.",
+        "amount_delta_minor": -4432857,
+        "reason_tier1_cannot_resolve": "No settlement reference (UTR / invoice id / order id / payment id) appears as a whole token anywhere in the narration, so Stage 1's deterministic reference match has nothing to key on and defers. The credited amount misses the settlement net by more than Stage 1/2's amount tolerance, so Stage 2's minimum-residual subset-sum search does not land on it either."
+      },
+      "notes": "Stress-test case (abbreviation_variant): Same counterparty as 'NORTHWIND SOFTWARE INTERNATIONAL LLC'; the wire abbreviates it to 'NORTHWIND SOFTWARE INTL LLC' -- corporate-suffix and multi-word abbreviation beyond what the main generator's mangle() covers."
+    },
+    {
+      "case_id": "STRESS_TEST-00010",
+      "defect_class": "abbreviation_variant",
+      "split": "stress_test",
+      "settlement_ids": [
+        "setl_GeTi8K5fKZ8qrf"
+      ],
+      "payment_ids": [
+        "pay_pJCfUixrhpACps"
+      ],
+      "bank_txn_ids": [
+        "BNKM000010"
+      ],
+      "invoice_ids": [
+        "INV-2026-M00010"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKM000010",
+        "covers_settlement_ids": [
+          "setl_GeTi8K5fKZ8qrf"
+        ],
+        "credit_amount_minor": 203526198,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 200478918,
+        "residual_minor": -3047280
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "ABBREVIATION_VARIANT",
+      "details": {
+        "category": "abbreviation_variant",
+        "true_counterparty_name": "APEX MANUFACTURING AND TRADING COMPANY",
+        "wire_counterparty_name": "APEX MFG & TRADING CO",
+        "narration_as_sent": "/RFB/EXPORT PROCEEDS APEX MFG & TRADING CO",
+        "clean_signal_before_degradation": "Same counterparty as 'APEX MANUFACTURING AND TRADING COMPANY'; the wire abbreviates it to 'APEX MFG & TRADING CO' -- corporate-suffix and multi-word abbreviation beyond what the main generator's mangle() covers.",
+        "amount_delta_minor": -3047280,
+        "reason_tier1_cannot_resolve": "No settlement reference (UTR / invoice id / order id / payment id) appears as a whole token anywhere in the narration, so Stage 1's deterministic reference match has nothing to key on and defers. The credited amount misses the settlement net by more than Stage 1/2's amount tolerance, so Stage 2's minimum-residual subset-sum search does not land on it either."
+      },
+      "notes": "Stress-test case (abbreviation_variant): Same counterparty as 'APEX MANUFACTURING AND TRADING COMPANY'; the wire abbreviates it to 'APEX MFG & TRADING CO' -- corporate-suffix and multi-word abbreviation beyond what the main generator's mangle() covers."
+    },
+    {
+      "case_id": "STRESS_TEST-00011",
+      "defect_class": "abbreviation_variant",
+      "split": "stress_test",
+      "settlement_ids": [
+        "setl_2z7gNKeVmpGkIZ"
+      ],
+      "payment_ids": [
+        "pay_JKNUHBgjXFLx0X"
+      ],
+      "bank_txn_ids": [
+        "BNKM000011"
+      ],
+      "invoice_ids": [
+        "INV-2026-M00011"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKM000011",
+        "covers_settlement_ids": [
+          "setl_2z7gNKeVmpGkIZ"
+        ],
+        "credit_amount_minor": 120033893,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 122809385,
+        "residual_minor": 2775492
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "ABBREVIATION_VARIANT",
+      "details": {
+        "category": "abbreviation_variant",
+        "true_counterparty_name": "BRIDGEWORK ANALYTICS AND CONSULTING INCORPORATED",
+        "wire_counterparty_name": "BRIDGEWORK ANALYTICS & CONSULTING INC",
+        "narration_as_sent": "/RFB/EXPORT PROCEEDS BRIDGEWORK ANALYTICS & CONSULTING INC",
+        "clean_signal_before_degradation": "Same counterparty as 'BRIDGEWORK ANALYTICS AND CONSULTING INCORPORATED'; the wire abbreviates it to 'BRIDGEWORK ANALYTICS & CONSULTING INC' -- corporate-suffix and multi-word abbreviation beyond what the main generator's mangle() covers.",
+        "amount_delta_minor": 2775492,
+        "reason_tier1_cannot_resolve": "No settlement reference (UTR / invoice id / order id / payment id) appears as a whole token anywhere in the narration, so Stage 1's deterministic reference match has nothing to key on and defers. The credited amount misses the settlement net by more than Stage 1/2's amount tolerance, so Stage 2's minimum-residual subset-sum search does not land on it either."
+      },
+      "notes": "Stress-test case (abbreviation_variant): Same counterparty as 'BRIDGEWORK ANALYTICS AND CONSULTING INCORPORATED'; the wire abbreviates it to 'BRIDGEWORK ANALYTICS & CONSULTING INC' -- corporate-suffix and multi-word abbreviation beyond what the main generator's mangle() covers."
+    },
+    {
+      "case_id": "STRESS_TEST-00012",
+      "defect_class": "abbreviation_variant",
+      "split": "stress_test",
+      "settlement_ids": [
+        "setl_Jm6BFYHZmIjoVU"
+      ],
+      "payment_ids": [
+        "pay_x8xormBwzzRSWz"
+      ],
+      "bank_txn_ids": [
+        "BNKM000012"
+      ],
+      "invoice_ids": [
+        "INV-2026-M00012"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKM000012",
+        "covers_settlement_ids": [
+          "setl_Jm6BFYHZmIjoVU"
+        ],
+        "credit_amount_minor": 266246628,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 261179741,
+        "residual_minor": -5066887
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "ABBREVIATION_VARIANT",
+      "details": {
+        "category": "abbreviation_variant",
+        "true_counterparty_name": "CASCADE INTERNATIONAL HOLDINGS COMPANY",
+        "wire_counterparty_name": "CASCADE INTL HOLDINGS CO",
+        "narration_as_sent": "/RFB/EXPORT PROCEEDS CASCADE INTL HOLDINGS CO",
+        "clean_signal_before_degradation": "Same counterparty as 'CASCADE INTERNATIONAL HOLDINGS COMPANY'; the wire abbreviates it to 'CASCADE INTL HOLDINGS CO' -- corporate-suffix and multi-word abbreviation beyond what the main generator's mangle() covers.",
+        "amount_delta_minor": -5066887,
+        "reason_tier1_cannot_resolve": "No settlement reference (UTR / invoice id / order id / payment id) appears as a whole token anywhere in the narration, so Stage 1's deterministic reference match has nothing to key on and defers. The credited amount misses the settlement net by more than Stage 1/2's amount tolerance, so Stage 2's minimum-residual subset-sum search does not land on it either."
+      },
+      "notes": "Stress-test case (abbreviation_variant): Same counterparty as 'CASCADE INTERNATIONAL HOLDINGS COMPANY'; the wire abbreviates it to 'CASCADE INTL HOLDINGS CO' -- corporate-suffix and multi-word abbreviation beyond what the main generator's mangle() covers."
+    },
+    {
+      "case_id": "STRESS_TEST-00013",
+      "defect_class": "abbreviation_variant",
+      "split": "stress_test",
+      "settlement_ids": [
+        "setl_9ZQKdD2862xk8e"
+      ],
+      "payment_ids": [
+        "pay_lYRKaa0QJ11uLT"
+      ],
+      "bank_txn_ids": [
+        "BNKM000013"
+      ],
+      "invoice_ids": [
+        "INV-2026-M00013"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKM000013",
+        "covers_settlement_ids": [
+          "setl_9ZQKdD2862xk8e"
+        ],
+        "credit_amount_minor": 277727511,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 282818239,
+        "residual_minor": 5090728
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "ABBREVIATION_VARIANT",
+      "details": {
+        "category": "abbreviation_variant",
+        "true_counterparty_name": "KESTREL SYSTEMS AND SOLUTIONS LIMITED",
+        "wire_counterparty_name": "KESTREL SYS & SOLUTIONS LTD",
+        "narration_as_sent": "/RFB/EXPORT PROCEEDS KESTREL SYS & SOLUTIONS LTD",
+        "clean_signal_before_degradation": "Same counterparty as 'KESTREL SYSTEMS AND SOLUTIONS LIMITED'; the wire abbreviates it to 'KESTREL SYS & SOLUTIONS LTD' -- corporate-suffix and multi-word abbreviation beyond what the main generator's mangle() covers.",
+        "amount_delta_minor": 5090728,
+        "reason_tier1_cannot_resolve": "No settlement reference (UTR / invoice id / order id / payment id) appears as a whole token anywhere in the narration, so Stage 1's deterministic reference match has nothing to key on and defers. The credited amount misses the settlement net by more than Stage 1/2's amount tolerance, so Stage 2's minimum-residual subset-sum search does not land on it either."
+      },
+      "notes": "Stress-test case (abbreviation_variant): Same counterparty as 'KESTREL SYSTEMS AND SOLUTIONS LIMITED'; the wire abbreviates it to 'KESTREL SYS & SOLUTIONS LTD' -- corporate-suffix and multi-word abbreviation beyond what the main generator's mangle() covers."
+    },
+    {
+      "case_id": "STRESS_TEST-00014",
+      "defect_class": "abbreviation_variant",
+      "split": "stress_test",
+      "settlement_ids": [
+        "setl_bvNLDrVw7fq5qn"
+      ],
+      "payment_ids": [
+        "pay_vPtmtf6APE9Fe8"
+      ],
+      "bank_txn_ids": [
+        "BNKM000014"
+      ],
+      "invoice_ids": [
+        "INV-2026-M00014"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKM000014",
+        "covers_settlement_ids": [
+          "setl_bvNLDrVw7fq5qn"
+        ],
+        "credit_amount_minor": 316165509,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 310239926,
+        "residual_minor": -5925583
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "ABBREVIATION_VARIANT",
+      "details": {
+        "category": "abbreviation_variant",
+        "true_counterparty_name": "NORTHWIND SOFTWARE INCORPORATED",
+        "wire_counterparty_name": "NSI",
+        "narration_as_sent": "/RFB/EXPORT PROCEEDS NSI",
+        "clean_signal_before_degradation": "Same counterparty as 'NORTHWIND SOFTWARE INCORPORATED'; the wire abbreviates it to 'NSI' -- corporate-suffix and multi-word abbreviation beyond what the main generator's mangle() covers.",
+        "amount_delta_minor": -5925583,
+        "reason_tier1_cannot_resolve": "No settlement reference (UTR / invoice id / order id / payment id) appears as a whole token anywhere in the narration, so Stage 1's deterministic reference match has nothing to key on and defers. The credited amount misses the settlement net by more than Stage 1/2's amount tolerance, so Stage 2's minimum-residual subset-sum search does not land on it either."
+      },
+      "notes": "Stress-test case (abbreviation_variant): Same counterparty as 'NORTHWIND SOFTWARE INCORPORATED'; the wire abbreviates it to 'NSI' -- corporate-suffix and multi-word abbreviation beyond what the main generator's mangle() covers."
+    },
+    {
+      "case_id": "STRESS_TEST-00015",
+      "defect_class": "abbreviation_variant",
+      "split": "stress_test",
+      "settlement_ids": [
+        "setl_WIlUWeaNJsDQQg"
+      ],
+      "payment_ids": [
+        "pay_6gkDcNwlJkmsso"
+      ],
+      "bank_txn_ids": [
+        "BNKM000015"
+      ],
+      "invoice_ids": [
+        "INV-2026-M00015"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKM000015",
+        "covers_settlement_ids": [
+          "setl_WIlUWeaNJsDQQg"
+        ],
+        "credit_amount_minor": 450063463,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 459342175,
+        "residual_minor": 9278712
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "ABBREVIATION_VARIANT",
+      "details": {
+        "category": "abbreviation_variant",
+        "true_counterparty_name": "MERIDIAN INTERNATIONAL TRADING COMPANY",
+        "wire_counterparty_name": "MERIDIAN INTL TRADING CO",
+        "narration_as_sent": "/RFB/EXPORT PROCEEDS MERIDIAN INTL TRADING CO",
+        "clean_signal_before_degradation": "Same counterparty as 'MERIDIAN INTERNATIONAL TRADING COMPANY'; the wire abbreviates it to 'MERIDIAN INTL TRADING CO' -- corporate-suffix and multi-word abbreviation beyond what the main generator's mangle() covers.",
+        "amount_delta_minor": 9278712,
+        "reason_tier1_cannot_resolve": "No settlement reference (UTR / invoice id / order id / payment id) appears as a whole token anywhere in the narration, so Stage 1's deterministic reference match has nothing to key on and defers. The credited amount misses the settlement net by more than Stage 1/2's amount tolerance, so Stage 2's minimum-residual subset-sum search does not land on it either."
+      },
+      "notes": "Stress-test case (abbreviation_variant): Same counterparty as 'MERIDIAN INTERNATIONAL TRADING COMPANY'; the wire abbreviates it to 'MERIDIAN INTL TRADING CO' -- corporate-suffix and multi-word abbreviation beyond what the main generator's mangle() covers."
+    },
+    {
+      "case_id": "STRESS_TEST-00016",
+      "defect_class": "abbreviation_variant",
+      "split": "stress_test",
+      "settlement_ids": [
+        "setl_fTqE0TR53XAsN3"
+      ],
+      "payment_ids": [
+        "pay_39HAwCWUrbKB0c"
+      ],
+      "bank_txn_ids": [
+        "BNKM000016"
+      ],
+      "invoice_ids": [
+        "INV-2026-M00016"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKM000016",
+        "covers_settlement_ids": [
+          "setl_fTqE0TR53XAsN3"
+        ],
+        "credit_amount_minor": 363811468,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 358187918,
+        "residual_minor": -5623550
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "ABBREVIATION_VARIANT",
+      "details": {
+        "category": "abbreviation_variant",
+        "true_counterparty_name": "HELIOS DATA AND ANALYTICS BV",
+        "wire_counterparty_name": "HELIOS D&A BV",
+        "narration_as_sent": "/RFB/EXPORT PROCEEDS HELIOS D&A BV",
+        "clean_signal_before_degradation": "Same counterparty as 'HELIOS DATA AND ANALYTICS BV'; the wire abbreviates it to 'HELIOS D&A BV' -- corporate-suffix and multi-word abbreviation beyond what the main generator's mangle() covers.",
+        "amount_delta_minor": -5623550,
+        "reason_tier1_cannot_resolve": "No settlement reference (UTR / invoice id / order id / payment id) appears as a whole token anywhere in the narration, so Stage 1's deterministic reference match has nothing to key on and defers. The credited amount misses the settlement net by more than Stage 1/2's amount tolerance, so Stage 2's minimum-residual subset-sum search does not land on it either."
+      },
+      "notes": "Stress-test case (abbreviation_variant): Same counterparty as 'HELIOS DATA AND ANALYTICS BV'; the wire abbreviates it to 'HELIOS D&A BV' -- corporate-suffix and multi-word abbreviation beyond what the main generator's mangle() covers."
+    },
+    {
+      "case_id": "STRESS_TEST-00017",
+      "defect_class": "legal_vs_trading_name",
+      "split": "stress_test",
+      "settlement_ids": [
+        "setl_HYs7r6F3s9xTkL"
+      ],
+      "payment_ids": [
+        "pay_0AjFAPWDbrSyik"
+      ],
+      "bank_txn_ids": [
+        "BNKM000017"
+      ],
+      "invoice_ids": [
+        "INV-2026-M00017"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKM000017",
+        "covers_settlement_ids": [
+          "setl_HYs7r6F3s9xTkL"
+        ],
+        "credit_amount_minor": 27063182,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 27253960,
+        "residual_minor": 190778
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "LEGAL_VS_TRADING_NAME",
+      "details": {
+        "category": "legal_vs_trading_name",
+        "true_counterparty_name": "AXIOM GLOBAL HOLDINGS PRIVATE LIMITED",
+        "wire_counterparty_name": "AXIOM TRADING CO",
+        "narration_as_sent": "/RFB/EXPORT PROCEEDS AXIOM TRADING CO",
+        "clean_signal_before_degradation": "The settlement/invoice side carries the buyer's legal name 'AXIOM GLOBAL HOLDINGS PRIVATE LIMITED'; the wire carries their trading name 'AXIOM TRADING CO' instead -- a genuinely different string for the same entity, not a spelling variant.",
+        "amount_delta_minor": 190778,
+        "reason_tier1_cannot_resolve": "No settlement reference (UTR / invoice id / order id / payment id) appears as a whole token anywhere in the narration, so Stage 1's deterministic reference match has nothing to key on and defers. The credited amount misses the settlement net by more than Stage 1/2's amount tolerance, so Stage 2's minimum-residual subset-sum search does not land on it either."
+      },
+      "notes": "Stress-test case (legal_vs_trading_name): The settlement/invoice side carries the buyer's legal name 'AXIOM GLOBAL HOLDINGS PRIVATE LIMITED'; the wire carries their trading name 'AXIOM TRADING CO' instead -- a genuinely different string for the same entity, not a spelling variant."
+    },
+    {
+      "case_id": "STRESS_TEST-00018",
+      "defect_class": "legal_vs_trading_name",
+      "split": "stress_test",
+      "settlement_ids": [
+        "setl_8xOsiRfRyAWCEV"
+      ],
+      "payment_ids": [
+        "pay_xgTMFFHzG3uYcH"
+      ],
+      "bank_txn_ids": [
+        "BNKM000018"
+      ],
+      "invoice_ids": [
+        "INV-2026-M00018"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKM000018",
+        "covers_settlement_ids": [
+          "setl_8xOsiRfRyAWCEV"
+        ],
+        "credit_amount_minor": 14050762,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 13708060,
+        "residual_minor": -342702
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "LEGAL_VS_TRADING_NAME",
+      "details": {
+        "category": "legal_vs_trading_name",
+        "true_counterparty_name": "BRIGHTPATH VENTURES PRIVATE LIMITED",
+        "wire_counterparty_name": "GLOWROUTE EXPORTS",
+        "narration_as_sent": "/RFB/EXPORT PROCEEDS GLOWROUTE EXPORTS",
+        "clean_signal_before_degradation": "The settlement/invoice side carries the buyer's legal name 'BRIGHTPATH VENTURES PRIVATE LIMITED'; the wire carries their trading name 'GLOWROUTE EXPORTS' instead -- a genuinely different string for the same entity, not a spelling variant.",
+        "amount_delta_minor": -342702,
+        "reason_tier1_cannot_resolve": "No settlement reference (UTR / invoice id / order id / payment id) appears as a whole token anywhere in the narration, so Stage 1's deterministic reference match has nothing to key on and defers. The credited amount misses the settlement net by more than Stage 1/2's amount tolerance, so Stage 2's minimum-residual subset-sum search does not land on it either."
+      },
+      "notes": "Stress-test case (legal_vs_trading_name): The settlement/invoice side carries the buyer's legal name 'BRIGHTPATH VENTURES PRIVATE LIMITED'; the wire carries their trading name 'GLOWROUTE EXPORTS' instead -- a genuinely different string for the same entity, not a spelling variant."
+    },
+    {
+      "case_id": "STRESS_TEST-00019",
+      "defect_class": "legal_vs_trading_name",
+      "split": "stress_test",
+      "settlement_ids": [
+        "setl_WDQhsXzNL3Wb1l"
+      ],
+      "payment_ids": [
+        "pay_Vyr4TH2wgtOfnH"
+      ],
+      "bank_txn_ids": [
+        "BNKM000019"
+      ],
+      "invoice_ids": [
+        "INV-2026-M00019"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKM000019",
+        "covers_settlement_ids": [
+          "setl_WDQhsXzNL3Wb1l"
+        ],
+        "credit_amount_minor": 448126222,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 439253305,
+        "residual_minor": -8872917
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "LEGAL_VS_TRADING_NAME",
+      "details": {
+        "category": "legal_vs_trading_name",
+        "true_counterparty_name": "STERLING MERCANTILE CORPORATION",
+        "wire_counterparty_name": "STERLING GOODS",
+        "narration_as_sent": "/RFB/EXPORT PROCEEDS STERLING GOODS",
+        "clean_signal_before_degradation": "The settlement/invoice side carries the buyer's legal name 'STERLING MERCANTILE CORPORATION'; the wire carries their trading name 'STERLING GOODS' instead -- a genuinely different string for the same entity, not a spelling variant.",
+        "amount_delta_minor": -8872917,
+        "reason_tier1_cannot_resolve": "No settlement reference (UTR / invoice id / order id / payment id) appears as a whole token anywhere in the narration, so Stage 1's deterministic reference match has nothing to key on and defers. The credited amount misses the settlement net by more than Stage 1/2's amount tolerance, so Stage 2's minimum-residual subset-sum search does not land on it either."
+      },
+      "notes": "Stress-test case (legal_vs_trading_name): The settlement/invoice side carries the buyer's legal name 'STERLING MERCANTILE CORPORATION'; the wire carries their trading name 'STERLING GOODS' instead -- a genuinely different string for the same entity, not a spelling variant."
+    },
+    {
+      "case_id": "STRESS_TEST-00020",
+      "defect_class": "legal_vs_trading_name",
+      "split": "stress_test",
+      "settlement_ids": [
+        "setl_ghy53Qi5S1zDFE"
+      ],
+      "payment_ids": [
+        "pay_rG23uVGsUsYxdG"
+      ],
+      "bank_txn_ids": [
+        "BNKM000020"
+      ],
+      "invoice_ids": [
+        "INV-2026-M00020"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKM000020",
+        "covers_settlement_ids": [
+          "setl_ghy53Qi5S1zDFE"
+        ],
+        "credit_amount_minor": 224949878,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 229869076,
+        "residual_minor": 4919198
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "LEGAL_VS_TRADING_NAME",
+      "details": {
+        "category": "legal_vs_trading_name",
+        "true_counterparty_name": "VERTEX INDUSTRIAL SUPPLIES LLC",
+        "wire_counterparty_name": "IRONPEAK SUPPLIES",
+        "narration_as_sent": "/RFB/EXPORT PROCEEDS IRONPEAK SUPPLIES",
+        "clean_signal_before_degradation": "The settlement/invoice side carries the buyer's legal name 'VERTEX INDUSTRIAL SUPPLIES LLC'; the wire carries their trading name 'IRONPEAK SUPPLIES' instead -- a genuinely different string for the same entity, not a spelling variant.",
+        "amount_delta_minor": 4919198,
+        "reason_tier1_cannot_resolve": "No settlement reference (UTR / invoice id / order id / payment id) appears as a whole token anywhere in the narration, so Stage 1's deterministic reference match has nothing to key on and defers. The credited amount misses the settlement net by more than Stage 1/2's amount tolerance, so Stage 2's minimum-residual subset-sum search does not land on it either."
+      },
+      "notes": "Stress-test case (legal_vs_trading_name): The settlement/invoice side carries the buyer's legal name 'VERTEX INDUSTRIAL SUPPLIES LLC'; the wire carries their trading name 'IRONPEAK SUPPLIES' instead -- a genuinely different string for the same entity, not a spelling variant."
+    },
+    {
+      "case_id": "STRESS_TEST-00021",
+      "defect_class": "legal_vs_trading_name",
+      "split": "stress_test",
+      "settlement_ids": [
+        "setl_lM1ySPFyXAbA00"
+      ],
+      "payment_ids": [
+        "pay_lc5TfZWVyjVu0D"
+      ],
+      "bank_txn_ids": [
+        "BNKM000021"
+      ],
+      "invoice_ids": [
+        "INV-2026-M00021"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKM000021",
+        "covers_settlement_ids": [
+          "setl_lM1ySPFyXAbA00"
+        ],
+        "credit_amount_minor": 42076671,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 42531761,
+        "residual_minor": 455090
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "LEGAL_VS_TRADING_NAME",
+      "details": {
+        "category": "legal_vs_trading_name",
+        "true_counterparty_name": "PRIME HORIZON ENTERPRISES LTD",
+        "wire_counterparty_name": "HORIZON RETAIL GROUP",
+        "narration_as_sent": "/RFB/EXPORT PROCEEDS HORIZON RETAIL GROUP",
+        "clean_signal_before_degradation": "The settlement/invoice side carries the buyer's legal name 'PRIME HORIZON ENTERPRISES LTD'; the wire carries their trading name 'HORIZON RETAIL GROUP' instead -- a genuinely different string for the same entity, not a spelling variant.",
+        "amount_delta_minor": 455090,
+        "reason_tier1_cannot_resolve": "No settlement reference (UTR / invoice id / order id / payment id) appears as a whole token anywhere in the narration, so Stage 1's deterministic reference match has nothing to key on and defers. The credited amount misses the settlement net by more than Stage 1/2's amount tolerance, so Stage 2's minimum-residual subset-sum search does not land on it either."
+      },
+      "notes": "Stress-test case (legal_vs_trading_name): The settlement/invoice side carries the buyer's legal name 'PRIME HORIZON ENTERPRISES LTD'; the wire carries their trading name 'HORIZON RETAIL GROUP' instead -- a genuinely different string for the same entity, not a spelling variant."
+    },
+    {
+      "case_id": "STRESS_TEST-00022",
+      "defect_class": "legal_vs_trading_name",
+      "split": "stress_test",
+      "settlement_ids": [
+        "setl_zoEAg05n3t6LVC"
+      ],
+      "payment_ids": [
+        "pay_kATHiQskB3yMK8"
+      ],
+      "bank_txn_ids": [
+        "BNKM000022"
+      ],
+      "invoice_ids": [
+        "INV-2026-M00022"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKM000022",
+        "covers_settlement_ids": [
+          "setl_zoEAg05n3t6LVC"
+        ],
+        "credit_amount_minor": 220106233,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 223458105,
+        "residual_minor": 3351872
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "LEGAL_VS_TRADING_NAME",
+      "details": {
+        "category": "legal_vs_trading_name",
+        "true_counterparty_name": "OCEANIC LOGISTICS HOLDINGS BV",
+        "wire_counterparty_name": "BLUEWATER SHIPPING",
+        "narration_as_sent": "/RFB/EXPORT PROCEEDS BLUEWATER SHIPPING",
+        "clean_signal_before_degradation": "The settlement/invoice side carries the buyer's legal name 'OCEANIC LOGISTICS HOLDINGS BV'; the wire carries their trading name 'BLUEWATER SHIPPING' instead -- a genuinely different string for the same entity, not a spelling variant.",
+        "amount_delta_minor": 3351872,
+        "reason_tier1_cannot_resolve": "No settlement reference (UTR / invoice id / order id / payment id) appears as a whole token anywhere in the narration, so Stage 1's deterministic reference match has nothing to key on and defers. The credited amount misses the settlement net by more than Stage 1/2's amount tolerance, so Stage 2's minimum-residual subset-sum search does not land on it either."
+      },
+      "notes": "Stress-test case (legal_vs_trading_name): The settlement/invoice side carries the buyer's legal name 'OCEANIC LOGISTICS HOLDINGS BV'; the wire carries their trading name 'BLUEWATER SHIPPING' instead -- a genuinely different string for the same entity, not a spelling variant."
+    },
+    {
+      "case_id": "STRESS_TEST-00023",
+      "defect_class": "legal_vs_trading_name",
+      "split": "stress_test",
+      "settlement_ids": [
+        "setl_3GPuv252NRxJQf"
+      ],
+      "payment_ids": [
+        "pay_ccMQC78SPGbrQa"
+      ],
+      "bank_txn_ids": [
+        "BNKM000023"
+      ],
+      "invoice_ids": [
+        "INV-2026-M00023"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKM000023",
+        "covers_settlement_ids": [
+          "setl_3GPuv252NRxJQf"
+        ],
+        "credit_amount_minor": 75937516,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 74726940,
+        "residual_minor": -1210576
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "LEGAL_VS_TRADING_NAME",
+      "details": {
+        "category": "legal_vs_trading_name",
+        "true_counterparty_name": "GRANITE PEAK MANUFACTURING INC",
+        "wire_counterparty_name": "SUMMIT WORKS",
+        "narration_as_sent": "/RFB/EXPORT PROCEEDS SUMMIT WORKS",
+        "clean_signal_before_degradation": "The settlement/invoice side carries the buyer's legal name 'GRANITE PEAK MANUFACTURING INC'; the wire carries their trading name 'SUMMIT WORKS' instead -- a genuinely different string for the same entity, not a spelling variant.",
+        "amount_delta_minor": -1210576,
+        "reason_tier1_cannot_resolve": "No settlement reference (UTR / invoice id / order id / payment id) appears as a whole token anywhere in the narration, so Stage 1's deterministic reference match has nothing to key on and defers. The credited amount misses the settlement net by more than Stage 1/2's amount tolerance, so Stage 2's minimum-residual subset-sum search does not land on it either."
+      },
+      "notes": "Stress-test case (legal_vs_trading_name): The settlement/invoice side carries the buyer's legal name 'GRANITE PEAK MANUFACTURING INC'; the wire carries their trading name 'SUMMIT WORKS' instead -- a genuinely different string for the same entity, not a spelling variant."
+    },
+    {
+      "case_id": "STRESS_TEST-00024",
+      "defect_class": "legal_vs_trading_name",
+      "split": "stress_test",
+      "settlement_ids": [
+        "setl_djUsoAKYEdHWC5"
+      ],
+      "payment_ids": [
+        "pay_GyR5lWRCldIxEp"
+      ],
+      "bank_txn_ids": [
+        "BNKM000024"
+      ],
+      "invoice_ids": [
+        "INV-2026-M00024"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKM000024",
+        "covers_settlement_ids": [
+          "setl_djUsoAKYEdHWC5"
+        ],
+        "credit_amount_minor": 431469781,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 435476162,
+        "residual_minor": 4006381
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "LEGAL_VS_TRADING_NAME",
+      "details": {
+        "category": "legal_vs_trading_name",
+        "true_counterparty_name": "EMERALD COAST TRADING LLC",
+        "wire_counterparty_name": "COASTLINE IMPORTS",
+        "narration_as_sent": "/RFB/EXPORT PROCEEDS COASTLINE IMPORTS",
+        "clean_signal_before_degradation": "The settlement/invoice side carries the buyer's legal name 'EMERALD COAST TRADING LLC'; the wire carries their trading name 'COASTLINE IMPORTS' instead -- a genuinely different string for the same entity, not a spelling variant.",
+        "amount_delta_minor": 4006381,
+        "reason_tier1_cannot_resolve": "No settlement reference (UTR / invoice id / order id / payment id) appears as a whole token anywhere in the narration, so Stage 1's deterministic reference match has nothing to key on and defers. The credited amount misses the settlement net by more than Stage 1/2's amount tolerance, so Stage 2's minimum-residual subset-sum search does not land on it either."
+      },
+      "notes": "Stress-test case (legal_vs_trading_name): The settlement/invoice side carries the buyer's legal name 'EMERALD COAST TRADING LLC'; the wire carries their trading name 'COASTLINE IMPORTS' instead -- a genuinely different string for the same entity, not a spelling variant."
+    },
+    {
+      "case_id": "STRESS_TEST-00025",
+      "defect_class": "ocr_typo_narration",
+      "split": "stress_test",
+      "settlement_ids": [
+        "setl_FShKIDlQnYWqpQ"
+      ],
+      "payment_ids": [
+        "pay_K2oNFPhN8s54ws"
+      ],
+      "bank_txn_ids": [
+        "BNKM000025"
+      ],
+      "invoice_ids": [
+        "INV-2026-M00025"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKM000025",
+        "covers_settlement_ids": [
+          "setl_FShKIDlQnYWqpQ"
+        ],
+        "credit_amount_minor": 246356282,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 241431088,
+        "residual_minor": -4925194
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "OCR_TYPO_NARRATION",
+      "details": {
+        "category": "ocr_typo_narration",
+        "true_counterparty_name": "ACME TRADING GMBH",
+        "wire_counterparty_name": "ACME TRADING GMBH",
+        "narration_as_sent": "/RFB/EXPORT PR0OCEEDD ACME TRADING GMBH",
+        "clean_signal_before_degradation": "Counterparty name is clean and unchanged ('ACME TRADING GMBH' on both sides); the free-text narration is OCR/re-keying-corrupted from '/RFB/EXPORT PROCEEDS ACME TRADING GMBH' to '/RFB/EXPORT PR0OCEEDD ACME TRADING GMBH'.",
+        "amount_delta_minor": -4925194,
+        "reason_tier1_cannot_resolve": "No settlement reference (UTR / invoice id / order id / payment id) appears as a whole token anywhere in the narration, so Stage 1's deterministic reference match has nothing to key on and defers. The credited amount misses the settlement net by more than Stage 1/2's amount tolerance, so Stage 2's minimum-residual subset-sum search does not land on it either.",
+        "clean_narration_before_ocr": "/RFB/EXPORT PROCEEDS ACME TRADING GMBH"
+      },
+      "notes": "Stress-test case (ocr_typo_narration): Counterparty name is clean and unchanged ('ACME TRADING GMBH' on both sides); the free-text narration is OCR/re-keying-corrupted from '/RFB/EXPORT PROCEEDS ACME TRADING GMBH' to '/RFB/EXPORT PR0OCEEDD ACME TRADING GMBH'."
+    },
+    {
+      "case_id": "STRESS_TEST-00026",
+      "defect_class": "ocr_typo_narration",
+      "split": "stress_test",
+      "settlement_ids": [
+        "setl_eV1uX40Fu0JLIu"
+      ],
+      "payment_ids": [
+        "pay_4dXq7chPGgqRyk"
+      ],
+      "bank_txn_ids": [
+        "BNKM000026"
+      ],
+      "invoice_ids": [
+        "INV-2026-M00026"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKM000026",
+        "covers_settlement_ids": [
+          "setl_eV1uX40Fu0JLIu"
+        ],
+        "credit_amount_minor": 503555652,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 498668699,
+        "residual_minor": -4886953
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "OCR_TYPO_NARRATION",
+      "details": {
+        "category": "ocr_typo_narration",
+        "true_counterparty_name": "NORTHWIND SOFTWARE INC",
+        "wire_counterparty_name": "NORTHWIND SOFTWARE INC",
+        "narration_as_sent": "/RFB/EXPORT PROCEEDS NORYHWIND SOFTWARE INC",
+        "clean_signal_before_degradation": "Counterparty name is clean and unchanged ('NORTHWIND SOFTWARE INC' on both sides); the free-text narration is OCR/re-keying-corrupted from '/RFB/EXPORT PROCEEDS NORTHWIND SOFTWARE INC' to '/RFB/EXPORT PROCEEDS NORYHWIND SOFTWARE INC'.",
+        "amount_delta_minor": -4886953,
+        "reason_tier1_cannot_resolve": "No settlement reference (UTR / invoice id / order id / payment id) appears as a whole token anywhere in the narration, so Stage 1's deterministic reference match has nothing to key on and defers. The credited amount misses the settlement net by more than Stage 1/2's amount tolerance, so Stage 2's minimum-residual subset-sum search does not land on it either.",
+        "clean_narration_before_ocr": "/RFB/EXPORT PROCEEDS NORTHWIND SOFTWARE INC"
+      },
+      "notes": "Stress-test case (ocr_typo_narration): Counterparty name is clean and unchanged ('NORTHWIND SOFTWARE INC' on both sides); the free-text narration is OCR/re-keying-corrupted from '/RFB/EXPORT PROCEEDS NORTHWIND SOFTWARE INC' to '/RFB/EXPORT PROCEEDS NORYHWIND SOFTWARE INC'."
+    },
+    {
+      "case_id": "STRESS_TEST-00027",
+      "defect_class": "ocr_typo_narration",
+      "split": "stress_test",
+      "settlement_ids": [
+        "setl_V6OdGQN0NeO05Z"
+      ],
+      "payment_ids": [
+        "pay_7li2hzhBOMzMwA"
+      ],
+      "bank_txn_ids": [
+        "BNKM000027"
+      ],
+      "invoice_ids": [
+        "INV-2026-M00027"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKM000027",
+        "covers_settlement_ids": [
+          "setl_V6OdGQN0NeO05Z"
+        ],
+        "credit_amount_minor": 241179185,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 240577741,
+        "residual_minor": -601444
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "OCR_TYPO_NARRATION",
+      "details": {
+        "category": "ocr_typo_narration",
+        "true_counterparty_name": "BRIDGEWORK ANALYTICS LLC",
+        "wire_counterparty_name": "BRIDGEWORK ANALYTICS LLC",
+        "narration_as_sent": "/RFB/EXPORT PROCWDS BRIDGEWORK ANAYTICS LLC",
+        "clean_signal_before_degradation": "Counterparty name is clean and unchanged ('BRIDGEWORK ANALYTICS LLC' on both sides); the free-text narration is OCR/re-keying-corrupted from '/RFB/EXPORT PROCEEDS BRIDGEWORK ANALYTICS LLC' to '/RFB/EXPORT PROCWDS BRIDGEWORK ANAYTICS LLC'.",
+        "amount_delta_minor": -601444,
+        "reason_tier1_cannot_resolve": "No settlement reference (UTR / invoice id / order id / payment id) appears as a whole token anywhere in the narration, so Stage 1's deterministic reference match has nothing to key on and defers. The credited amount misses the settlement net by more than Stage 1/2's amount tolerance, so Stage 2's minimum-residual subset-sum search does not land on it either.",
+        "clean_narration_before_ocr": "/RFB/EXPORT PROCEEDS BRIDGEWORK ANALYTICS LLC"
+      },
+      "notes": "Stress-test case (ocr_typo_narration): Counterparty name is clean and unchanged ('BRIDGEWORK ANALYTICS LLC' on both sides); the free-text narration is OCR/re-keying-corrupted from '/RFB/EXPORT PROCEEDS BRIDGEWORK ANALYTICS LLC' to '/RFB/EXPORT PROCWDS BRIDGEWORK ANAYTICS LLC'."
+    },
+    {
+      "case_id": "STRESS_TEST-00028",
+      "defect_class": "ocr_typo_narration",
+      "split": "stress_test",
+      "settlement_ids": [
+        "setl_8qQARBpt8uFQZv"
+      ],
+      "payment_ids": [
+        "pay_YBTq1Q8VRCCQsj"
+      ],
+      "bank_txn_ids": [
+        "BNKM000028"
+      ],
+      "invoice_ids": [
+        "INV-2026-M00028"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKM000028",
+        "covers_settlement_ids": [
+          "setl_8qQARBpt8uFQZv"
+        ],
+        "credit_amount_minor": 454097657,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 443411441,
+        "residual_minor": -10686216
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "OCR_TYPO_NARRATION",
+      "details": {
+        "category": "ocr_typo_narration",
+        "true_counterparty_name": "KESTREL SYSTEMS LIMITED",
+        "wire_counterparty_name": "KESTREL SYSTEMS LIMITED",
+        "narration_as_sent": "/RFB/EXPORT PROCEEDS KESTREL SYSTEMS LIMITED",
+        "clean_signal_before_degradation": "Counterparty name is clean and unchanged ('KESTREL SYSTEMS LIMITED' on both sides); the free-text narration is OCR/re-keying-corrupted from '/RFB/EXPORT PROCEEDS KESTREL SYSTEMS LIMITED' to '/RFB/EXPORT PROCEEDS KESTREL SYSTEMS LIMITED'.",
+        "amount_delta_minor": -10686216,
+        "reason_tier1_cannot_resolve": "No settlement reference (UTR / invoice id / order id / payment id) appears as a whole token anywhere in the narration, so Stage 1's deterministic reference match has nothing to key on and defers. The credited amount misses the settlement net by more than Stage 1/2's amount tolerance, so Stage 2's minimum-residual subset-sum search does not land on it either.",
+        "clean_narration_before_ocr": "/RFB/EXPORT PROCEEDS KESTREL SYSTEMS LIMITED"
+      },
+      "notes": "Stress-test case (ocr_typo_narration): Counterparty name is clean and unchanged ('KESTREL SYSTEMS LIMITED' on both sides); the free-text narration is OCR/re-keying-corrupted from '/RFB/EXPORT PROCEEDS KESTREL SYSTEMS LIMITED' to '/RFB/EXPORT PROCEEDS KESTREL SYSTEMS LIMITED'."
+    },
+    {
+      "case_id": "STRESS_TEST-00029",
+      "defect_class": "ocr_typo_narration",
+      "split": "stress_test",
+      "settlement_ids": [
+        "setl_9VoIIbjvROe2NY"
+      ],
+      "payment_ids": [
+        "pay_Rmsgb1QbatDTN9"
+      ],
+      "bank_txn_ids": [
+        "BNKM000029"
+      ],
+      "invoice_ids": [
+        "INV-2026-M00029"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKM000029",
+        "covers_settlement_ids": [
+          "setl_9VoIIbjvROe2NY"
+        ],
+        "credit_amount_minor": 108914723,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 111535815,
+        "residual_minor": 2621092
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "OCR_TYPO_NARRATION",
+      "details": {
+        "category": "ocr_typo_narration",
+        "true_counterparty_name": "MERIDIAN PTE LTD",
+        "wire_counterparty_name": "MERIDIAN PTE LTD",
+        "narration_as_sent": "/RFB/EXPORT PROCEEDS MERIIDIAN PTELTD",
+        "clean_signal_before_degradation": "Counterparty name is clean and unchanged ('MERIDIAN PTE LTD' on both sides); the free-text narration is OCR/re-keying-corrupted from '/RFB/EXPORT PROCEEDS MERIDIAN PTE LTD' to '/RFB/EXPORT PROCEEDS MERIIDIAN PTELTD'.",
+        "amount_delta_minor": 2621092,
+        "reason_tier1_cannot_resolve": "No settlement reference (UTR / invoice id / order id / payment id) appears as a whole token anywhere in the narration, so Stage 1's deterministic reference match has nothing to key on and defers. The credited amount misses the settlement net by more than Stage 1/2's amount tolerance, so Stage 2's minimum-residual subset-sum search does not land on it either.",
+        "clean_narration_before_ocr": "/RFB/EXPORT PROCEEDS MERIDIAN PTE LTD"
+      },
+      "notes": "Stress-test case (ocr_typo_narration): Counterparty name is clean and unchanged ('MERIDIAN PTE LTD' on both sides); the free-text narration is OCR/re-keying-corrupted from '/RFB/EXPORT PROCEEDS MERIDIAN PTE LTD' to '/RFB/EXPORT PROCEEDS MERIIDIAN PTELTD'."
+    },
+    {
+      "case_id": "STRESS_TEST-00030",
+      "defect_class": "ocr_typo_narration",
+      "split": "stress_test",
+      "settlement_ids": [
+        "setl_7J20dHZFRggemQ"
+      ],
+      "payment_ids": [
+        "pay_J6p7g8E5mo1Lv7"
+      ],
+      "bank_txn_ids": [
+        "BNKM000030"
+      ],
+      "invoice_ids": [
+        "INV-2026-M00030"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKM000030",
+        "covers_settlement_ids": [
+          "setl_7J20dHZFRggemQ"
+        ],
+        "credit_amount_minor": 73971740,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 73080162,
+        "residual_minor": -891578
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "OCR_TYPO_NARRATION",
+      "details": {
+        "category": "ocr_typo_narration",
+        "true_counterparty_name": "AL MAHA GENERAL TRADING LLC",
+        "wire_counterparty_name": "AL MAHA GENERAL TRADING LLC",
+        "narration_as_sent": "/RFB/EXPPORT PROCEEDS AL MAHS GENERALTRADING LLC",
+        "clean_signal_before_degradation": "Counterparty name is clean and unchanged ('AL MAHA GENERAL TRADING LLC' on both sides); the free-text narration is OCR/re-keying-corrupted from '/RFB/EXPORT PROCEEDS AL MAHA GENERAL TRADING LLC' to '/RFB/EXPPORT PROCEEDS AL MAHS GENERALTRADING LLC'.",
+        "amount_delta_minor": -891578,
+        "reason_tier1_cannot_resolve": "No settlement reference (UTR / invoice id / order id / payment id) appears as a whole token anywhere in the narration, so Stage 1's deterministic reference match has nothing to key on and defers. The credited amount misses the settlement net by more than Stage 1/2's amount tolerance, so Stage 2's minimum-residual subset-sum search does not land on it either.",
+        "clean_narration_before_ocr": "/RFB/EXPORT PROCEEDS AL MAHA GENERAL TRADING LLC"
+      },
+      "notes": "Stress-test case (ocr_typo_narration): Counterparty name is clean and unchanged ('AL MAHA GENERAL TRADING LLC' on both sides); the free-text narration is OCR/re-keying-corrupted from '/RFB/EXPORT PROCEEDS AL MAHA GENERAL TRADING LLC' to '/RFB/EXPPORT PROCEEDS AL MAHS GENERALTRADING LLC'."
+    },
+    {
+      "case_id": "STRESS_TEST-00031",
+      "defect_class": "ocr_typo_narration",
+      "split": "stress_test",
+      "settlement_ids": [
+        "setl_5vXfeIuFLGNfRK"
+      ],
+      "payment_ids": [
+        "pay_HXwkpvrIRHQA15"
+      ],
+      "bank_txn_ids": [
+        "BNKM000031"
+      ],
+      "invoice_ids": [
+        "INV-2026-M00031"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKM000031",
+        "covers_settlement_ids": [
+          "setl_5vXfeIuFLGNfRK"
+        ],
+        "credit_amount_minor": 70393620,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 70577121,
+        "residual_minor": 183501
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "OCR_TYPO_NARRATION",
+      "details": {
+        "category": "ocr_typo_narration",
+        "true_counterparty_name": "HELIOS DATA BV",
+        "wire_counterparty_name": "HELIOS DATA BV",
+        "narration_as_sent": "/RB/EXPORT PROCEEEDS HELIIOS DATA BV",
+        "clean_signal_before_degradation": "Counterparty name is clean and unchanged ('HELIOS DATA BV' on both sides); the free-text narration is OCR/re-keying-corrupted from '/RFB/EXPORT PROCEEDS HELIOS DATA BV' to '/RB/EXPORT PROCEEEDS HELIIOS DATA BV'.",
+        "amount_delta_minor": 183501,
+        "reason_tier1_cannot_resolve": "No settlement reference (UTR / invoice id / order id / payment id) appears as a whole token anywhere in the narration, so Stage 1's deterministic reference match has nothing to key on and defers. The credited amount misses the settlement net by more than Stage 1/2's amount tolerance, so Stage 2's minimum-residual subset-sum search does not land on it either.",
+        "clean_narration_before_ocr": "/RFB/EXPORT PROCEEDS HELIOS DATA BV"
+      },
+      "notes": "Stress-test case (ocr_typo_narration): Counterparty name is clean and unchanged ('HELIOS DATA BV' on both sides); the free-text narration is OCR/re-keying-corrupted from '/RFB/EXPORT PROCEEDS HELIOS DATA BV' to '/RB/EXPORT PROCEEEDS HELIIOS DATA BV'."
+    },
+    {
+      "case_id": "STRESS_TEST-00032",
+      "defect_class": "ocr_typo_narration",
+      "split": "stress_test",
+      "settlement_ids": [
+        "setl_k2ACXJ3TQIj48a"
+      ],
+      "payment_ids": [
+        "pay_0r7ZEkL6XYOsBL"
+      ],
+      "bank_txn_ids": [
+        "BNKM000032"
+      ],
+      "invoice_ids": [
+        "INV-2026-M00032"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKM000032",
+        "covers_settlement_ids": [
+          "setl_k2ACXJ3TQIj48a"
+        ],
+        "credit_amount_minor": 378564519,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 381041287,
+        "residual_minor": 2476768
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "OCR_TYPO_NARRATION",
+      "details": {
+        "category": "ocr_typo_narration",
+        "true_counterparty_name": "CASCADE RETAIL CORP",
+        "wire_counterparty_name": "CASCADE RETAIL CORP",
+        "narration_as_sent": "/RFFB/EXPORT PROCEEDS CASCADE RETAIL CORP",
+        "clean_signal_before_degradation": "Counterparty name is clean and unchanged ('CASCADE RETAIL CORP' on both sides); the free-text narration is OCR/re-keying-corrupted from '/RFB/EXPORT PROCEEDS CASCADE RETAIL CORP' to '/RFFB/EXPORT PROCEEDS CASCADE RETAIL CORP'.",
+        "amount_delta_minor": 2476768,
+        "reason_tier1_cannot_resolve": "No settlement reference (UTR / invoice id / order id / payment id) appears as a whole token anywhere in the narration, so Stage 1's deterministic reference match has nothing to key on and defers. The credited amount misses the settlement net by more than Stage 1/2's amount tolerance, so Stage 2's minimum-residual subset-sum search does not land on it either.",
+        "clean_narration_before_ocr": "/RFB/EXPORT PROCEEDS CASCADE RETAIL CORP"
+      },
+      "notes": "Stress-test case (ocr_typo_narration): Counterparty name is clean and unchanged ('CASCADE RETAIL CORP' on both sides); the free-text narration is OCR/re-keying-corrupted from '/RFB/EXPORT PROCEEDS CASCADE RETAIL CORP' to '/RFFB/EXPORT PROCEEDS CASCADE RETAIL CORP'."
+    },
+    {
+      "case_id": "STRESS_TEST-00033",
+      "defect_class": "invoice_description_mismatch",
+      "split": "stress_test",
+      "settlement_ids": [
+        "setl_xzMNtNGL454yjS"
+      ],
+      "payment_ids": [
+        "pay_vaopSYUGxY6wpT"
+      ],
+      "bank_txn_ids": [
+        "BNKM000033"
+      ],
+      "invoice_ids": [
+        "INV-2026-M00033"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKM000033",
+        "covers_settlement_ids": [
+          "setl_xzMNtNGL454yjS"
+        ],
+        "credit_amount_minor": 174387871,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 174022424,
+        "residual_minor": -365447
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "INVOICE_DESCRIPTION_MISMATCH",
+      "details": {
+        "category": "invoice_description_mismatch",
+        "true_counterparty_name": "ZENITH CONSULTING GROUP",
+        "wire_counterparty_name": "ZENITH CONSULTING GROUP",
+        "narration_as_sent": "/RFB/EXPORT PROCEEDS ZENITH CONSULTING GROUP",
+        "clean_signal_before_degradation": "Counterparty name is clean and unchanged ('ZENITH CONSULTING GROUP' on both sides); the invoice ledger's own description ('Q3 SaaS renewal - annual seat license, 24 seats') shares zero tokens with the settlement/wire text ('EXPORT PROCEEDS ...'), so a matcher over-relying on invoice-description overlap has nothing to key on either.",
+        "amount_delta_minor": -365447,
+        "reason_tier1_cannot_resolve": "No settlement reference (UTR / invoice id / order id / payment id) appears as a whole token anywhere in the narration, so Stage 1's deterministic reference match has nothing to key on and defers. The credited amount misses the settlement net by more than Stage 1/2's amount tolerance, so Stage 2's minimum-residual subset-sum search does not land on it either.",
+        "invoice_description": "Q3 SaaS renewal - annual seat license, 24 seats"
+      },
+      "notes": "Stress-test case (invoice_description_mismatch): Counterparty name is clean and unchanged ('ZENITH CONSULTING GROUP' on both sides); the invoice ledger's own description ('Q3 SaaS renewal - annual seat license, 24 seats') shares zero tokens with the settlement/wire text ('EXPORT PROCEEDS ...'), so a matcher over-relying on invoice-description overlap has nothing to key on either."
+    },
+    {
+      "case_id": "STRESS_TEST-00034",
+      "defect_class": "invoice_description_mismatch",
+      "split": "stress_test",
+      "settlement_ids": [
+        "setl_vH8I9afezaVWlF"
+      ],
+      "payment_ids": [
+        "pay_uWqUD2asn1iDCd"
+      ],
+      "bank_txn_ids": [
+        "BNKM000034"
+      ],
+      "invoice_ids": [
+        "INV-2026-M00034"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKM000034",
+        "covers_settlement_ids": [
+          "setl_vH8I9afezaVWlF"
+        ],
+        "credit_amount_minor": 243440151,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 248611265,
+        "residual_minor": 5171114
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "INVOICE_DESCRIPTION_MISMATCH",
+      "details": {
+        "category": "invoice_description_mismatch",
+        "true_counterparty_name": "PALLAS ROBOTICS LTD",
+        "wire_counterparty_name": "PALLAS ROBOTICS LTD",
+        "narration_as_sent": "/RFB/EXPORT PROCEEDS PALLAS ROBOTICS LTD",
+        "clean_signal_before_degradation": "Counterparty name is clean and unchanged ('PALLAS ROBOTICS LTD' on both sides); the invoice ledger's own description ('Precision servo actuator batch, custom firmware calibration') shares zero tokens with the settlement/wire text ('EXPORT PROCEEDS ...'), so a matcher over-relying on invoice-description overlap has nothing to key on either.",
+        "amount_delta_minor": 5171114,
+        "reason_tier1_cannot_resolve": "No settlement reference (UTR / invoice id / order id / payment id) appears as a whole token anywhere in the narration, so Stage 1's deterministic reference match has nothing to key on and defers. The credited amount misses the settlement net by more than Stage 1/2's amount tolerance, so Stage 2's minimum-residual subset-sum search does not land on it either.",
+        "invoice_description": "Precision servo actuator batch, custom firmware calibration"
+      },
+      "notes": "Stress-test case (invoice_description_mismatch): Counterparty name is clean and unchanged ('PALLAS ROBOTICS LTD' on both sides); the invoice ledger's own description ('Precision servo actuator batch, custom firmware calibration') shares zero tokens with the settlement/wire text ('EXPORT PROCEEDS ...'), so a matcher over-relying on invoice-description overlap has nothing to key on either."
+    },
+    {
+      "case_id": "STRESS_TEST-00035",
+      "defect_class": "invoice_description_mismatch",
+      "split": "stress_test",
+      "settlement_ids": [
+        "setl_PFzwTRYsnPD7VR"
+      ],
+      "payment_ids": [
+        "pay_gYxaOZwsIqLOIM"
+      ],
+      "bank_txn_ids": [
+        "BNKM000035"
+      ],
+      "invoice_ids": [
+        "INV-2026-M00035"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKM000035",
+        "covers_settlement_ids": [
+          "setl_PFzwTRYsnPD7VR"
+        ],
+        "credit_amount_minor": 335562044,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 332305451,
+        "residual_minor": -3256593
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "INVOICE_DESCRIPTION_MISMATCH",
+      "details": {
+        "category": "invoice_description_mismatch",
+        "true_counterparty_name": "TIDEWATER FISHERIES CORP",
+        "wire_counterparty_name": "TIDEWATER FISHERIES CORP",
+        "narration_as_sent": "/RFB/EXPORT PROCEEDS TIDEWATER FISHERIES CORP",
+        "clean_signal_before_degradation": "Counterparty name is clean and unchanged ('TIDEWATER FISHERIES CORP' on both sides); the invoice ledger's own description ('Chilled catch shipment, cold-chain logistics surcharge included') shares zero tokens with the settlement/wire text ('EXPORT PROCEEDS ...'), so a matcher over-relying on invoice-description overlap has nothing to key on either.",
+        "amount_delta_minor": -3256593,
+        "reason_tier1_cannot_resolve": "No settlement reference (UTR / invoice id / order id / payment id) appears as a whole token anywhere in the narration, so Stage 1's deterministic reference match has nothing to key on and defers. The credited amount misses the settlement net by more than Stage 1/2's amount tolerance, so Stage 2's minimum-residual subset-sum search does not land on it either.",
+        "invoice_description": "Chilled catch shipment, cold-chain logistics surcharge included"
+      },
+      "notes": "Stress-test case (invoice_description_mismatch): Counterparty name is clean and unchanged ('TIDEWATER FISHERIES CORP' on both sides); the invoice ledger's own description ('Chilled catch shipment, cold-chain logistics surcharge included') shares zero tokens with the settlement/wire text ('EXPORT PROCEEDS ...'), so a matcher over-relying on invoice-description overlap has nothing to key on either."
+    },
+    {
+      "case_id": "STRESS_TEST-00036",
+      "defect_class": "invoice_description_mismatch",
+      "split": "stress_test",
+      "settlement_ids": [
+        "setl_jtfpHr4sXHhjc1"
+      ],
+      "payment_ids": [
+        "pay_nfw3WYwEAIXgem"
+      ],
+      "bank_txn_ids": [
+        "BNKM000036"
+      ],
+      "invoice_ids": [
+        "INV-2026-M00036"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKM000036",
+        "covers_settlement_ids": [
+          "setl_jtfpHr4sXHhjc1"
+        ],
+        "credit_amount_minor": 7544463,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 7366201,
+        "residual_minor": -178262
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "INVOICE_DESCRIPTION_MISMATCH",
+      "details": {
+        "category": "invoice_description_mismatch",
+        "true_counterparty_name": "SOLSTICE ENERGY PARTNERS",
+        "wire_counterparty_name": "SOLSTICE ENERGY PARTNERS",
+        "narration_as_sent": "/RFB/EXPORT PROCEEDS SOLSTICE ENERGY PARTNERS",
+        "clean_signal_before_degradation": "Counterparty name is clean and unchanged ('SOLSTICE ENERGY PARTNERS' on both sides); the invoice ledger's own description ('Rooftop solar array maintenance contract, quarterly visit') shares zero tokens with the settlement/wire text ('EXPORT PROCEEDS ...'), so a matcher over-relying on invoice-description overlap has nothing to key on either.",
+        "amount_delta_minor": -178262,
+        "reason_tier1_cannot_resolve": "No settlement reference (UTR / invoice id / order id / payment id) appears as a whole token anywhere in the narration, so Stage 1's deterministic reference match has nothing to key on and defers. The credited amount misses the settlement net by more than Stage 1/2's amount tolerance, so Stage 2's minimum-residual subset-sum search does not land on it either.",
+        "invoice_description": "Rooftop solar array maintenance contract, quarterly visit"
+      },
+      "notes": "Stress-test case (invoice_description_mismatch): Counterparty name is clean and unchanged ('SOLSTICE ENERGY PARTNERS' on both sides); the invoice ledger's own description ('Rooftop solar array maintenance contract, quarterly visit') shares zero tokens with the settlement/wire text ('EXPORT PROCEEDS ...'), so a matcher over-relying on invoice-description overlap has nothing to key on either."
+    },
+    {
+      "case_id": "STRESS_TEST-00037",
+      "defect_class": "invoice_description_mismatch",
+      "split": "stress_test",
+      "settlement_ids": [
+        "setl_iLB1PR18Yisud9"
+      ],
+      "payment_ids": [
+        "pay_HLP8SXyRyWcq6J"
+      ],
+      "bank_txn_ids": [
+        "BNKM000037"
+      ],
+      "invoice_ids": [
+        "INV-2026-M00037"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKM000037",
+        "covers_settlement_ids": [
+          "setl_iLB1PR18Yisud9"
+        ],
+        "credit_amount_minor": 60081334,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 60952961,
+        "residual_minor": 871627
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "INVOICE_DESCRIPTION_MISMATCH",
+      "details": {
+        "category": "invoice_description_mismatch",
+        "true_counterparty_name": "IVORYLINE FURNITURE CO",
+        "wire_counterparty_name": "IVORYLINE FURNITURE CO",
+        "narration_as_sent": "/RFB/EXPORT PROCEEDS IVORYLINE FURNITURE CO",
+        "clean_signal_before_degradation": "Counterparty name is clean and unchanged ('IVORYLINE FURNITURE CO' on both sides); the invoice ledger's own description ('Bespoke office furniture set, walnut finish, 12 desks') shares zero tokens with the settlement/wire text ('EXPORT PROCEEDS ...'), so a matcher over-relying on invoice-description overlap has nothing to key on either.",
+        "amount_delta_minor": 871627,
+        "reason_tier1_cannot_resolve": "No settlement reference (UTR / invoice id / order id / payment id) appears as a whole token anywhere in the narration, so Stage 1's deterministic reference match has nothing to key on and defers. The credited amount misses the settlement net by more than Stage 1/2's amount tolerance, so Stage 2's minimum-residual subset-sum search does not land on it either.",
+        "invoice_description": "Bespoke office furniture set, walnut finish, 12 desks"
+      },
+      "notes": "Stress-test case (invoice_description_mismatch): Counterparty name is clean and unchanged ('IVORYLINE FURNITURE CO' on both sides); the invoice ledger's own description ('Bespoke office furniture set, walnut finish, 12 desks') shares zero tokens with the settlement/wire text ('EXPORT PROCEEDS ...'), so a matcher over-relying on invoice-description overlap has nothing to key on either."
+    },
+    {
+      "case_id": "STRESS_TEST-00038",
+      "defect_class": "invoice_description_mismatch",
+      "split": "stress_test",
+      "settlement_ids": [
+        "setl_1lAuOpZxNVB1Wk"
+      ],
+      "payment_ids": [
+        "pay_nT7u6fuqOHvJV8"
+      ],
+      "bank_txn_ids": [
+        "BNKM000038"
+      ],
+      "invoice_ids": [
+        "INV-2026-M00038"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKM000038",
+        "covers_settlement_ids": [
+          "setl_1lAuOpZxNVB1Wk"
+        ],
+        "credit_amount_minor": 499744565,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 506583441,
+        "residual_minor": 6838876
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "INVOICE_DESCRIPTION_MISMATCH",
+      "details": {
+        "category": "invoice_description_mismatch",
+        "true_counterparty_name": "REDSHIFT ANALYTICS INC",
+        "wire_counterparty_name": "REDSHIFT ANALYTICS INC",
+        "narration_as_sent": "/RFB/EXPORT PROCEEDS REDSHIFT ANALYTICS INC",
+        "clean_signal_before_degradation": "Counterparty name is clean and unchanged ('REDSHIFT ANALYTICS INC' on both sides); the invoice ledger's own description ('Predictive-maintenance dashboard subscription, enterprise tier') shares zero tokens with the settlement/wire text ('EXPORT PROCEEDS ...'), so a matcher over-relying on invoice-description overlap has nothing to key on either.",
+        "amount_delta_minor": 6838876,
+        "reason_tier1_cannot_resolve": "No settlement reference (UTR / invoice id / order id / payment id) appears as a whole token anywhere in the narration, so Stage 1's deterministic reference match has nothing to key on and defers. The credited amount misses the settlement net by more than Stage 1/2's amount tolerance, so Stage 2's minimum-residual subset-sum search does not land on it either.",
+        "invoice_description": "Predictive-maintenance dashboard subscription, enterprise tier"
+      },
+      "notes": "Stress-test case (invoice_description_mismatch): Counterparty name is clean and unchanged ('REDSHIFT ANALYTICS INC' on both sides); the invoice ledger's own description ('Predictive-maintenance dashboard subscription, enterprise tier') shares zero tokens with the settlement/wire text ('EXPORT PROCEEDS ...'), so a matcher over-relying on invoice-description overlap has nothing to key on either."
+    },
+    {
+      "case_id": "STRESS_TEST-00039",
+      "defect_class": "invoice_description_mismatch",
+      "split": "stress_test",
+      "settlement_ids": [
+        "setl_lzJcrCDMhMUUvh"
+      ],
+      "payment_ids": [
+        "pay_DIDCLEnJ34NL0s"
+      ],
+      "bank_txn_ids": [
+        "BNKM000039"
+      ],
+      "invoice_ids": [
+        "INV-2026-M00039"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKM000039",
+        "covers_settlement_ids": [
+          "setl_lzJcrCDMhMUUvh"
+        ],
+        "credit_amount_minor": 208972693,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 213020074,
+        "residual_minor": 4047381
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "INVOICE_DESCRIPTION_MISMATCH",
+      "details": {
+        "category": "invoice_description_mismatch",
+        "true_counterparty_name": "MARROW BIOSCIENCES LLC",
+        "wire_counterparty_name": "MARROW BIOSCIENCES LLC",
+        "narration_as_sent": "/RFB/EXPORT PROCEEDS MARROW BIOSCIENCES LLC",
+        "clean_signal_before_degradation": "Counterparty name is clean and unchanged ('MARROW BIOSCIENCES LLC' on both sides); the invoice ledger's own description ('Reagent kit restock, cold storage handling fee') shares zero tokens with the settlement/wire text ('EXPORT PROCEEDS ...'), so a matcher over-relying on invoice-description overlap has nothing to key on either.",
+        "amount_delta_minor": 4047381,
+        "reason_tier1_cannot_resolve": "No settlement reference (UTR / invoice id / order id / payment id) appears as a whole token anywhere in the narration, so Stage 1's deterministic reference match has nothing to key on and defers. The credited amount misses the settlement net by more than Stage 1/2's amount tolerance, so Stage 2's minimum-residual subset-sum search does not land on it either.",
+        "invoice_description": "Reagent kit restock, cold storage handling fee"
+      },
+      "notes": "Stress-test case (invoice_description_mismatch): Counterparty name is clean and unchanged ('MARROW BIOSCIENCES LLC' on both sides); the invoice ledger's own description ('Reagent kit restock, cold storage handling fee') shares zero tokens with the settlement/wire text ('EXPORT PROCEEDS ...'), so a matcher over-relying on invoice-description overlap has nothing to key on either."
+    },
+    {
+      "case_id": "STRESS_TEST-00040",
+      "defect_class": "invoice_description_mismatch",
+      "split": "stress_test",
+      "settlement_ids": [
+        "setl_B64JECPX0r2uoZ"
+      ],
+      "payment_ids": [
+        "pay_derO8jg7WTsnH7"
+      ],
+      "bank_txn_ids": [
+        "BNKM000040"
+      ],
+      "invoice_ids": [
+        "INV-2026-M00040"
+      ],
+      "expected_link": {
+        "bank_txn_id": "BNKM000040",
+        "covers_settlement_ids": [
+          "setl_B64JECPX0r2uoZ"
+        ],
+        "credit_amount_minor": 52994826,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 52062900,
+        "residual_minor": -931926
+      },
+      "expected_link_resolution": "MATCHED",
+      "expected_exception_category": "INVOICE_DESCRIPTION_MISMATCH",
+      "details": {
+        "category": "invoice_description_mismatch",
+        "true_counterparty_name": "COPPERLEAF DESIGN STUDIO",
+        "wire_counterparty_name": "COPPERLEAF DESIGN STUDIO",
+        "narration_as_sent": "/RFB/EXPORT PROCEEDS COPPERLEAF DESIGN STUDIO",
+        "clean_signal_before_degradation": "Counterparty name is clean and unchanged ('COPPERLEAF DESIGN STUDIO' on both sides); the invoice ledger's own description ('Brand identity refresh, logo and packaging redesign') shares zero tokens with the settlement/wire text ('EXPORT PROCEEDS ...'), so a matcher over-relying on invoice-description overlap has nothing to key on either.",
+        "amount_delta_minor": -931926,
+        "reason_tier1_cannot_resolve": "No settlement reference (UTR / invoice id / order id / payment id) appears as a whole token anywhere in the narration, so Stage 1's deterministic reference match has nothing to key on and defers. The credited amount misses the settlement net by more than Stage 1/2's amount tolerance, so Stage 2's minimum-residual subset-sum search does not land on it either.",
+        "invoice_description": "Brand identity refresh, logo and packaging redesign"
+      },
+      "notes": "Stress-test case (invoice_description_mismatch): Counterparty name is clean and unchanged ('COPPERLEAF DESIGN STUDIO' on both sides); the invoice ledger's own description ('Brand identity refresh, logo and packaging redesign') shares zero tokens with the settlement/wire text ('EXPORT PROCEEDS ...'), so a matcher over-relying on invoice-description overlap has nothing to key on either."
+    }
+  ]
+}
