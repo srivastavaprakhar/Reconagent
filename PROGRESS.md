@@ -50,6 +50,29 @@ isolation -- the existing per-case tolerance test would not have caught a
 constant value, since a constant delta is still nonzero and still outside
 tolerance.
 
+### Tier 2, unit 5 — LLM explanation layer (built in parallel with units 2-3, per instruction)
+
+`reconagent/explain.py`: `Verdict` (frozen, every field a plain stringified
+value already-built from a `VarianceDecomposition` or `MatchResult`) is the
+entire interface surface the LLM ever sees; `explain(verdict) -> str` makes
+one raw `httpx.post` to the Anthropic Messages API and returns only a
+sanitized string. No LangChain, per the earlier decision recorded above.
+`ANTHROPIC_API_KEY` read from the environment; unset raises
+`MissingApiKeyError` rather than guessing or silently degrading.
+
+Verified structurally, not just by the unit's own claim: read the module
+directly — `explain()`'s only return path is `_sanitize(text)`, a `str`;
+nothing else comes back, no mutation of the input `Verdict`. The adversarial
+test constructs an LLM response that explicitly tries to talk the system
+into a different category, a different amount, and a fabricated settlement
+id, and proves the original `Verdict` is byte-identical after the call
+(frozen-dataclass equality) while the adversarial text passes through
+inertly as display text only.
+
+218 passed, 1 skipped (the live-API test, correctly gated on the env var
+being set, which it isn't in this environment) — suite unaffected outside
+`reconagent/explain.py`/`tests/test_explain.py`.
+
 ### Tier 1.5 fix 1 — F now reports the FX attribution table natively
 `reconagent/eval.py` calls `reconagent.fx.decompose_variance` directly and adds
 a "FX variance attribution" table to `reports/eval_report.md` (all six
