@@ -36,9 +36,10 @@ an honest exception list, false-match rate as the headline metric — that's
 table stakes in this track now. What isn't table stakes: an FX-tolerance
 validator whose band is *derived* from labelled data instead of hand-set, a
 variance decomposition that attributes a gap mathematically instead of
-guessing, and the EDPMS linkage nobody else in this space has built. We
-didn't build a reconciliation engine — we built the one that handles what
-happens the moment a payment crosses a border."
+guessing, and EDPMS realisation tracking against the FEMA shipping-bill
+deadline that nobody else in this space has built. We didn't build a
+reconciliation engine — we built the one that handles what happens the
+moment a payment crosses a border."
 
 **Visual:** a single comparison line/table — "generic domestic recon" vs.
 "this system" — three or four rows max (FX validation, variance attribution,

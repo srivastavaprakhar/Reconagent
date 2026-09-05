@@ -5,9 +5,9 @@ three sources of truth — Razorpay's settlement export, the merchant's bank
 statement, and the merchant's own invoice/order ledger — down to the paisa,
 and it does the one thing a domestic-only reconciliation tool can't: validate
 whether an applied FX rate was reasonable, decompose an unexplained variance
-into a named cause, and track every export receipt against its **RBI EDPMS
-shipping-bill closure obligation** — the deadline that gets an exporter
-caution-listed if it's missed, not just a bookkeeping nuisance.
+into a named cause, and track each export receipt's realisation against its
+**RBI EDPMS shipping-bill closure deadline** — the deadline that gets an
+exporter caution-listed if it's missed, not just a bookkeeping nuisance.
 
 The headline number isn't match rate. It's **false-match rate** — a wrong
 match silently corrupts the books, which is a worse failure than an honest
@@ -150,6 +150,12 @@ justify a transformer dependency in the live path. Full derivation:
   labelled case per category is not the ~150-case validation the rest of
   this system's numbers rest on. Treat those two rows differently from
   everything else here.
+- **EDPMS realisation is read from the invoice ledger's own recorded figure,
+  not derived from actual matched bank credits.** The tracking against the
+  FEMA deadline is real and tested, but today it trusts a column the
+  generator writes rather than summing what the matcher actually linked to
+  that shipping bill. Deriving it from live match results is a real
+  strengthening this could still get.
 - **No overdue EDPMS shipping-bill case exists in either split.** The aging
   logic's overdue branch is unit-tested against a moved date, not validated
   against a generated overdue case.
@@ -165,7 +171,8 @@ stakes now; several strong entries in this space converge on nearly
 identical language for that architecture. What isn't table stakes: an
 FX-tolerance validator whose band is *derived* from labelled data rather than
 hand-set, a variance decomposition that attributes a gap mathematically
-rather than guessing, and the EDPMS/shipping-bill regulatory linkage. The
+rather than guessing, and EDPMS realisation tracking against the FEMA
+shipping-bill deadline. The
 pitch isn't "we built a reconciliation engine" — it's "we built the one that
 handles what happens the moment a payment crosses a border," on a domestic
 core that's held to the same rigor.
