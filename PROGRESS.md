@@ -3,7 +3,59 @@
 Updated after every integrated unit of work. Source of truth for scope:
 `reconagent-design-description.md`. Rules: `CLAUDE.md`.
 
-## Status: Tier 2 in progress — built proactively, not reactively
+## Status: Tier 3 in progress — TigerBeetle built, cross-encoder ablation running
+
+### Tier 3, item 3a — TigerBeetle audit-log substrate (built)
+
+Correction on the record first: the original plan scheduled a "Subagent G"
+(FastAPI + audit log, Postgres fallback included) as part of Tier 1. That
+unit was deferred at the Tier 1.5 checkpoint and never revisited. **No
+audit-log persistence layer existed at all before this item** — this was
+not a substrate swap, it was building the log itself.
+
+Time-boxed at 30 minutes total with a hard 15-minute checkpoint (server
+running + one working client round-trip, or abandon and build the Postgres
+fallback instead). Checkpoint cleared in ~2.5 minutes; total effort under
+15 minutes. Postgres was not even running locally when checked, so the
+fallback path was never exercised.
+
+`reconagent/audit_log.py`: decisions modelled as double-entry transfers —
+`SUSPENSE → RECONCILED` for MATCHED/PARTIAL, `SUSPENSE → EXCEPTIONS`
+otherwise. Spec §8's four fields map onto native transfer fields (stage ->
+`code`, confidence -> `user_data_32` bps, a digest of compared fields ->
+`user_data_128`, timestamp -> TigerBeetle's own cluster-assigned value).
+Money stays an integer all the way to the storage engine.
+
+**Two guarantees enforced by the substrate, not asserted in Python:**
+append-only is enforced by TigerBeetle's own API (no UPDATE/DELETE, and a
+transfer id derived from `bank_txn_id` blocks a contradictory resubmission
+outright — **tamper-proof, not just tamper-evident**, confirmed by a test
+that attacks the raw client directly and shows the forged write is refused
+while the original record survives byte-for-byte); and the ledger's own
+running balances must reconcile (`verify_log` reads TigerBeetle's balances
+back, not a sum over the rows it just wrote).
+
+**Verified independently, not taken on the build's own report:** binary
+re-downloaded fresh into a separate location; full test suite re-run
+against it (15/15 passed, 260/260 including the rest of the project's suite
+with the binary present, 1 skipped unrelated to this unit); the real
+demonstration re-executed from a clean server instance — `match_all`
+against `data/`'s actual 152 settlements/credits, all 152 written, read
+back, and verified with no exception, ledger balances internally
+consistent (`suspense_debits == reconciled == 6,175,281,891` minor units,
+`exceptions == 0`, matching that `data/` resolves entirely at Tier 1).
+
+Not built: a live API surface, or wiring Tier 2/FX decision types into the
+writer (the demonstration uses Tier 1 output, which is what `data/` actually
+produces; the other result types carry compatible fields but aren't yet
+piped through). Real remaining scope, stated plainly.
+
+### Tier 3, item 3b — cross-encoder ablation
+
+Dispatched in parallel with 3a (independent, no shared files). Result to be
+recorded here once it lands.
+
+### Tier 2 (built earlier, proactively — not reactively)
 
 Tier 1's own evaluation showed no recall gap on the existing synthetic set
 that would trigger Tier 2 under the design spec's own stated condition (§12).

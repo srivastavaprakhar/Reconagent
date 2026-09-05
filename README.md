@@ -157,10 +157,10 @@ raised exception, not a style violation caught in review.
 
 - **[`ARCHITECTURE.md`](ARCHITECTURE.md)** — the system as actually built:
   the matching cascade, the FX/compliance layer, Tier 2's probabilistic and
-  fuzzy matching with the full per-category ablation, the evaluation
-  methodology, and — stated with the same confidence as everything that
-  *was* built — exactly what wasn't (Tier 3's ledger substrate, the full
-  exception-taxonomy and abstention-gate unit, the audit-log/API layer) and
+  fuzzy matching with the full per-category ablation, the TigerBeetle
+  audit-log substrate, the evaluation methodology, and — stated with the
+  same confidence as everything that *was* built — exactly what wasn't (the
+  full exception-taxonomy and abstention-gate unit, the live API layer) and
   why.
 - **[`reconagent-design-description.md`](reconagent-design-description.md)**
   — the original design spec this system is built against.

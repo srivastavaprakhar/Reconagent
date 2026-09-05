@@ -14,13 +14,16 @@ detail underneath it.
 ## 1. What was built vs. what was planned
 
 The spec's build sequencing (§12) calls for three tiers. **Tier 1 is
-complete. Tier 2 is now built as well — proactively, not because Tier 1's
-own results showed a gap that needed it.** Tier 3 remains not built.
+complete. Tier 2 is built as well — proactively, not because Tier 1's own
+results showed a gap that needed it. Tier 3 is partially built**, attempted
+under an explicit time-box per item, each reported honestly on its own
+result rather than as a single bundled "Tier 3" verdict.
 
-| Tier | Spec's condition to build it | What Tier 1's numbers showed | Status |
+| Item | Spec's condition to build it | What the evidence showed | Status |
 |---|---|---|---|
 | 2 — Fellegi-Sunter (Splink), hybrid fuzzy text | "if the deterministic-plus-subset-sum stages leave a real recall gap" | 0.00% false-clear on main; the holdout's only non-zero number is 3 cases correctly reported as genuine subset-sum ties (`TIE_AMBIGUOUS`), not misses — see §5 | Condition not met — **built anyway**, on a different basis. See §11. |
-| 3 — TigerBeetle ledger, cross-encoder ablation | "attempt only with time to spare, and only after Tier 1 and 2 are solid" | — | **Not built.** A decision reserved for the project owner, not made here on the basis that the codebase looks stable. |
+| 3a — TigerBeetle ledger substrate | "attempt only with time to spare, and only after Tier 1 and 2 are solid" (both true by the time this was attempted) | No audit-log substrate of any kind existed yet — a deferred unit from earlier in the build, not something this item could "fall back to" | **Built.** A 30-minute time-box, checkpointed at 15 — TigerBeetle cleared it in ~2.5 minutes. See §12. |
+| 3b — Cross-encoder ablation on the residual | "reported honestly whether or not it beats Splink+hybrid" | Tier 2's own ablation left `legal_vs_trading_name` at a flat 0/8 — the one category with no textual signal for a classical matcher to use | See §12 for the result once reported. |
 
 **Why Tier 2 was built despite no measured gap, stated once and held to
 throughout §11:** genuine ML depth appropriate to this submission, and
@@ -409,7 +412,9 @@ test run's word. The verification steps are in `PROGRESS.md`.
   shortcoming of the build** — see §11 for the full per-category breakdown.
   In one word: it earns its cost where a matching signal exists in the text
   at all, and correctly declines where none does.
-- **Tier 3 is not built** — see §1.
+- **Tier 3 is partially built, each item on its own merits** — the
+  TigerBeetle audit-log substrate is real and working; the cross-encoder
+  ablation's outcome is reported separately once available. See §1 and §12.
 
 ---
 
@@ -501,3 +506,116 @@ other half, not an unqualified win.
 
 Full per-defect-class numbers, the delta tables, and the reproducible
 threshold derivations: `reports/tier2_ablation.md` / `.json`.
+
+---
+
+## 12. Tier 3 — the audit-log substrate, and the cross-encoder ablation
+
+Two independent items, attempted in order, each reported on its own result.
+Neither is gated on the other, and one landing does not imply anything
+about the other.
+
+### 3a. TigerBeetle as the audit-log substrate — built
+
+Spec §8 wants every decision — which stage resolved it, the confidence
+score, the fields compared, and the timestamp — written to an append-only
+log an auditor can trust, on TigerBeetle if its setup cooperates within the
+time available, Postgres as the fallback otherwise.
+
+**A correction to the plan, on the record:** the original build sequence
+scheduled a "Subagent G" (FastAPI + audit log, Postgres included) as part of
+Tier 1. That unit was deferred at a mid-build checkpoint and never
+revisited (see §9's Tier 1.5 discussion and `PROGRESS.md`). **No audit-log
+persistence layer of any kind existed before this item was attempted** —
+not TigerBeetle, not Postgres. This item was not a substrate swap; it was
+building the log itself, on TigerBeetle first.
+
+**Time-boxed, and the box was cleared quickly, not narrowly.** A 30-minute
+ceiling was set for standing up a TigerBeetle server and a working Python
+client round-trip, with a hard checkpoint at 15 minutes — miss it, abandon
+TigerBeetle immediately and build the Postgres fallback instead, no
+extended debugging. The checkpoint cleared in roughly 2.5 minutes: the
+prebuilt binary and the PyPI client package were the same version
+(0.17.9) with no compatibility work needed, and the server round-tripped an
+account and a transfer on the first attempt. Total TigerBeetle effort,
+setup through a real end-to-end demonstration, was under 15 minutes —
+comfortably inside the 30-minute ceiling, with room to spare rather than a
+photo finish. (For the record: a local Postgres server was not even running
+when checked, so the fallback would have meant standing one up from
+nothing too — moot, since it wasn't needed.)
+
+**Why TigerBeetle's ledger model fits, not just "an API that returns
+success."** TigerBeetle has no generic log table — it has `Account` and
+`Transfer`. Reconciliation is modelled as what it actually is: money moving
+out of an unreconciled pool into either a reconciled pool or an exceptions
+pool (`SUSPENSE → RECONCILED` for `MATCHED`/`PARTIAL`, `SUSPENSE →
+EXCEPTIONS` for everything else). Spec §8's four fields map onto native
+transfer fields — stage onto `Transfer.code`, confidence onto
+`user_data_32` as basis points, a digest of the compared fields onto
+`user_data_128`, the timestamp is TigerBeetle's own cluster-assigned
+transfer timestamp, not a clock this code controls. The credit amount goes
+straight into `Transfer.amount` as an integer — the project's own money
+rule (§4) holds all the way down to the storage engine, no float conversion
+anywhere on the path.
+
+**Two invariants are enforced by the substrate, not asserted in Python — and
+that distinction is the actual point of using a purpose-built ledger over a
+hand-rolled table:**
+1. **Append-only is enforced, not conventional.** A transfer's id is
+   deterministically derived from its `bank_txn_id`, and TigerBeetle's API
+   has no UPDATE or DELETE to begin with — so re-submitting a decision for
+   an already-logged credit with different data is rejected outright
+   (`EXISTS_WITH_DIFFERENT_*`), not merely detected after the fact. This
+   makes the log **tamper-proof, not just tamper-evident** — a deliberate
+   deviation from a hash-chain design (the right choice for the Postgres
+   path that wasn't needed here), and a strictly stronger property. Proven
+   by attack, not assumption: a test bypasses the module's own write path,
+   submits a forged transfer with the same derived id but a different
+   amount, stage, and destination account directly against the raw client,
+   and confirms TigerBeetle refuses it while the original record survives
+   byte-for-byte.
+2. **The books have to balance.** Debits out of `SUSPENSE` must equal
+   credits into `RECONCILED` plus `EXCEPTIONS`, enforced by TigerBeetle's
+   own commit rules — a decision cannot be silently dropped or
+   double-counted without the ledger's own running balances disagreeing.
+   `verify_log` reads those balances back from TigerBeetle itself, not from
+   summing the rows it just wrote.
+
+**The demonstration is on real decision data, not a synthetic smoke
+test — independently reproduced, not taken on report:** `reconagent.match.
+match_all` run against `data/`'s actual 152 settlements and credits
+produces 152 real decisions; all 152 were written, all 152 read back, and
+`verify_log` confirmed every one against its original decision object with
+no exception raised. Ledger balances after the run: `suspense_debits =
+reconciled = 6,175,281,891` minor units, `exceptions = 0` — internally
+consistent, and matching the fact that `data/` resolves entirely at Tier 1
+with nothing routed to the exceptions account. Verified fresh, independent
+of the build session: the binary was re-downloaded into a separate
+location, the full test suite re-run against it (15/15 passed), and the
+152-decision demonstration re-executed from a clean server instance with
+the same result.
+
+Not built out further: a live API surface, persistence of Tier 2/FX
+decisions specifically (the demonstration uses Tier 1 output, which is what
+the main set actually produces — `reconagent.fx.VarianceDecomposition` and
+Tier 2's result types are not yet wired into the writer, though they carry
+compatible fields and the mapping would be mechanical). That's real
+remaining scope, not hidden: this item proves the substrate and the
+guarantee, not a complete logging pipeline for every decision type in the
+system.
+
+### 3b. Cross-encoder ablation — reported once available
+
+Design spec §11's stretch addition: test a small pretrained cross-encoder
+against the residual Tier 1+2 can't resolve, specifically the
+`legal_vs_trading_name` category where Tier 2's own ablation (§11) showed a
+flat 0/8 — the one failure mode with no textual signal for a classical
+matcher to use, which is exactly the case a semantically-aware pretrained
+model is supposed to help with, if it helps at all. Per the spec's own
+research framing, a credible negative result here (LM methods not beating
+classical/probabilistic methods on short structured financial strings) is
+as valuable a finding as a positive one — reported honestly whichever way
+it lands, and, per an explicit instruction, kept as a standalone ablation
+finding and not wired into the live cascade regardless of outcome, unless a
+clear, unambiguous, zero-false-match win is found — in which case that gets
+flagged for a separate integration decision, not made here.
