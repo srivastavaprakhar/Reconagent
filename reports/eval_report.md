@@ -9,6 +9,26 @@ tie-ambiguous rate is reported alongside false-clear rate, not folded into it: i
 | main | 0.00% (0/152) | 0.00% (0/152) | 0.00% (0/152) |
 | holdout | 0.00% (0/53) | 0.00% (0/53) | 5.66% (3/53) |
 
+## No-match control: credits that correspond to no settlement at all
+
+**These are two separate populations with two separate denominators, not one combined score.** Every linked case in `data/` and `data/holdout/` is ground-truth MATCHED or PARTIAL -- every credit there is answerable, and the headline above measures only how often the right answer was found. It says nothing about money that has no right answer. `no_match_control/` is that missing population: ten bank credits per split (misdirected wire, bank posting error, tax refund, investor inflow, insurance payout, deposit refund, and so on) built to correspond to no settlement whatsoever, and matched against that split's FULL real settlement list -- so the matcher has a complete, real pool of decoys in front of it and must decline anyway. Correct behaviour is UNMATCHED, AMBIGUOUS or TIE_AMBIGUOUS; MATCHED or PARTIAL on any of them is a false match.
+
+| split | existing population (answerable credits) | additionally: no-match control | false matches | settlements searched against |
+|---|---|---|---|---|
+| main | 152/152 correct (unchanged) | 10/10 correctly rejected | 0 | 202 |
+| holdout | 50/53 correct (unchanged) | 10/10 correctly rejected | 0 | 100 |
+
+Main: 152/152 correct on answerable credits (unchanged). Additionally: 10/10 no-match credits correctly rejected, 0 false positives. Holdout: 50/53 correct on answerable credits (unchanged). Additionally: 10/10 no-match credits correctly rejected, 0 false positives.
+
+How the rejections split, which is worth reading rather than summing: UNMATCHED means no subset of the open settlements came within tolerance at all. TIE_AMBIGUOUS means several distinct subsets *did* land on the identical minimum residual and Stage 2 refused to pick one. Both are correct here, but they are not the same defence -- against an unpruned pool (nothing resolves at Stage 1 in this population, so no settlement is ever consumed) the tie-detection rule is doing real work, not decoration.
+
+| split | resolutions | amount redraws during generation |
+|---|---|---|
+| main | TIE_AMBIGUOUS 8, UNMATCHED 2 | 1 |
+| holdout | TIE_AMBIGUOUS 7, UNMATCHED 3 | 1 |
+
+The redraw column is reported rather than hidden: it counts amounts the generator drew that *did* land on a coincidental exact subset of the real settlements and had to be redrawn before the case could be labelled no-match. It is the honest measure of how dense this search space is, and it corroborates the MEASURED CEILING note in `reconagent.match` -- an arbitrary amount against an unpruned pool is not safe by default. It is not a matcher error rate: the emitted dataset is verified false-match-free against the real settlements both before and after it is written.
+
 ## Match rate, precision, recall
 
 | split | match rate | precision | recall |
@@ -101,9 +121,9 @@ This table counts what `decompose_variance` produced for every settlement in the
 
 | scale (settlements) | credits | seconds | records/sec |
 |---|---|---|---|
-| 200 | 152 | 0.0124 | 12249 |
-| 1000 | 751 | 2.2610 | 332 |
-| 5000 | 3728 | 21.2258 | 176 |
+| 200 | 152 | 0.0135 | 11262 |
+| 1000 | 751 | 2.5883 | 290 |
+| 5000 | 3728 | 22.6184 | 165 |
 
 ## Mutation test (harness credibility check, not a matcher metric)
 

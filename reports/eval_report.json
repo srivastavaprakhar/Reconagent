@@ -61,6 +61,446 @@
       }
     ]
   },
+  "no_match_control": {
+    "holdout": {
+      "amount_redraws_during_generation": 1,
+      "by_resolution": {
+        "TIE_AMBIGUOUS": 7,
+        "UNMATCHED": 3
+      },
+      "cases": [
+        {
+          "amount_redraws": 0,
+          "bank_txn_id": "NOMATCHH0001",
+          "case_id": "NO-MATCH-CONTROL-HOLDOUT-00001",
+          "confidence": "0.20",
+          "credit_amount_minor": 169382994,
+          "defect_class": "misdirected_wire",
+          "expected_link_resolution": "UNMATCHED",
+          "false_match": false,
+          "pool_size": 64,
+          "resolution": "TIE_AMBIGUOUS",
+          "settlement_ids": [
+            "setl_2NGo0ByKdddSUy",
+            "setl_7t2PPWkjvptqyw",
+            "setl_FTouIZAKxUgGMC",
+            "setl_Jh5wjhtYhghsUg",
+            "setl_hT9Bbht7AXFwnm",
+            "setl_qkGZsxt2aOMk5s",
+            "setl_v6EIFXdg4ytaWT",
+            "setl_yGUJf7967txLBk"
+          ],
+          "stage": "stage2_subset_sum"
+        },
+        {
+          "amount_redraws": 0,
+          "bank_txn_id": "NOMATCHH0002",
+          "case_id": "NO-MATCH-CONTROL-HOLDOUT-00002",
+          "confidence": "0.20",
+          "credit_amount_minor": 287705964,
+          "defect_class": "unrelated_inbound_wire",
+          "expected_link_resolution": "UNMATCHED",
+          "false_match": false,
+          "pool_size": 64,
+          "resolution": "TIE_AMBIGUOUS",
+          "settlement_ids": [
+            "setl_8WEXnbLI1JFiJV",
+            "setl_CVuP3qKFbgb6ch",
+            "setl_G7U9fqSrjlTZZp",
+            "setl_LYGRKPfajFonD8",
+            "setl_cgcu9au57DagJr",
+            "setl_qkGZsxt2aOMk5s",
+            "setl_rKV16ntTJ4bfEu",
+            "setl_roUKktjTlji0RG"
+          ],
+          "stage": "stage2_subset_sum"
+        },
+        {
+          "amount_redraws": 1,
+          "bank_txn_id": "NOMATCHH0003",
+          "case_id": "NO-MATCH-CONTROL-HOLDOUT-00003",
+          "confidence": "0",
+          "credit_amount_minor": 331046143,
+          "defect_class": "bank_posting_error",
+          "expected_link_resolution": "UNMATCHED",
+          "false_match": false,
+          "pool_size": 41,
+          "resolution": "UNMATCHED",
+          "settlement_ids": [],
+          "stage": "stage2_subset_sum"
+        },
+        {
+          "amount_redraws": 0,
+          "bank_txn_id": "NOMATCHH0004",
+          "case_id": "NO-MATCH-CONTROL-HOLDOUT-00004",
+          "confidence": "0.20",
+          "credit_amount_minor": 243810686,
+          "defect_class": "investor_capital_infusion",
+          "expected_link_resolution": "UNMATCHED",
+          "false_match": false,
+          "pool_size": 64,
+          "resolution": "TIE_AMBIGUOUS",
+          "settlement_ids": [
+            "setl_2NGo0ByKdddSUy",
+            "setl_EDBmmGeIXZBBVM",
+            "setl_EF6mzeEqvmtY3b",
+            "setl_EIhcJ8xtcXEfjM",
+            "setl_J2l62EBvHjdACk",
+            "setl_cfhdA8yQciGDpE",
+            "setl_uIPU7Tj6jJXDx1",
+            "setl_yGUJf7967txLBk"
+          ],
+          "stage": "stage2_subset_sum"
+        },
+        {
+          "amount_redraws": 0,
+          "bank_txn_id": "NOMATCHH0005",
+          "case_id": "NO-MATCH-CONTROL-HOLDOUT-00005",
+          "confidence": "0",
+          "credit_amount_minor": 46697032,
+          "defect_class": "insurance_claim_payout",
+          "expected_link_resolution": "UNMATCHED",
+          "false_match": false,
+          "pool_size": 23,
+          "resolution": "UNMATCHED",
+          "settlement_ids": [],
+          "stage": "stage2_subset_sum"
+        },
+        {
+          "amount_redraws": 0,
+          "bank_txn_id": "NOMATCHH0006",
+          "case_id": "NO-MATCH-CONTROL-HOLDOUT-00006",
+          "confidence": "0.20",
+          "credit_amount_minor": 164078155,
+          "defect_class": "tax_refund",
+          "expected_link_resolution": "UNMATCHED",
+          "false_match": false,
+          "pool_size": 64,
+          "resolution": "TIE_AMBIGUOUS",
+          "settlement_ids": [
+            "setl_2H4A5wqNstlyps",
+            "setl_2NGo0ByKdddSUy",
+            "setl_CVuP3qKFbgb6ch",
+            "setl_QQvpLAnnN65TJR",
+            "setl_SoX305Lkp8MvFd",
+            "setl_Xb3gzVdG0CDD2O",
+            "setl_uIPU7Tj6jJXDx1",
+            "setl_yaVyC7IIXCwosf"
+          ],
+          "stage": "stage2_subset_sum"
+        },
+        {
+          "amount_redraws": 0,
+          "bank_txn_id": "NOMATCHH0007",
+          "case_id": "NO-MATCH-CONTROL-HOLDOUT-00007",
+          "confidence": "0.20",
+          "credit_amount_minor": 377597229,
+          "defect_class": "bank_interest_credit",
+          "expected_link_resolution": "UNMATCHED",
+          "false_match": false,
+          "pool_size": 64,
+          "resolution": "TIE_AMBIGUOUS",
+          "settlement_ids": [
+            "setl_EF6mzeEqvmtY3b",
+            "setl_HPlDZOI18ZRG5Y",
+            "setl_U5L3e5cQ7goDGU",
+            "setl_hT9Bbht7AXFwnm",
+            "setl_xUgWjgdGuJsKGH",
+            "setl_yGUJf7967txLBk",
+            "setl_yaVyC7IIXCwosf"
+          ],
+          "stage": "stage2_subset_sum"
+        },
+        {
+          "amount_redraws": 0,
+          "bank_txn_id": "NOMATCHH0008",
+          "case_id": "NO-MATCH-CONTROL-HOLDOUT-00008",
+          "confidence": "0",
+          "credit_amount_minor": 82017259,
+          "defect_class": "vendor_overpayment_refund",
+          "expected_link_resolution": "UNMATCHED",
+          "false_match": false,
+          "pool_size": 34,
+          "resolution": "UNMATCHED",
+          "settlement_ids": [],
+          "stage": "stage2_subset_sum"
+        },
+        {
+          "amount_redraws": 0,
+          "bank_txn_id": "NOMATCHH0009",
+          "case_id": "NO-MATCH-CONTROL-HOLDOUT-00009",
+          "confidence": "0.20",
+          "credit_amount_minor": 278085481,
+          "defect_class": "security_deposit_refund",
+          "expected_link_resolution": "UNMATCHED",
+          "false_match": false,
+          "pool_size": 57,
+          "resolution": "TIE_AMBIGUOUS",
+          "settlement_ids": [
+            "setl_2NGo0ByKdddSUy",
+            "setl_EDBmmGeIXZBBVM",
+            "setl_HPlDZOI18ZRG5Y",
+            "setl_JhT7LCoYezg58p",
+            "setl_MnEKCX3Ak9iX4Y",
+            "setl_jBhBjvkqfSTmE9",
+            "setl_uzjca4Ud7WMpqR",
+            "setl_yGG61U71KFP6Um"
+          ],
+          "stage": "stage2_subset_sum"
+        },
+        {
+          "amount_redraws": 0,
+          "bank_txn_id": "NOMATCHH0010",
+          "case_id": "NO-MATCH-CONTROL-HOLDOUT-00010",
+          "confidence": "0.20",
+          "credit_amount_minor": 44932653,
+          "defect_class": "fx_forward_settlement",
+          "expected_link_resolution": "UNMATCHED",
+          "false_match": false,
+          "pool_size": 58,
+          "resolution": "TIE_AMBIGUOUS",
+          "settlement_ids": [
+            "setl_7p3HuHaCOvfAyv",
+            "setl_EDBmmGeIXZBBVM",
+            "setl_EIhcJ8xtcXEfjM",
+            "setl_FDNulqJcChsUA8",
+            "setl_Jh5wjhtYhghsUg",
+            "setl_QQvpLAnnN65TJR",
+            "setl_VUQkDC414I3bBn",
+            "setl_yGUJf7967txLBk"
+          ],
+          "stage": "stage2_subset_sum"
+        }
+      ],
+      "correctly_rejected": 10,
+      "false_matches": 0,
+      "settlements_searched": 100,
+      "total": 10
+    },
+    "main": {
+      "amount_redraws_during_generation": 1,
+      "by_resolution": {
+        "TIE_AMBIGUOUS": 8,
+        "UNMATCHED": 2
+      },
+      "cases": [
+        {
+          "amount_redraws": 0,
+          "bank_txn_id": "NOMATCHM0001",
+          "case_id": "NO-MATCH-CONTROL-MAIN-00001",
+          "confidence": "0.20",
+          "credit_amount_minor": 390048609,
+          "defect_class": "misdirected_wire",
+          "expected_link_resolution": "UNMATCHED",
+          "false_match": false,
+          "pool_size": 64,
+          "resolution": "TIE_AMBIGUOUS",
+          "settlement_ids": [
+            "setl_7domftY4F1WkFm",
+            "setl_GdzgrDreTp2whb",
+            "setl_GgwBvnaWIpYuF0",
+            "setl_H25sCFRXnFOULI",
+            "setl_PAJHP960asUSib",
+            "setl_Vwg3FcP9ZutZ20",
+            "setl_dFDWWnBI7gfwmP",
+            "setl_sZpWFIVTGP95DC"
+          ],
+          "stage": "stage2_subset_sum"
+        },
+        {
+          "amount_redraws": 0,
+          "bank_txn_id": "NOMATCHM0002",
+          "case_id": "NO-MATCH-CONTROL-MAIN-00002",
+          "confidence": "0",
+          "credit_amount_minor": 218124158,
+          "defect_class": "unrelated_inbound_wire",
+          "expected_link_resolution": "UNMATCHED",
+          "false_match": false,
+          "pool_size": 47,
+          "resolution": "UNMATCHED",
+          "settlement_ids": [],
+          "stage": "stage2_subset_sum"
+        },
+        {
+          "amount_redraws": 0,
+          "bank_txn_id": "NOMATCHM0003",
+          "case_id": "NO-MATCH-CONTROL-MAIN-00003",
+          "confidence": "0.20",
+          "credit_amount_minor": 173618482,
+          "defect_class": "bank_posting_error",
+          "expected_link_resolution": "UNMATCHED",
+          "false_match": false,
+          "pool_size": 64,
+          "resolution": "TIE_AMBIGUOUS",
+          "settlement_ids": [
+            "setl_8IK3t8wna1ffgt",
+            "setl_QoZ8EzFHlZmlQf",
+            "setl_SvmzeHQQwSgUcy",
+            "setl_Vwg3FcP9ZutZ20",
+            "setl_YJ8OfhrhYM5z5A",
+            "setl_g3NNOnsup3phKU",
+            "setl_lmavHcmYTngV5s",
+            "setl_nYYRErZgN6lxZ7"
+          ],
+          "stage": "stage2_subset_sum"
+        },
+        {
+          "amount_redraws": 0,
+          "bank_txn_id": "NOMATCHM0004",
+          "case_id": "NO-MATCH-CONTROL-MAIN-00004",
+          "confidence": "0.20",
+          "credit_amount_minor": 133880352,
+          "defect_class": "investor_capital_infusion",
+          "expected_link_resolution": "UNMATCHED",
+          "false_match": false,
+          "pool_size": 64,
+          "resolution": "TIE_AMBIGUOUS",
+          "settlement_ids": [
+            "setl_84nDWYdMLywVbZ",
+            "setl_9iUGW16zLiBWGu",
+            "setl_IbHQmDyas2jlx5",
+            "setl_M2zJG57PnXPdwr",
+            "setl_OUsT3vQGQ6KCuU",
+            "setl_Vwg3FcP9ZutZ20",
+            "setl_WdlV4fEA8APKZl",
+            "setl_zoOwYombvitfnm"
+          ],
+          "stage": "stage2_subset_sum"
+        },
+        {
+          "amount_redraws": 0,
+          "bank_txn_id": "NOMATCHM0005",
+          "case_id": "NO-MATCH-CONTROL-MAIN-00005",
+          "confidence": "0.20",
+          "credit_amount_minor": 256574588,
+          "defect_class": "insurance_claim_payout",
+          "expected_link_resolution": "UNMATCHED",
+          "false_match": false,
+          "pool_size": 64,
+          "resolution": "TIE_AMBIGUOUS",
+          "settlement_ids": [
+            "setl_J7BdxfUUevCYaG",
+            "setl_KZCFziwfQfKL5f",
+            "setl_QoZ8EzFHlZmlQf",
+            "setl_Vwg3FcP9ZutZ20",
+            "setl_XO9dMRww99NPsz",
+            "setl_YJ8OfhrhYM5z5A",
+            "setl_lwIfx6xBOdcFTb",
+            "setl_tc0qkvt0bJue2Z"
+          ],
+          "stage": "stage2_subset_sum"
+        },
+        {
+          "amount_redraws": 0,
+          "bank_txn_id": "NOMATCHM0006",
+          "case_id": "NO-MATCH-CONTROL-MAIN-00006",
+          "confidence": "0.20",
+          "credit_amount_minor": 393946927,
+          "defect_class": "tax_refund",
+          "expected_link_resolution": "UNMATCHED",
+          "false_match": false,
+          "pool_size": 64,
+          "resolution": "TIE_AMBIGUOUS",
+          "settlement_ids": [
+            "setl_0CAIAVpFHffGdL",
+            "setl_6q794kjf4Q9zeH",
+            "setl_A1J0Le9AftaQO2",
+            "setl_LnudShWNnMLl8c",
+            "setl_QoZ8EzFHlZmlQf",
+            "setl_UVInobI1tgkFTA",
+            "setl_cotOMj4aPb6nxF",
+            "setl_etucbqUBvcS9As"
+          ],
+          "stage": "stage2_subset_sum"
+        },
+        {
+          "amount_redraws": 0,
+          "bank_txn_id": "NOMATCHM0007",
+          "case_id": "NO-MATCH-CONTROL-MAIN-00007",
+          "confidence": "0.20",
+          "credit_amount_minor": 334714146,
+          "defect_class": "bank_interest_credit",
+          "expected_link_resolution": "UNMATCHED",
+          "false_match": false,
+          "pool_size": 64,
+          "resolution": "TIE_AMBIGUOUS",
+          "settlement_ids": [
+            "setl_3TXHru74bzThdy",
+            "setl_5WgL70r12BRUby",
+            "setl_DuS9SrpIdjYnT7",
+            "setl_OOp7WYK7BSKeTY",
+            "setl_VbGb8AHmsQ9n0H",
+            "setl_cytIYoI2rqbODJ",
+            "setl_gqd4BTavtde07x",
+            "setl_qd6So3GAbBE0xM"
+          ],
+          "stage": "stage2_subset_sum"
+        },
+        {
+          "amount_redraws": 0,
+          "bank_txn_id": "NOMATCHM0008",
+          "case_id": "NO-MATCH-CONTROL-MAIN-00008",
+          "confidence": "0",
+          "credit_amount_minor": 281855893,
+          "defect_class": "vendor_overpayment_refund",
+          "expected_link_resolution": "UNMATCHED",
+          "false_match": false,
+          "pool_size": 64,
+          "resolution": "UNMATCHED",
+          "settlement_ids": [],
+          "stage": "stage2_subset_sum"
+        },
+        {
+          "amount_redraws": 0,
+          "bank_txn_id": "NOMATCHM0009",
+          "case_id": "NO-MATCH-CONTROL-MAIN-00009",
+          "confidence": "0.20",
+          "credit_amount_minor": 7719793,
+          "defect_class": "security_deposit_refund",
+          "expected_link_resolution": "UNMATCHED",
+          "false_match": false,
+          "pool_size": 59,
+          "resolution": "TIE_AMBIGUOUS",
+          "settlement_ids": [
+            "setl_Bo4O6FVt0CTznr",
+            "setl_Ma8WN5AEpmWMOh",
+            "setl_TpXzT3q10QvZof",
+            "setl_VwnTVmguhyXfho",
+            "setl_c394R8uH6Oeln0",
+            "setl_e3D6uvfUj7vdHa",
+            "setl_xjHE7SVZkZ7Gfn"
+          ],
+          "stage": "stage2_subset_sum"
+        },
+        {
+          "amount_redraws": 1,
+          "bank_txn_id": "NOMATCHM0010",
+          "case_id": "NO-MATCH-CONTROL-MAIN-00010",
+          "confidence": "0.20",
+          "credit_amount_minor": 388630529,
+          "defect_class": "fx_forward_settlement",
+          "expected_link_resolution": "UNMATCHED",
+          "false_match": false,
+          "pool_size": 64,
+          "resolution": "TIE_AMBIGUOUS",
+          "settlement_ids": [
+            "setl_DuS9SrpIdjYnT7",
+            "setl_OOp7WYK7BSKeTY",
+            "setl_PzbJHX9BV0uMQ0",
+            "setl_aQj1JqtmtrTQK7",
+            "setl_bMs5dFgPSISNi9",
+            "setl_liTKwt02mmbkkq",
+            "setl_y8LZU5fxlgUuxn"
+          ],
+          "stage": "stage2_subset_sum"
+        }
+      ],
+      "correctly_rejected": 10,
+      "false_matches": 0,
+      "settlements_searched": 202,
+      "total": 10
+    }
+  },
   "splits": {
     "holdout": {
       "asserted_count": 50,
@@ -362,23 +802,23 @@
   "throughput": [
     {
       "credits": 152,
-      "records_per_sec": 12248.967684680785,
+      "records_per_sec": 11261.518243598692,
       "scale": 200,
-      "seconds": 0.012409208997269161,
+      "seconds": 0.01349729199137073,
       "settlements": 202
     },
     {
       "credits": 751,
-      "records_per_sec": 332.1550527210924,
+      "records_per_sec": 290.1482732308988,
       "scale": 1000,
-      "seconds": 2.2609922499977984,
+      "seconds": 2.5883317920088302,
       "settlements": 1004
     },
     {
       "credits": 3728,
-      "records_per_sec": 175.63499282365154,
+      "records_per_sec": 164.82161707672037,
       "scale": 5000,
-      "seconds": 21.22583854199911,
+      "seconds": 22.618392332995427,
       "settlements": 5003
     }
   ],

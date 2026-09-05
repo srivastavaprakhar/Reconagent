@@ -3,7 +3,67 @@
 Updated after every integrated unit of work. Source of truth for scope:
 `reconagent-design-description.md`. Rules: `CLAUDE.md`.
 
-## Status: Post-review remediation, sequenced by risk — Tier A done, Tier B in progress
+## Status: Post-review remediation, sequenced by risk — Tier A + Tier B done, Tier C next
+
+### Tier B, item 5 — a genuine no-match population, answering the single
+### most damaging attack: "does 100% just mean every test credit was
+### answerable?"
+
+Every case in `data/`/`data/holdout/`'s ground truth resolves `MATCHED` or
+`PARTIAL` — there was no population proving the system *declines* to match
+money that shouldn't be matched. Closed without touching either committed
+dataset: a standalone `no_match_control/{main,holdout}/` (10 credits each),
+same precedent as `stress_test/` — new directory, own `ground_truth.json`,
+never a change to the existing 152/155-case files dozens of tests hardcode
+against.
+
+**Ten genuinely different reasons per split** (misdirected wire, unrelated
+inbound wire, bank posting error, investor capital infusion, insurance
+payout, tax refund, bank interest, vendor overpayment refund, security
+deposit refund, FX forward settlement) — not the same case shape repeated,
+each split's remitters distinct from the other's.
+
+**Verified two different ways, because they fail two different ways:**
+Stage 1 is a hard assertion at generation time (`match_deterministic` must
+return `None` for every credit — an `AssertionError`, not a redraw
+condition); Stage 2 is rejection sampling against the *real, full, unpruned*
+settlement pool (202 main / 100 holdout) specifically because
+`reconagent.match`'s own docstring documents that roughly one arbitrary
+amount in six finds a coincidental exact subset against an unpruned pool —
+amounts were drawn from the middle of the real settlement range precisely so
+the pool-pruning filters couldn't hand these credits an easy, unrealistically
+small candidate set.
+
+**Result, independently reproduced (not taken from the unit's own report):**
+
+| | Main (10 credits vs. 202 settlements) | Holdout (10 vs. 100) |
+|---|---|---|
+| TIE_AMBIGUOUS (genuine ties, correctly declined) | 8 | 7 |
+| UNMATCHED | 2 | 3 |
+| **False matches** | **0** | **0** |
+
+15 of 20 correct rejections came from tie detection, not "no subset found" —
+reported as its own honest finding, not collapsed into a single "rejected"
+number, since it corroborates rather than merely satisfies the existing
+measured-ceiling note. 2 of the 22 amount draws (1 main, 1 holdout) hit a
+coincidental exact subset and were redrawn — recorded in each case's own
+`ground_truth.json` (`amount_redraws`), surfaced in the eval report as its
+own column, not silently discarded. Verified directly: `NO-MATCH-CONTROL-
+MAIN-00010` (fx_forward_settlement) and `NO-MATCH-CONTROL-HOLDOUT-00003`
+(bank_posting_error) both show `amount_redraws: 1` in the actual committed
+files, matching the claim exactly.
+
+**Existing headline re-verified unchanged, independently**: main
+152/152/0/0/0, holdout 53 linked/50 correct/0/0/3 — byte-identical to every
+prior measurement in this document.
+
+`reconagent/eval.py` gained `no_match_control_summary()` plus a
+`report.get("no_match_control")`-guarded rendering section (same pattern as
+`decomposition`/`tier2_ablation`) — `compute_metrics`/`classify`/`Metrics`
+and the existing headline computation are untouched.
+
+Full suite after this change: 286 passed, 13 skipped (+21 new tests, zero
+regressions) — confirmed via a fresh run, not the unit's own report.
 
 ### Tier A (3 commits: d9f8bf6, f2215aa, a660a0b) — cheap precision fixes
 

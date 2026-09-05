@@ -150,7 +150,15 @@ from reconagent.fx import (
     decompose_variance,
     load_reference_rates,
 )
-from reconagent.match import AMBIGUOUS, MATCHED, PARTIAL, TIE_AMBIGUOUS, MatchResult, match_all
+from reconagent.match import (
+    AMBIGUOUS,
+    MATCHED,
+    PARTIAL,
+    TIE_AMBIGUOUS,
+    UNMATCHED,
+    MatchResult,
+    match_all,
+)
 from reconagent.razorpay import parse_razorpay_settlements
 
 # Fixed order, all six named every time -- see decomposition_breakdown().
@@ -534,6 +542,102 @@ def tier2_ablation_summary() -> dict:
     }
 
 
+# --------------------------------------------------------------------------
+# No-match control population -- a SEPARATE population, scored on a SEPARATE
+# code path. Nothing below touches `compute_metrics`, `classify`, `Metrics`
+# or the headline tallies above, and none of these credits appear in
+# `data/` or `data/holdout/`.
+#
+# WHY IT EXISTS. Read the MATCHED/PARTIAL LABEL MISMATCH note in this
+# module's docstring: "In this dataset every linked case's ground truth is
+# MATCHED or PARTIAL, never UNMATCHED." That is an honest statement with an
+# uncomfortable consequence -- the headline accuracy is measured entirely on
+# credits that are *answerable*. It cannot, on its own, answer the first
+# question a payments-literate reader asks of a 100% match rate: what
+# happens when money arrives that legitimately has no match at all?
+#
+# `no_match_control/` is that population (see
+# scripts/generate_no_match_control.py): ten bank credits per split that
+# correspond to no settlement whatsoever -- a misdirected wire, a bank
+# posting error, a tax refund, an investor inflow, and so on -- each matched
+# against its own split's FULL real settlement list, so the matcher has a
+# complete, real pool of decoys available and must decline anyway.
+#
+# SCORING. UNMATCHED, AMBIGUOUS and TIE_AMBIGUOUS are all correct
+# rejections: the system declined to assert a link, which is the right
+# answer. MATCHED or PARTIAL on any of these is a false match -- the worst
+# outcome this project has. That is the same asymmetry `classify()` encodes,
+# applied to a population `classify()`'s denominators must not absorb.
+# --------------------------------------------------------------------------
+
+NO_MATCH_CONTROL_ROOT = REPO / "no_match_control"
+CORRECT_REJECTIONS = (UNMATCHED, AMBIGUOUS, TIE_AMBIGUOUS)
+
+
+def _no_match_control_split(dir_name: str, split: Split) -> dict:
+    """Score one no-match control population against `split`'s real
+    settlements. `split` supplies only its settlement list; its own results
+    and metrics are untouched."""
+    d = NO_MATCH_CONTROL_ROOT / dir_name
+    truth = json.loads((d / "ground_truth.json").read_text())
+    credits = parse_camt053_file(d / "bank_statement.camt053.xml")
+    results = {r.bank_txn_id: r for r in match_all(credits, split.settlements)}
+
+    cases = []
+    by_resolution: dict[str, int] = {}
+    false_matches = 0
+    redraws = 0
+    for case in truth["cases"]:
+        bid = case["expected_link"]["bank_txn_id"]
+        r = results[bid]
+        is_false_match = r.resolution in ASSERTED
+        false_matches += is_false_match
+        by_resolution[r.resolution] = by_resolution.get(r.resolution, 0) + 1
+        redraws += case["details"].get("amount_redraws", 0)
+        cases.append({
+            "case_id": case["case_id"],
+            "bank_txn_id": bid,
+            "defect_class": case["defect_class"],
+            "expected_link_resolution": case["expected_link_resolution"],
+            "credit_amount_minor": case["expected_link"]["credit_amount_minor"],
+            "resolution": r.resolution,
+            "settlement_ids": list(r.settlement_ids),
+            "stage": r.stage,
+            "pool_size": r.pool_size,
+            "confidence": str(r.confidence),
+            "false_match": bool(is_false_match),
+            "amount_redraws": case["details"].get("amount_redraws", 0),
+        })
+
+    return {
+        "total": len(cases),
+        "correctly_rejected": len(cases) - false_matches,
+        "false_matches": false_matches,
+        "by_resolution": dict(sorted(by_resolution.items())),
+        "settlements_searched": len(split.settlements),
+        "amount_redraws_during_generation": redraws,
+        "cases": cases,
+    }
+
+
+def no_match_control_summary(
+    main: Split | None = None, holdout: Split | None = None
+) -> dict:
+    """Both no-match control populations, each scored against its own split's
+    real settlement pool.
+
+    `main`/`holdout` are optional purely to avoid re-running `match_all` over
+    the real datasets when the caller already has the loaded splits (which
+    `build_report` does). Passing them changes nothing about the numbers --
+    only `split.settlements` is read."""
+    main = main or load_main()
+    holdout = holdout or load_holdout()
+    return {
+        "main": _no_match_control_split("main", main),
+        "holdout": _no_match_control_split("holdout", holdout),
+    }
+
+
 def throughput_table(scales=(200, 1000, 5000), seed: int = 20260903) -> list[dict]:
     gen = _load_generator_module()
     rows = []
@@ -589,6 +693,10 @@ def build_report(
         },
         "coverage_gaps": list(COVERAGE_GAPS),
         "fx_metrics_note": FX_METRICS_NOTE,
+        # A separate population with a separate denominator -- never added
+        # into `splits` above. See the section comment on
+        # `no_match_control_summary`.
+        "no_match_control": no_match_control_summary(main, holdout),
         "tier2_ablation": tier2_ablation_summary(),
         "decomposition": {
             "main": decomposition_breakdown(main),
@@ -645,6 +753,81 @@ def _render_tier2_delta_section(title: str, delta: dict) -> list[str]:
     return lines
 
 
+def _render_no_match_control_section(control: dict, m: dict, h: dict) -> list[str]:
+    """The no-match control population, rendered as ADDITIONAL to the headline
+    above, never blended into it. Pure presentation of an already-computed
+    dict, same as `_render_tier2_delta_section`."""
+    cm, ch = control["main"], control["holdout"]
+
+    def one(label: str, c: dict, existing: dict) -> str:
+        return (
+            f"| {label} | {existing['correct']}/{existing['total_linked']} correct "
+            f"(unchanged) | {c['correctly_rejected']}/{c['total']} correctly rejected "
+            f"| {c['false_matches']} | {c['settlements_searched']} |"
+        )
+
+    lines = [
+        "## No-match control: credits that correspond to no settlement at all",
+        "",
+        "**These are two separate populations with two separate denominators, "
+        "not one combined score.** Every linked case in `data/` and "
+        "`data/holdout/` is ground-truth MATCHED or PARTIAL -- every credit "
+        "there is answerable, and the headline above measures only how often "
+        "the right answer was found. It says nothing about money that has no "
+        "right answer. `no_match_control/` is that missing population: ten "
+        "bank credits per split (misdirected wire, bank posting error, tax "
+        "refund, investor inflow, insurance payout, deposit refund, and so "
+        "on) built to correspond to no settlement whatsoever, and matched "
+        "against that split's FULL real settlement list -- so the matcher has "
+        "a complete, real pool of decoys in front of it and must decline "
+        "anyway. Correct behaviour is UNMATCHED, AMBIGUOUS or TIE_AMBIGUOUS; "
+        "MATCHED or PARTIAL on any of them is a false match.",
+        "",
+        "| split | existing population (answerable credits) | additionally: "
+        "no-match control | false matches | settlements searched against |",
+        "|---|---|---|---|---|",
+        one("main", cm, m),
+        one("holdout", ch, h),
+        "",
+        f"Main: {m['correct']}/{m['total_linked']} correct on answerable credits "
+        f"(unchanged). Additionally: {cm['correctly_rejected']}/{cm['total']} "
+        f"no-match credits correctly rejected, {cm['false_matches']} false "
+        f"positives. Holdout: {h['correct']}/{h['total_linked']} correct on "
+        f"answerable credits (unchanged). Additionally: "
+        f"{ch['correctly_rejected']}/{ch['total']} no-match credits correctly "
+        f"rejected, {ch['false_matches']} false positives.",
+        "",
+        "How the rejections split, which is worth reading rather than "
+        "summing: UNMATCHED means no subset of the open settlements came "
+        "within tolerance at all. TIE_AMBIGUOUS means several distinct "
+        "subsets *did* land on the identical minimum residual and Stage 2 "
+        "refused to pick one. Both are correct here, but they are not the "
+        "same defence -- against an unpruned pool (nothing resolves at Stage "
+        "1 in this population, so no settlement is ever consumed) the "
+        "tie-detection rule is doing real work, not decoration.",
+        "",
+        "| split | resolutions | amount redraws during generation |",
+        "|---|---|---|",
+    ]
+    for label, c in (("main", cm), ("holdout", ch)):
+        res = ", ".join(f"{k} {v}" for k, v in c["by_resolution"].items())
+        lines.append(f"| {label} | {res} | {c['amount_redraws_during_generation']} |")
+    lines += [
+        "",
+        "The redraw column is reported rather than hidden: it counts amounts "
+        "the generator drew that *did* land on a coincidental exact subset of "
+        "the real settlements and had to be redrawn before the case could be "
+        "labelled no-match. It is the honest measure of how dense this search "
+        "space is, and it corroborates the MEASURED CEILING note in "
+        "`reconagent.match` -- an arbitrary amount against an unpruned pool is "
+        "not safe by default. It is not a matcher error rate: the emitted "
+        "dataset is verified false-match-free against the real settlements "
+        "both before and after it is written.",
+        "",
+    ]
+    return lines
+
+
 def render_markdown(report: dict) -> str:
     m = report["splits"]["main"]
     h = report["splits"]["holdout"]
@@ -669,6 +852,11 @@ def render_markdown(report: dict) -> str:
         f"| {_pct(h['false_clear_rate'])} ({h['false_clear']}/{h['true_link_count']}) "
         f"| {_pct(h['tie_ambiguous_rate'])} ({h['tie_ambiguous']}/{h['true_link_count']}) |",
         "",
+    ]
+    control = report.get("no_match_control")
+    if control:
+        lines += _render_no_match_control_section(control, m, h)
+    lines += [
         "## Match rate, precision, recall",
         "",
         "| split | match rate | precision | recall |",

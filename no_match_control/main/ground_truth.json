@@ -1,0 +1,379 @@
+{
+  "schema_version": "1.0",
+  "generator": {
+    "script": "scripts/generate_no_match_control.py",
+    "seed": 20260905,
+    "scale": 10,
+    "split": "no_match_control_main",
+    "adversarial_holdout": false,
+    "deterministic": "same seed => byte-identical output; no wall-clock input"
+  },
+  "conventions": {
+    "purpose": "A control population of bank credits that correspond to NO settlement at all. data/ and data/holdout/ contain only answerable credits (every linked case there is ground-truth MATCHED or PARTIAL), so their headline accuracy cannot speak to what the matcher does with money that has no right answer. This dataset supplies that population. The correct system behaviour for every case here is to decline: UNMATCHED, AMBIGUOUS or TIE_AMBIGUOUS. Asserting MATCHED or PARTIAL on any of these is a false match -- the failure this project exists to avoid.",
+    "separate_population": "These cases are scored through a parallel code path and are NEVER merged into data/'s or data/holdout/'s tallies. Neither of those directories is modified by this generator. Report the two populations as two populations, never as one combined denominator.",
+    "scored_against_the_real_pool": "Each credit is matched against its own split's FULL real settlement list (data/razorpay_settlements.csv for main, data/holdout/HOLDOUT_razorpay_settlements.csv for holdout), not an empty or reduced pool. Because nothing here resolves at Stage 1, every settlement stays open, so Stage 2 searches an unpruned pool -- a strictly harder candidate space than the real splits present.",
+    "amount_construction": "Amounts are integer minor units drawn from the middle of the real settlement range, then verified by running match_all against the real settlements and redrawn if any landed on a coincidental subset. amount_redraws below records how many redraws each case needed.",
+    "money": "Every *_minor field in this file is an integer count of currency minor units (paise for INR). Never a float. The emitted camt.053 carries the same values as exact fixed-point decimal strings.",
+    "not_a_realistic_proportions_dataset": "Real statements are not 100% unmatchable money. Do not compute a production-style match-rate expectation from this file; it is a control population for one specific question.",
+    "case_fields": {
+      "case_id": "stable id, unique within this dataset",
+      "defect_class": "the reason this money has no settlement behind it",
+      "split": "no_match_control_main | no_match_control_holdout",
+      "settlement_ids": "always empty -- that is the point of this dataset",
+      "payment_ids": "always empty",
+      "bank_txn_ids": "the NtryRef in the camt.053 this case involves",
+      "invoice_ids": "always empty",
+      "expected_link": "covers_settlement_ids is empty; settlement_net_sum_minor is 0 and residual_minor is -credit_amount_minor, matching the convention reconagent.match uses for its own UNMATCHED results",
+      "expected_link_resolution": "UNMATCHED for every case in this dataset",
+      "expected_exception_category": "the defect_class, upper-cased",
+      "details": "the remitter, the narration as sent, how many amount redraws the verification loop needed, and the Stage 2 pool size the credit was actually declined against",
+      "notes": "plain-English statement of why this money has no match"
+    },
+    "matched_against_settlements_file": "data/razorpay_settlements.csv",
+    "period": [
+      "2026-08-01",
+      "2026-08-31"
+    ]
+  },
+  "counts": {
+    "cases": 10,
+    "settlements": 0,
+    "settlement_rows": 0,
+    "bank_credits": 10,
+    "invoices": 0,
+    "by_defect_class": {
+      "bank_interest_credit": 1,
+      "bank_posting_error": 1,
+      "fx_forward_settlement": 1,
+      "insurance_claim_payout": 1,
+      "investor_capital_infusion": 1,
+      "misdirected_wire": 1,
+      "security_deposit_refund": 1,
+      "tax_refund": 1,
+      "unrelated_inbound_wire": 1,
+      "vendor_overpayment_refund": 1
+    }
+  },
+  "cases": [
+    {
+      "case_id": "NO-MATCH-CONTROL-MAIN-00001",
+      "defect_class": "misdirected_wire",
+      "split": "no_match_control_main",
+      "settlement_ids": [],
+      "payment_ids": [],
+      "bank_txn_ids": [
+        "NOMATCHM0001"
+      ],
+      "invoice_ids": [],
+      "expected_link": {
+        "bank_txn_id": "NOMATCHM0001",
+        "covers_settlement_ids": [],
+        "credit_amount_minor": 390048609,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 0,
+        "residual_minor": -390048609
+      },
+      "expected_link_resolution": "UNMATCHED",
+      "expected_exception_category": "MISDIRECTED_WIRE",
+      "details": {
+        "remitter_name": "HANSEATIC MARITIME SUPPLY GMBH",
+        "narration_as_sent": "/RFB/HANSEATIC MARITIME SUPPLY - BENEFICIARY A/C 50200087654322 PO 88231 - PLEASE CONFIRM RECEIPT",
+        "channel": "SWIFT_MT103",
+        "value_date": "2026-08-25",
+        "amount_redraws": 0,
+        "verified_stage2_pool_size": 64,
+        "observed_resolution_at_generation": "TIE_AMBIGUOUS",
+        "why_no_settlement_exists": "An inbound wire intended for a different beneficiary entirely -- the remitter keyed the wrong account number. The money is in the merchant's account; none of the merchant's settlements are behind it."
+      },
+      "notes": "An inbound wire intended for a different beneficiary entirely -- the remitter keyed the wrong account number. The money is in the merchant's account; none of the merchant's settlements are behind it."
+    },
+    {
+      "case_id": "NO-MATCH-CONTROL-MAIN-00002",
+      "defect_class": "unrelated_inbound_wire",
+      "split": "no_match_control_main",
+      "settlement_ids": [],
+      "payment_ids": [],
+      "bank_txn_ids": [
+        "NOMATCHM0002"
+      ],
+      "invoice_ids": [],
+      "expected_link": {
+        "bank_txn_id": "NOMATCHM0002",
+        "covers_settlement_ids": [],
+        "credit_amount_minor": 218124158,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 0,
+        "residual_minor": -218124158
+      },
+      "expected_link_resolution": "UNMATCHED",
+      "expected_exception_category": "UNRELATED_INBOUND_WIRE",
+      "details": {
+        "remitter_name": "VALLEYCREST AGRO COOPERATIVE",
+        "narration_as_sent": "NEFT CR-HDFC0000412-VALLEYCREST AGRO COOPERATIVE-TRADE ADVANCE",
+        "channel": "DOMESTIC_NEFT",
+        "value_date": "2026-08-08",
+        "amount_redraws": 0,
+        "verified_stage2_pool_size": 47,
+        "observed_resolution_at_generation": "UNMATCHED",
+        "why_no_settlement_exists": "A genuine inbound wire from an entity this merchant has never traded with -- no invoice, no order, no settlement, no prior relationship."
+      },
+      "notes": "A genuine inbound wire from an entity this merchant has never traded with -- no invoice, no order, no settlement, no prior relationship."
+    },
+    {
+      "case_id": "NO-MATCH-CONTROL-MAIN-00003",
+      "defect_class": "bank_posting_error",
+      "split": "no_match_control_main",
+      "settlement_ids": [],
+      "payment_ids": [],
+      "bank_txn_ids": [
+        "NOMATCHM0003"
+      ],
+      "invoice_ids": [],
+      "expected_link": {
+        "bank_txn_id": "NOMATCHM0003",
+        "covers_settlement_ids": [],
+        "credit_amount_minor": 173618482,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 0,
+        "residual_minor": -173618482
+      },
+      "expected_link_resolution": "UNMATCHED",
+      "expected_exception_category": "BANK_POSTING_ERROR",
+      "details": {
+        "remitter_name": "RATNAKAR BANK LIMITED",
+        "narration_as_sent": "CR ADJ-POSTING ERROR-BRANCH 0088-TO BE REVERSED-SR 5540118",
+        "channel": "DOMESTIC_NEFT",
+        "value_date": "2026-08-23",
+        "amount_redraws": 0,
+        "verified_stage2_pool_size": 64,
+        "observed_resolution_at_generation": "TIE_AMBIGUOUS",
+        "why_no_settlement_exists": "The bank's own posting error -- a credit booked to the wrong account and reversed in the following statement period. There is no counterparty transaction behind it at all."
+      },
+      "notes": "The bank's own posting error -- a credit booked to the wrong account and reversed in the following statement period. There is no counterparty transaction behind it at all."
+    },
+    {
+      "case_id": "NO-MATCH-CONTROL-MAIN-00004",
+      "defect_class": "investor_capital_infusion",
+      "split": "no_match_control_main",
+      "settlement_ids": [],
+      "payment_ids": [],
+      "bank_txn_ids": [
+        "NOMATCHM0004"
+      ],
+      "invoice_ids": [],
+      "expected_link": {
+        "bank_txn_id": "NOMATCHM0004",
+        "covers_settlement_ids": [],
+        "credit_amount_minor": 133880352,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 0,
+        "residual_minor": -133880352
+      },
+      "expected_link_resolution": "UNMATCHED",
+      "expected_exception_category": "INVESTOR_CAPITAL_INFUSION",
+      "details": {
+        "remitter_name": "ORIEL GROWTH PARTNERS II LP",
+        "narration_as_sent": "NEFT CR-HDFC0000221-ORIEL GROWTH PARTNERS II LP-SHARE SUBSCRIPTION TRANCHE B",
+        "channel": "DOMESTIC_NEFT",
+        "value_date": "2026-08-19",
+        "amount_redraws": 0,
+        "verified_stage2_pool_size": 64,
+        "observed_resolution_at_generation": "TIE_AMBIGUOUS",
+        "why_no_settlement_exists": "Equity subscription money from an investor. A capital inflow is not trade revenue, so no settlement can ever exist for it -- the matcher must not reach for one."
+      },
+      "notes": "Equity subscription money from an investor. A capital inflow is not trade revenue, so no settlement can ever exist for it -- the matcher must not reach for one."
+    },
+    {
+      "case_id": "NO-MATCH-CONTROL-MAIN-00005",
+      "defect_class": "insurance_claim_payout",
+      "split": "no_match_control_main",
+      "settlement_ids": [],
+      "payment_ids": [],
+      "bank_txn_ids": [
+        "NOMATCHM0005"
+      ],
+      "invoice_ids": [],
+      "expected_link": {
+        "bank_txn_id": "NOMATCHM0005",
+        "covers_settlement_ids": [],
+        "credit_amount_minor": 256574588,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 0,
+        "residual_minor": -256574588
+      },
+      "expected_link_resolution": "UNMATCHED",
+      "expected_exception_category": "INSURANCE_CLAIM_PAYOUT",
+      "details": {
+        "remitter_name": "NEW HORIZON GENERAL INSURANCE CO LTD",
+        "narration_as_sent": "NEFT CR-SBIN0004512-NEW HORIZON GENERAL INSURANCE-CLAIM SETTLEMENT MARINE CARGO CLM 90218774",
+        "channel": "DOMESTIC_NEFT",
+        "value_date": "2026-08-23",
+        "amount_redraws": 0,
+        "verified_stage2_pool_size": 64,
+        "observed_resolution_at_generation": "TIE_AMBIGUOUS",
+        "why_no_settlement_exists": "An insurer settling a marine-cargo claim. Money in, but the counterparty is the insurer, not a customer, and it corresponds to no payment gateway settlement."
+      },
+      "notes": "An insurer settling a marine-cargo claim. Money in, but the counterparty is the insurer, not a customer, and it corresponds to no payment gateway settlement."
+    },
+    {
+      "case_id": "NO-MATCH-CONTROL-MAIN-00006",
+      "defect_class": "tax_refund",
+      "split": "no_match_control_main",
+      "settlement_ids": [],
+      "payment_ids": [],
+      "bank_txn_ids": [
+        "NOMATCHM0006"
+      ],
+      "invoice_ids": [],
+      "expected_link": {
+        "bank_txn_id": "NOMATCHM0006",
+        "covers_settlement_ids": [],
+        "credit_amount_minor": 393946927,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 0,
+        "residual_minor": -393946927
+      },
+      "expected_link_resolution": "UNMATCHED",
+      "expected_exception_category": "TAX_REFUND",
+      "details": {
+        "remitter_name": "CENTRAL BOARD OF INDIRECT TAXES AND CUSTOMS",
+        "narration_as_sent": "GST REFUND ARN AA290826003911Q-RFD-05 SANCTIONED-PMT ADVICE",
+        "channel": "DOMESTIC_NEFT",
+        "value_date": "2026-08-20",
+        "amount_redraws": 0,
+        "verified_stage2_pool_size": 64,
+        "observed_resolution_at_generation": "TIE_AMBIGUOUS",
+        "why_no_settlement_exists": "A GST refund from the tax authority. Government money, arriving on a government reference, with no settlement or invoice behind it."
+      },
+      "notes": "A GST refund from the tax authority. Government money, arriving on a government reference, with no settlement or invoice behind it."
+    },
+    {
+      "case_id": "NO-MATCH-CONTROL-MAIN-00007",
+      "defect_class": "bank_interest_credit",
+      "split": "no_match_control_main",
+      "settlement_ids": [],
+      "payment_ids": [],
+      "bank_txn_ids": [
+        "NOMATCHM0007"
+      ],
+      "invoice_ids": [],
+      "expected_link": {
+        "bank_txn_id": "NOMATCHM0007",
+        "covers_settlement_ids": [],
+        "credit_amount_minor": 334714146,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 0,
+        "residual_minor": -334714146
+      },
+      "expected_link_resolution": "UNMATCHED",
+      "expected_exception_category": "BANK_INTEREST_CREDIT",
+      "details": {
+        "remitter_name": "ICICI BANK LIMITED",
+        "narration_as_sent": "INT CR-QTR ENDED 30JUN2026-SB A/C 50200087654321-TDS DEDUCTED",
+        "channel": "DOMESTIC_NEFT",
+        "value_date": "2026-08-11",
+        "amount_redraws": 0,
+        "verified_stage2_pool_size": 64,
+        "observed_resolution_at_generation": "TIE_AMBIGUOUS",
+        "why_no_settlement_exists": "Quarterly savings interest posted by the merchant's own bank. Not a customer payment at all."
+      },
+      "notes": "Quarterly savings interest posted by the merchant's own bank. Not a customer payment at all."
+    },
+    {
+      "case_id": "NO-MATCH-CONTROL-MAIN-00008",
+      "defect_class": "vendor_overpayment_refund",
+      "split": "no_match_control_main",
+      "settlement_ids": [],
+      "payment_ids": [],
+      "bank_txn_ids": [
+        "NOMATCHM0008"
+      ],
+      "invoice_ids": [],
+      "expected_link": {
+        "bank_txn_id": "NOMATCHM0008",
+        "covers_settlement_ids": [],
+        "credit_amount_minor": 281855893,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 0,
+        "residual_minor": -281855893
+      },
+      "expected_link_resolution": "UNMATCHED",
+      "expected_exception_category": "VENDOR_OVERPAYMENT_REFUND",
+      "details": {
+        "remitter_name": "KAVERI PACKAGING SOLUTIONS PVT LTD",
+        "narration_as_sent": "NEFT CR-HDFC0000330-KAVERI PACKAGING SOLUTIONS-REFUND OF EXCESS REMITTANCE PO 2026-0774",
+        "channel": "DOMESTIC_NEFT",
+        "value_date": "2026-08-12",
+        "amount_redraws": 0,
+        "verified_stage2_pool_size": 64,
+        "observed_resolution_at_generation": "UNMATCHED",
+        "why_no_settlement_exists": "A supplier returning money the merchant overpaid them. The cash flows the wrong way round for a settlement: this is the merchant's own money coming back, not a customer's arriving."
+      },
+      "notes": "A supplier returning money the merchant overpaid them. The cash flows the wrong way round for a settlement: this is the merchant's own money coming back, not a customer's arriving."
+    },
+    {
+      "case_id": "NO-MATCH-CONTROL-MAIN-00009",
+      "defect_class": "security_deposit_refund",
+      "split": "no_match_control_main",
+      "settlement_ids": [],
+      "payment_ids": [],
+      "bank_txn_ids": [
+        "NOMATCHM0009"
+      ],
+      "invoice_ids": [],
+      "expected_link": {
+        "bank_txn_id": "NOMATCHM0009",
+        "covers_settlement_ids": [],
+        "credit_amount_minor": 7719793,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 0,
+        "residual_minor": -7719793
+      },
+      "expected_link_resolution": "UNMATCHED",
+      "expected_exception_category": "SECURITY_DEPOSIT_REFUND",
+      "details": {
+        "remitter_name": "PRESTIGE ESTATES REALTY LLP",
+        "narration_as_sent": "NEFT CR-AXIS0000118-PRESTIGE ESTATES REALTY-SECURITY DEPOSIT REFUND LEASE EXIT UNIT 704",
+        "channel": "DOMESTIC_NEFT",
+        "value_date": "2026-08-10",
+        "amount_redraws": 0,
+        "verified_stage2_pool_size": 59,
+        "observed_resolution_at_generation": "TIE_AMBIGUOUS",
+        "why_no_settlement_exists": "A landlord returning the office security deposit on lease exit. A balance-sheet movement, not revenue."
+      },
+      "notes": "A landlord returning the office security deposit on lease exit. A balance-sheet movement, not revenue."
+    },
+    {
+      "case_id": "NO-MATCH-CONTROL-MAIN-00010",
+      "defect_class": "fx_forward_settlement",
+      "split": "no_match_control_main",
+      "settlement_ids": [],
+      "payment_ids": [],
+      "bank_txn_ids": [
+        "NOMATCHM0010"
+      ],
+      "invoice_ids": [],
+      "expected_link": {
+        "bank_txn_id": "NOMATCHM0010",
+        "covers_settlement_ids": [],
+        "credit_amount_minor": 388630529,
+        "credit_currency": "INR",
+        "settlement_net_sum_minor": 0,
+        "residual_minor": -388630529
+      },
+      "expected_link_resolution": "UNMATCHED",
+      "expected_exception_category": "FX_FORWARD_SETTLEMENT",
+      "details": {
+        "remitter_name": "KOTAK MAHINDRA BANK TREASURY",
+        "narration_as_sent": "FWD CONTRACT SETTLEMENT-DEAL 8841207-USD/INR MATURED-NET CR TO A/C",
+        "channel": "DOMESTIC_NEFT",
+        "value_date": "2026-08-11",
+        "amount_redraws": 1,
+        "verified_stage2_pool_size": 64,
+        "observed_resolution_at_generation": "TIE_AMBIGUOUS",
+        "why_no_settlement_exists": "A treasury desk crediting the settlement of a matured FX forward contract. It looks like export money and it is denominated the same way, which is exactly why it is worth having in this population -- there is still no settlement behind it."
+      },
+      "notes": "A treasury desk crediting the settlement of a matured FX forward contract. It looks like export money and it is denominated the same way, which is exactly why it is worth having in this population -- there is still no settlement behind it."
+    }
+  ]
+}
