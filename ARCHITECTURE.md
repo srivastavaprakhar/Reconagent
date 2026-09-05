@@ -259,18 +259,36 @@ arithmetic that decides six of these categories** (`decompose_variance`'s
 `NO_VARIANCE`/`BENIGN_FX_DRIFT`/`FLAGGED_FX_DRIFT`/`FEE_MISMATCH`/
 `DATA_ENTRY_ERROR`/`UNRESOLVED`, plus the matcher's own `PARTIAL`/
 `TIE_AMBIGUOUS`/`UNMATCHED`, plus EDPMS aging and timing-pending as separate
-checks) — the arithmetic backbone the full taxonomy would sit on top of. What
-is **not** built: a single unified taxonomy module that collects all of these
-into one named-category output, the confidence-calibrated abstention gate
-that routes categories to auto-match/queue/clean-miss, and the LLM
-explanation call. That unit (spec's "Subagent E") was deliberately deferred
-at the Tier 1.5 checkpoint pending a scope decision, and stayed out of scope
-for the rest of this build — see [`PROGRESS.md`](PROGRESS.md) for exactly
-when and why.
+checks) — the arithmetic backbone the full taxonomy would sit on top of.
 
-**Explicitly not built, and not attempted:** the audit log / API layer
-(spec's "Subagent G" — FastAPI service, hash-chained Postgres journal). Same
-reason: deferred at the same checkpoint, never revisited.
+**The LLM explanation call itself was subsequently built** (`reconagent/
+explain.py`, Tier 2 unit 5) and is boundary-tested: `Verdict` is the only
+shape the call accepts, every field on it a plain stringified fact, and an
+adversarial test proves a manipulated LLM response cannot alter the
+category or amounts it was handed — the response comes back as inert
+display text, nothing more. **What remains genuinely not built is the
+broader unit this call was originally scoped inside**: a single unified
+taxonomy module that collects all the named categories above into one
+output, and the confidence-calibrated abstention gate that routes them to
+auto-match/queue/clean-miss. That broader unit (spec's "Subagent E") was
+deferred at the Tier 1.5 checkpoint pending a scope decision; only the
+narrow explanation-call piece was later carved out and built on its own —
+the taxonomy-and-gate piece was never revisited. These are two separate
+facts and neither should be read as covering the other: the call existing
+does not mean E is done, and E's remaining gap does not mean the call is
+untested.
+
+**The call has never been executed against a live API in this build.** Its
+own live-key test is correctly skipped — no `ANTHROPIC_API_KEY` is set in
+this environment — so everything proven about it so far, including the
+adversarial boundary test above, was proven against mocked HTTP responses,
+not a real model's output. That is an honest, correctly-gated fact about
+what has and hasn't been exercised, not a deficiency in the test design.
+
+**Explicitly not built, and not attempted:** the live API layer (spec's
+"Subagent G" — a FastAPI service). The other half of that original unit,
+the audit log, was built separately in Tier 3 on TigerBeetle — see §12 —
+so this gap is narrower than it was when Tier 1.5 first deferred it.
 
 ---
 
