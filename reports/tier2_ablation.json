@@ -1,0 +1,488 @@
+{
+  "deltas": {
+    "main": {
+      "by_defect_class": [
+        {
+          "defect_class": "clean_match",
+          "match_rate_delta": 0.0,
+          "tier1+2_correct": 107,
+          "tier1+2_match_rate": 1.0,
+          "tier1_correct": 107,
+          "tier1_match_rate": 1.0,
+          "total": 107
+        },
+        {
+          "defect_class": "data_entry_error",
+          "match_rate_delta": 0.0,
+          "tier1+2_correct": 1,
+          "tier1+2_match_rate": 1.0,
+          "tier1_correct": 1,
+          "tier1_match_rate": 1.0,
+          "total": 1
+        },
+        {
+          "defect_class": "edpms_open",
+          "match_rate_delta": 0.0,
+          "tier1+2_correct": 2,
+          "tier1+2_match_rate": 1.0,
+          "tier1_correct": 2,
+          "tier1_match_rate": 1.0,
+          "total": 2
+        },
+        {
+          "defect_class": "fee_mismatch",
+          "match_rate_delta": 0.0,
+          "tier1+2_correct": 1,
+          "tier1+2_match_rate": 1.0,
+          "tier1_correct": 1,
+          "tier1_match_rate": 1.0,
+          "total": 1
+        },
+        {
+          "defect_class": "fx_drift_benign",
+          "match_rate_delta": 0.0,
+          "tier1+2_correct": 10,
+          "tier1+2_match_rate": 1.0,
+          "tier1_correct": 10,
+          "tier1_match_rate": 1.0,
+          "total": 10
+        },
+        {
+          "defect_class": "fx_drift_flagged",
+          "match_rate_delta": 0.0,
+          "tier1+2_correct": 5,
+          "tier1+2_match_rate": 1.0,
+          "tier1_correct": 5,
+          "tier1_match_rate": 1.0,
+          "total": 5
+        },
+        {
+          "defect_class": "missing_remitter",
+          "match_rate_delta": 0.0,
+          "tier1+2_correct": 6,
+          "tier1+2_match_rate": 1.0,
+          "tier1_correct": 6,
+          "tier1_match_rate": 1.0,
+          "total": 6
+        },
+        {
+          "defect_class": "partial_payment",
+          "match_rate_delta": 0.0,
+          "tier1+2_correct": 6,
+          "tier1+2_match_rate": 1.0,
+          "tier1_correct": 6,
+          "tier1_match_rate": 1.0,
+          "total": 6
+        },
+        {
+          "defect_class": "refund_fx_asymmetry",
+          "match_rate_delta": 0.0,
+          "tier1+2_correct": 2,
+          "tier1+2_match_rate": 1.0,
+          "tier1_correct": 2,
+          "tier1_match_rate": 1.0,
+          "total": 2
+        },
+        {
+          "defect_class": "subset_sum_bundle",
+          "match_rate_delta": 0.0,
+          "tier1+2_correct": 12,
+          "tier1+2_match_rate": 1.0,
+          "tier1_correct": 12,
+          "tier1_match_rate": 1.0,
+          "total": 12
+        }
+      ],
+      "dataset": "main_tier1",
+      "overall": {
+        "match_rate_delta": 0.0,
+        "recall_delta": 0.0,
+        "tier1+2_false_clear": 0,
+        "tier1+2_false_match": 0,
+        "tier1+2_match_rate": 1.0,
+        "tier1+2_recall": 1.0,
+        "tier1_false_clear": 0,
+        "tier1_false_match": 0,
+        "tier1_match_rate": 1.0,
+        "tier1_recall": 1.0
+      }
+    },
+    "stress_test": {
+      "by_defect_class": [
+        {
+          "defect_class": "abbreviation_variant",
+          "match_rate_delta": 0.25,
+          "tier1+2_correct": 2,
+          "tier1+2_match_rate": 0.25,
+          "tier1_correct": 0,
+          "tier1_match_rate": 0.0,
+          "total": 8
+        },
+        {
+          "defect_class": "invoice_description_mismatch",
+          "match_rate_delta": 0.5,
+          "tier1+2_correct": 4,
+          "tier1+2_match_rate": 0.5,
+          "tier1_correct": 0,
+          "tier1_match_rate": 0.0,
+          "total": 8
+        },
+        {
+          "defect_class": "legal_vs_trading_name",
+          "match_rate_delta": 0.0,
+          "tier1+2_correct": 0,
+          "tier1+2_match_rate": 0.0,
+          "tier1_correct": 0,
+          "tier1_match_rate": 0.0,
+          "total": 8
+        },
+        {
+          "defect_class": "ocr_typo_narration",
+          "match_rate_delta": 1.0,
+          "tier1+2_correct": 8,
+          "tier1+2_match_rate": 1.0,
+          "tier1_correct": 0,
+          "tier1_match_rate": 0.0,
+          "total": 8
+        },
+        {
+          "defect_class": "transliteration_variant",
+          "match_rate_delta": 0.75,
+          "tier1+2_correct": 6,
+          "tier1+2_match_rate": 0.75,
+          "tier1_correct": 0,
+          "tier1_match_rate": 0.0,
+          "total": 8
+        }
+      ],
+      "dataset": "stress_tier1",
+      "overall": {
+        "match_rate_delta": 0.5,
+        "recall_delta": 0.5,
+        "tier1+2_false_clear": 20,
+        "tier1+2_false_match": 0,
+        "tier1+2_match_rate": 0.5,
+        "tier1+2_recall": 0.5,
+        "tier1_false_clear": 40,
+        "tier1_false_match": 0,
+        "tier1_match_rate": 0.0,
+        "tier1_recall": 0.0
+      }
+    }
+  },
+  "finding": "On the main dataset, Tier 2 (Splink + hybrid fuzzy) provides zero measurable value: Tier 1 alone and Tier 1+2 produce identical match rates (100.00%). Tier 1 already resolves the main set completely, so Tier 2 never gets a case to add value on there -- provably a no-op, not a close call. On the stress-test dataset (built specifically so Tier 1 alone resolves nothing: match rate 0.00% under Tier 1 alone), Tier 2 raises match rate to 50.00% (+50.00%), with false_match count going from 0 to 0. Tier 2's gain on the stress set is uneven across defect classes, improving: abbreviation_variant (2/8), invoice_description_mismatch (4/8), ocr_typo_narration (8/8), transliteration_variant (6/8). It shows no improvement at all over Tier 1 (still 0 resolved) on: legal_vs_trading_name (0/8). In plain language: Tier 2 provides zero value on the main set (Tier 1 already resolves it completely) and partial, uneven value on the stress set -- real gains on several defect classes, no gain whatsoever on others. This is not softened or rounded up in either direction; it is what compute_metrics measured on this run.",
+  "full_metrics": {
+    "main_tier1": {
+      "asserted_count": 152,
+      "by_defect_class": {
+        "clean_match": {
+          "correct": 107,
+          "false_clear": 0,
+          "false_match": 0,
+          "match_rate": 1.0,
+          "tie_ambiguous": 0,
+          "total": 107
+        },
+        "data_entry_error": {
+          "correct": 1,
+          "false_clear": 0,
+          "false_match": 0,
+          "match_rate": 1.0,
+          "tie_ambiguous": 0,
+          "total": 1
+        },
+        "edpms_open": {
+          "correct": 2,
+          "false_clear": 0,
+          "false_match": 0,
+          "match_rate": 1.0,
+          "tie_ambiguous": 0,
+          "total": 2
+        },
+        "fee_mismatch": {
+          "correct": 1,
+          "false_clear": 0,
+          "false_match": 0,
+          "match_rate": 1.0,
+          "tie_ambiguous": 0,
+          "total": 1
+        },
+        "fx_drift_benign": {
+          "correct": 10,
+          "false_clear": 0,
+          "false_match": 0,
+          "match_rate": 1.0,
+          "tie_ambiguous": 0,
+          "total": 10
+        },
+        "fx_drift_flagged": {
+          "correct": 5,
+          "false_clear": 0,
+          "false_match": 0,
+          "match_rate": 1.0,
+          "tie_ambiguous": 0,
+          "total": 5
+        },
+        "missing_remitter": {
+          "correct": 6,
+          "false_clear": 0,
+          "false_match": 0,
+          "match_rate": 1.0,
+          "tie_ambiguous": 0,
+          "total": 6
+        },
+        "partial_payment": {
+          "correct": 6,
+          "false_clear": 0,
+          "false_match": 0,
+          "match_rate": 1.0,
+          "tie_ambiguous": 0,
+          "total": 6
+        },
+        "refund_fx_asymmetry": {
+          "correct": 2,
+          "false_clear": 0,
+          "false_match": 0,
+          "match_rate": 1.0,
+          "tie_ambiguous": 0,
+          "total": 2
+        },
+        "subset_sum_bundle": {
+          "correct": 12,
+          "false_clear": 0,
+          "false_match": 0,
+          "match_rate": 1.0,
+          "tie_ambiguous": 0,
+          "total": 12
+        }
+      },
+      "correct": 152,
+      "false_clear": 0,
+      "false_clear_rate": 0.0,
+      "false_match": 0,
+      "false_match_rate": 0.0,
+      "match_rate": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "split": "main_tier1",
+      "tie_ambiguous": 0,
+      "tie_ambiguous_rate": 0.0,
+      "total_linked": 152,
+      "true_link_count": 152
+    },
+    "main_tier1+2": {
+      "asserted_count": 152,
+      "by_defect_class": {
+        "clean_match": {
+          "correct": 107,
+          "false_clear": 0,
+          "false_match": 0,
+          "match_rate": 1.0,
+          "tie_ambiguous": 0,
+          "total": 107
+        },
+        "data_entry_error": {
+          "correct": 1,
+          "false_clear": 0,
+          "false_match": 0,
+          "match_rate": 1.0,
+          "tie_ambiguous": 0,
+          "total": 1
+        },
+        "edpms_open": {
+          "correct": 2,
+          "false_clear": 0,
+          "false_match": 0,
+          "match_rate": 1.0,
+          "tie_ambiguous": 0,
+          "total": 2
+        },
+        "fee_mismatch": {
+          "correct": 1,
+          "false_clear": 0,
+          "false_match": 0,
+          "match_rate": 1.0,
+          "tie_ambiguous": 0,
+          "total": 1
+        },
+        "fx_drift_benign": {
+          "correct": 10,
+          "false_clear": 0,
+          "false_match": 0,
+          "match_rate": 1.0,
+          "tie_ambiguous": 0,
+          "total": 10
+        },
+        "fx_drift_flagged": {
+          "correct": 5,
+          "false_clear": 0,
+          "false_match": 0,
+          "match_rate": 1.0,
+          "tie_ambiguous": 0,
+          "total": 5
+        },
+        "missing_remitter": {
+          "correct": 6,
+          "false_clear": 0,
+          "false_match": 0,
+          "match_rate": 1.0,
+          "tie_ambiguous": 0,
+          "total": 6
+        },
+        "partial_payment": {
+          "correct": 6,
+          "false_clear": 0,
+          "false_match": 0,
+          "match_rate": 1.0,
+          "tie_ambiguous": 0,
+          "total": 6
+        },
+        "refund_fx_asymmetry": {
+          "correct": 2,
+          "false_clear": 0,
+          "false_match": 0,
+          "match_rate": 1.0,
+          "tie_ambiguous": 0,
+          "total": 2
+        },
+        "subset_sum_bundle": {
+          "correct": 12,
+          "false_clear": 0,
+          "false_match": 0,
+          "match_rate": 1.0,
+          "tie_ambiguous": 0,
+          "total": 12
+        }
+      },
+      "correct": 152,
+      "false_clear": 0,
+      "false_clear_rate": 0.0,
+      "false_match": 0,
+      "false_match_rate": 0.0,
+      "match_rate": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "split": "main_tier1+2",
+      "tie_ambiguous": 0,
+      "tie_ambiguous_rate": 0.0,
+      "total_linked": 152,
+      "true_link_count": 152
+    },
+    "stress_tier1": {
+      "asserted_count": 0,
+      "by_defect_class": {
+        "abbreviation_variant": {
+          "correct": 0,
+          "false_clear": 8,
+          "false_match": 0,
+          "match_rate": 0.0,
+          "tie_ambiguous": 0,
+          "total": 8
+        },
+        "invoice_description_mismatch": {
+          "correct": 0,
+          "false_clear": 8,
+          "false_match": 0,
+          "match_rate": 0.0,
+          "tie_ambiguous": 0,
+          "total": 8
+        },
+        "legal_vs_trading_name": {
+          "correct": 0,
+          "false_clear": 8,
+          "false_match": 0,
+          "match_rate": 0.0,
+          "tie_ambiguous": 0,
+          "total": 8
+        },
+        "ocr_typo_narration": {
+          "correct": 0,
+          "false_clear": 8,
+          "false_match": 0,
+          "match_rate": 0.0,
+          "tie_ambiguous": 0,
+          "total": 8
+        },
+        "transliteration_variant": {
+          "correct": 0,
+          "false_clear": 8,
+          "false_match": 0,
+          "match_rate": 0.0,
+          "tie_ambiguous": 0,
+          "total": 8
+        }
+      },
+      "correct": 0,
+      "false_clear": 40,
+      "false_clear_rate": 1.0,
+      "false_match": 0,
+      "false_match_rate": 0.0,
+      "match_rate": 0.0,
+      "precision": null,
+      "recall": 0.0,
+      "split": "stress_tier1",
+      "tie_ambiguous": 0,
+      "tie_ambiguous_rate": 0.0,
+      "total_linked": 40,
+      "true_link_count": 40
+    },
+    "stress_tier1+2": {
+      "asserted_count": 20,
+      "by_defect_class": {
+        "abbreviation_variant": {
+          "correct": 2,
+          "false_clear": 6,
+          "false_match": 0,
+          "match_rate": 0.25,
+          "tie_ambiguous": 0,
+          "total": 8
+        },
+        "invoice_description_mismatch": {
+          "correct": 4,
+          "false_clear": 4,
+          "false_match": 0,
+          "match_rate": 0.5,
+          "tie_ambiguous": 0,
+          "total": 8
+        },
+        "legal_vs_trading_name": {
+          "correct": 0,
+          "false_clear": 8,
+          "false_match": 0,
+          "match_rate": 0.0,
+          "tie_ambiguous": 0,
+          "total": 8
+        },
+        "ocr_typo_narration": {
+          "correct": 8,
+          "false_clear": 0,
+          "false_match": 0,
+          "match_rate": 1.0,
+          "tie_ambiguous": 0,
+          "total": 8
+        },
+        "transliteration_variant": {
+          "correct": 6,
+          "false_clear": 2,
+          "false_match": 0,
+          "match_rate": 0.75,
+          "tie_ambiguous": 0,
+          "total": 8
+        }
+      },
+      "correct": 20,
+      "false_clear": 20,
+      "false_clear_rate": 0.5,
+      "false_match": 0,
+      "false_match_rate": 0.0,
+      "match_rate": 0.5,
+      "precision": 1.0,
+      "recall": 0.5,
+      "split": "stress_tier1+2",
+      "tie_ambiguous": 0,
+      "tie_ambiguous_rate": 0.0,
+      "total_linked": 40,
+      "true_link_count": 40
+    }
+  }
+}
