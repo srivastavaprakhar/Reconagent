@@ -3,7 +3,7 @@
 Updated after every integrated unit of work. Source of truth for scope:
 `reconagent-design-description.md`. Rules: `CLAUDE.md`.
 
-## Status: Tier 3 in progress — TigerBeetle built, cross-encoder ablation running
+## Status: Tier 3 complete — TigerBeetle built, cross-encoder ablation a confirmed negative result. Holding for review before any further work.
 
 ### Tier 3, item 3a — TigerBeetle audit-log substrate (built)
 
@@ -50,10 +50,56 @@ writer (the demonstration uses Tier 1 output, which is what `data/` actually
 produces; the other result types carry compatible fields but aren't yet
 piped through). Real remaining scope, stated plainly.
 
-### Tier 3, item 3b — cross-encoder ablation
+### Tier 3, item 3b — cross-encoder ablation (built and run — confirmed negative result)
 
-Dispatched in parallel with 3a (independent, no shared files). Result to be
-recorded here once it lands.
+Dispatched in parallel with 3a (independent, no shared files). `git diff` on
+`reconagent/match.py`/`probabilistic.py`/`fuzzy.py` confirmed empty by a test
+that checks git directly, not a prose scan — the live cascade was never
+touched, matching the standing instruction.
+
+`cross-encoder/stsb-distilroberta-base`, off-the-shelf, no fine-tuning
+(chosen over the faster `stsb-TinyBERT-L-4` on the reasoning that a negative
+result from a toy model proves nothing — worth noting `stsb-MiniLM-L-6-v2`,
+the usual first pick, is gone from the Hub, 401, not a network fault).
+Threshold `0.829885`, derived from `data/`'s own labelled population the
+same way every other stage in this project derives its threshold — 175
+known positives (range 0.108-0.866) against 30,529 known negatives (range
+0.056-0.828), the worst separation of any stage built so far, with only 3
+of 175 positives clearing the negative ceiling.
+
+**Result against the 20-case `stress_test/` residual Tier 1+2 leaves
+unresolved: 0 correct, 0 wrong, 20 deferred. `legal_vs_trading_name` —
+the category this ablation specifically targeted — resolves 0/8, identical
+to Tier 2.** Highest score any residual credit's best candidate reached was
+0.644592, well short of the 0.829885 threshold.
+
+**The nuance kept rather than flattened:** the model's *ranking* carries
+real signal even though its *calibration* doesn't — it puts the true
+settlement first for 15/20 residual credits (4/8 on `legal_vs_trading_name`
+specifically). Accepting the top-ranked candidate unconditionally, no
+threshold at all, would have produced 5 false matches out of 20 -- a 25%
+false-match rate. No threshold rescues this: even one set at `data/`'s own
+weakest known positive admits 99.57% of `data/`'s own known negatives.
+There is no threshold that buys the recall without buying the false
+matches.
+
+Per the standing instruction: zero lift means the human-in-the-loop
+integration gate is never triggered. Not wired in, stays a reported
+ablation finding. Consistent with, not a failure to reproduce, spec §11's
+own research caveat.
+
+Verified independently before commit: `git status`/pyproject diff clean
+(one dependency line, `sentence-transformers>=3.0`); `git diff --stat` on
+every cascade file, `data/`, `stress_test/`, and every prior script/test
+confirmed empty; the report JSON's `ranking_diagnostic` block
+(5+4+4+2=15/20 ranked-first, matching the claim exactly) read directly, not
+taken from the unit's own prose; the anti-cheat test (function-source scan,
+scoped to the eight matching functions rather than the whole file, since
+this is a flat report generator whose grading half legitimately reads
+`stress_test/ground_truth.json`) read and confirmed real; the
+no-cascade-modification test confirmed to check `git diff` directly rather
+than scan prose; `tests/test_cross_encoder_ablation.py` re-run standalone,
+17/17 passed.
 
 ### Tier 2 (built earlier, proactively — not reactively)
 

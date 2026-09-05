@@ -10,6 +10,7 @@ dependencies = [
     "rapidfuzz>=3.9",
     "faiss-cpu>=1.8",
     "tigerbeetle>=0.17.9",
+    "sentence-transformers>=3.0",
 ]
 
 [project.optional-dependencies]

@@ -110,6 +110,32 @@ stage in this engine. Zero false matches were introduced anywhere, on either
 dataset, at any stage. Full breakdown and the reproducible threshold
 derivations: `reports/tier2_ablation.md`.
 
+## Tier 3 — one built, one a confirmed negative result
+
+**The audit log is real, on TigerBeetle.** Every reconciliation decision is
+modelled as a double-entry transfer — money moving from an unreconciled pool
+into either a reconciled or an exceptions pool — with two guarantees coming
+from the ledger substrate itself rather than application code: a forged
+resubmission of an already-logged decision is refused outright by
+TigerBeetle, not merely detected after the fact, and the ledger's own
+account balances must reconcile or a transfer won't commit. Demonstrated on
+real data: all 152 decisions from the main dataset's actual matching run,
+written, read back, and verified.
+
+**Tried a pretrained cross-encoder on the one category Tier 2 couldn't
+touch — legal name versus trading name for the same counterparty — and it
+didn't help either, honestly reported rather than left untried.** Zero false
+matches, but also zero cases resolved: still 0/8 on that category, same as
+Tier 2. The model's *ranking* wasn't useless — it puts the correct
+settlement first 15 times out of 20 — but its *calibration* was: accepting
+its top guess unconditionally would have produced a 25% false-match rate,
+and no threshold threads that needle without paying for it in false matches.
+Consistent with, not a failure to reproduce, the design spec's own research
+caveat that language-model methods don't reliably beat classical matching on
+short structured financial text. Not integrated — a zero-lift result doesn't
+justify a transformer dependency in the live path. Full derivation:
+`reports/tier3_cross_encoder_ablation.md`.
+
 ## The gaps, stated at their actual size
 
 - **`FEE_MISMATCH` and `DATA_ENTRY_ERROR` are validated on exactly one

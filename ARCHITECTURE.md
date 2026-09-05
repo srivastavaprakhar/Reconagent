@@ -23,7 +23,7 @@ result rather than as a single bundled "Tier 3" verdict.
 |---|---|---|---|
 | 2 — Fellegi-Sunter (Splink), hybrid fuzzy text | "if the deterministic-plus-subset-sum stages leave a real recall gap" | 0.00% false-clear on main; the holdout's only non-zero number is 3 cases correctly reported as genuine subset-sum ties (`TIE_AMBIGUOUS`), not misses — see §5 | Condition not met — **built anyway**, on a different basis. See §11. |
 | 3a — TigerBeetle ledger substrate | "attempt only with time to spare, and only after Tier 1 and 2 are solid" (both true by the time this was attempted) | No audit-log substrate of any kind existed yet — a deferred unit from earlier in the build, not something this item could "fall back to" | **Built.** A 30-minute time-box, checkpointed at 15 — TigerBeetle cleared it in ~2.5 minutes. See §12. |
-| 3b — Cross-encoder ablation on the residual | "reported honestly whether or not it beats Splink+hybrid" | Tier 2's own ablation left `legal_vs_trading_name` at a flat 0/8 — the one category with no textual signal for a classical matcher to use | See §12 for the result once reported. |
+| 3b — Cross-encoder ablation on the residual | "reported honestly whether or not it beats Splink+hybrid" | Tier 2's own ablation left `legal_vs_trading_name` at a flat 0/8 — the one category with no textual signal for a classical matcher to use | **Built and run — credible negative result.** Zero lift (`legal_vs_trading_name` still 0/8), zero false matches. See §12. |
 
 **Why Tier 2 was built despite no measured gap, stated once and held to
 throughout §11:** genuine ML depth appropriate to this submission, and
@@ -412,9 +412,12 @@ test run's word. The verification steps are in `PROGRESS.md`.
   shortcoming of the build** — see §11 for the full per-category breakdown.
   In one word: it earns its cost where a matching signal exists in the text
   at all, and correctly declines where none does.
-- **Tier 3 is partially built, each item on its own merits** — the
-  TigerBeetle audit-log substrate is real and working; the cross-encoder
-  ablation's outcome is reported separately once available. See §1 and §12.
+- **Tier 3 is complete, both items attempted on their own merits, one built
+  and one a confirmed negative result** — the TigerBeetle audit-log
+  substrate is real and working; the cross-encoder ablation shows zero lift
+  on the one category it targeted, consistent with the spec's own research
+  caveat rather than a failure to reproduce. Neither outcome was forced to
+  look better than it measured. See §1 and §12.
 
 ---
 
@@ -619,3 +622,41 @@ it lands, and, per an explicit instruction, kept as a standalone ablation
 finding and not wired into the live cascade regardless of outcome, unless a
 clear, unambiguous, zero-false-match win is found — in which case that gets
 flagged for a separate integration decision, not made here.
+
+**Result: a credible negative, confirming rather than embarrassing the
+spec's own caveat.** `cross-encoder/stsb-distilroberta-base` (82M params,
+off-the-shelf, no fine-tuning — a symmetric semantic-similarity model
+chosen because entity matching is a symmetric "same thing?" question, not
+an asymmetric query-to-passage one) scored against the same 20 residual
+`stress_test/` cases Tier 2 leaves unresolved.
+
+**Zero false matches anywhere — but also zero cases resolved.** Threshold
+derived from `data/`'s own labelled population the same way every other
+matching stage in this project derives its threshold: 175 known-positive
+scores and 30,529 known-negative scores barely separate (positive range
+0.108–0.866, negative range 0.056–0.828 — far worse separation than either
+Stage 3's Fellegi-Sunter probability or Stage 4's RRF score), and only 3 of
+175 positives clear the negative ceiling. Threshold sits at that gap's
+midpoint, 0.829885. Nothing in the 20-case residual reaches it — the
+highest score any residual credit's best candidate achieved was 0.644592.
+`legal_vs_trading_name`, the category this ablation specifically targeted,
+resolves **0/8 — identical to Tier 2's own result.**
+
+**The one nuance worth keeping, because it's more informative than a bare
+zero:** the cross-encoder's *ranking* carries real signal even though its
+*calibration* doesn't. It puts the true settlement first for 15 of the 20
+residual credits (4 of 8 on `legal_vs_trading_name` specifically) — but
+accepting the top-ranked candidate unconditionally, with no threshold at
+all, would have produced 5 false matches out of 20, a 25% false-match rate,
+exactly the failure mode this entire project is built to avoid. And no
+lower threshold rescues it: even a threshold set at `data/`'s own weakest
+known positive already admits 99.57% of `data/`'s own known negatives. There
+is no threshold that buys the recall without buying the false matches.
+
+**Not integrated, per the standing instruction — and correctly so, since
+the result doesn't clear the "unambiguous win" bar that would have
+triggered a human integration decision.** Wiring in a transformer
+dependency and per-pair inference cost for a measured gain of zero would be
+exactly the kind of complexity this project has avoided everywhere else.
+Full derivation, the per-category table, and the ranking-versus-calibration
+diagnostic: `reports/tier3_cross_encoder_ablation.md` / `.json`.

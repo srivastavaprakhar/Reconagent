@@ -1,0 +1,338 @@
+{
+  "finding": "HEADLINE: zero false matches across all 20 residual cases -- the cross-encoder never confidently asserted a wrong settlement link. On the 20 cases Tier 1 (deterministic + subset-sum) and Tier 2 (Splink + hybrid fuzzy) leave unresolved in stress_test/, the pretrained cross-encoder (cross-encoder/stsb-distilroberta-base, off-the-shelf, no fine-tuning) resolved 0 correctly, 0 incorrectly, and deferred 20. On legal_vs_trading_name -- the category this ablation primarily targeted, where the two sides' names are genuinely different strings and semantic understanding is supposed to beat lexical similarity -- the cross-encoder resolved 0/8, exactly as Tier 2 did. No lift, stated plainly. This is CONSISTENT WITH, not a failure to reproduce, the research literature's own caveat (spec section 11) that dense/LM methods do not reliably beat classical and probabilistic methods on short structured financial strings. On the other residual categories: abbreviation_variant 0/6 correct, 0 wrong, 6 deferred, invoice_description_mismatch 0/4 correct, 0 wrong, 4 deferred, transliteration_variant 0/2 correct, 0 wrong, 2 deferred. Why nothing cleared the bar: the highest score any residual credit's best candidate reached was 0.644592, against a threshold of 0.829885 derived from data/'s own labelled population. The ordering-versus-calibration split is the honest version of this negative result: the cross-encoder ranks the TRUE settlement first for 15/20 residual credits, so its ordering does carry real information -- but accepting that top-ranked candidate unconditionally would have produced 5 false matches, and there is no lower threshold available to reach those cases honestly -- even a threshold at data/'s own weakest known positive already admits 30399 of data/'s 30529 known negatives (99.57%). There is no threshold that buys the recall without buying the false matches.",
+  "fine_tuned": false,
+  "integration_recommendation": "DO NOT INTEGRATE -- no lift. Zero false matches, but also zero cases resolved: the cross-encoder recovers nothing Tier 1+2 could not already handle, so wiring it in would add a transformer dependency, model weights and per-pair inference cost for a measured gain of zero. Stays a reported ablation finding.",
+  "model": "cross-encoder/stsb-distilroberta-base",
+  "proposals": [
+    {
+      "accepted": false,
+      "bank_txn_id": "BNKM000010",
+      "candidates_considered": 20,
+      "credit_amount_minor": 203526198,
+      "rank_of_best": 1,
+      "residual_minor": -3047280,
+      "score": "0.559167",
+      "settlement_id": null,
+      "settlement_net_sum_minor": 200478918,
+      "threshold": "0.829885"
+    },
+    {
+      "accepted": false,
+      "bank_txn_id": "BNKM000012",
+      "candidates_considered": 20,
+      "credit_amount_minor": 266246628,
+      "rank_of_best": 1,
+      "residual_minor": -5066887,
+      "score": "0.599811",
+      "settlement_id": null,
+      "settlement_net_sum_minor": 261179741,
+      "threshold": "0.829885"
+    },
+    {
+      "accepted": false,
+      "bank_txn_id": "BNKM000020",
+      "candidates_considered": 20,
+      "credit_amount_minor": 224949878,
+      "rank_of_best": 1,
+      "residual_minor": -217583677,
+      "score": "0.3431",
+      "settlement_id": null,
+      "settlement_net_sum_minor": 7366201,
+      "threshold": "0.829885"
+    },
+    {
+      "accepted": false,
+      "bank_txn_id": "BNKM000040",
+      "candidates_considered": 20,
+      "credit_amount_minor": 52994826,
+      "rank_of_best": 1,
+      "residual_minor": -931926,
+      "score": "0.560706",
+      "settlement_id": null,
+      "settlement_net_sum_minor": 52062900,
+      "threshold": "0.829885"
+    },
+    {
+      "accepted": false,
+      "bank_txn_id": "BNKM000014",
+      "candidates_considered": 20,
+      "credit_amount_minor": 316165509,
+      "rank_of_best": 1,
+      "residual_minor": -264102609,
+      "score": "0.104727",
+      "settlement_id": null,
+      "settlement_net_sum_minor": 52062900,
+      "threshold": "0.829885"
+    },
+    {
+      "accepted": false,
+      "bank_txn_id": "BNKM000017",
+      "candidates_considered": 20,
+      "credit_amount_minor": 27063182,
+      "rank_of_best": 1,
+      "residual_minor": 190778,
+      "score": "0.446624",
+      "settlement_id": null,
+      "settlement_net_sum_minor": 27253960,
+      "threshold": "0.829885"
+    },
+    {
+      "accepted": false,
+      "bank_txn_id": "BNKM000039",
+      "candidates_considered": 20,
+      "credit_amount_minor": 208972693,
+      "rank_of_best": 1,
+      "residual_minor": 4047381,
+      "score": "0.515477",
+      "settlement_id": null,
+      "settlement_net_sum_minor": 213020074,
+      "threshold": "0.829885"
+    },
+    {
+      "accepted": false,
+      "bank_txn_id": "BNKM000018",
+      "candidates_considered": 20,
+      "credit_amount_minor": 14050762,
+      "rank_of_best": 1,
+      "residual_minor": -6684561,
+      "score": "0.265187",
+      "settlement_id": null,
+      "settlement_net_sum_minor": 7366201,
+      "threshold": "0.829885"
+    },
+    {
+      "accepted": false,
+      "bank_txn_id": "BNKM000023",
+      "candidates_considered": 20,
+      "credit_amount_minor": 75937516,
+      "rank_of_best": 1,
+      "residual_minor": -68571315,
+      "score": "0.200818",
+      "settlement_id": null,
+      "settlement_net_sum_minor": 7366201,
+      "threshold": "0.829885"
+    },
+    {
+      "accepted": false,
+      "bank_txn_id": "BNKM000001",
+      "candidates_considered": 20,
+      "credit_amount_minor": 390387990,
+      "rank_of_best": 1,
+      "residual_minor": 9845750,
+      "score": "0.644592",
+      "settlement_id": null,
+      "settlement_net_sum_minor": 400233740,
+      "threshold": "0.829885"
+    },
+    {
+      "accepted": false,
+      "bank_txn_id": "BNKM000034",
+      "candidates_considered": 20,
+      "credit_amount_minor": 243440151,
+      "rank_of_best": 1,
+      "residual_minor": 5171114,
+      "score": "0.482469",
+      "settlement_id": null,
+      "settlement_net_sum_minor": 248611265,
+      "threshold": "0.829885"
+    },
+    {
+      "accepted": false,
+      "bank_txn_id": "BNKM000013",
+      "candidates_considered": 20,
+      "credit_amount_minor": 277727511,
+      "rank_of_best": 1,
+      "residual_minor": 5090728,
+      "score": "0.578078",
+      "settlement_id": null,
+      "settlement_net_sum_minor": 282818239,
+      "threshold": "0.829885"
+    },
+    {
+      "accepted": false,
+      "bank_txn_id": "BNKM000021",
+      "candidates_considered": 20,
+      "credit_amount_minor": 42076671,
+      "rank_of_best": 1,
+      "residual_minor": 455090,
+      "score": "0.372934",
+      "settlement_id": null,
+      "settlement_net_sum_minor": 42531761,
+      "threshold": "0.829885"
+    },
+    {
+      "accepted": false,
+      "bank_txn_id": "BNKM000019",
+      "candidates_considered": 20,
+      "credit_amount_minor": 448126222,
+      "rank_of_best": 1,
+      "residual_minor": -8872917,
+      "score": "0.344583",
+      "settlement_id": null,
+      "settlement_net_sum_minor": 439253305,
+      "threshold": "0.829885"
+    },
+    {
+      "accepted": false,
+      "bank_txn_id": "BNKM000024",
+      "candidates_considered": 20,
+      "credit_amount_minor": 431469781,
+      "rank_of_best": 1,
+      "residual_minor": 4006381,
+      "score": "0.246575",
+      "settlement_id": null,
+      "settlement_net_sum_minor": 435476162,
+      "threshold": "0.829885"
+    },
+    {
+      "accepted": false,
+      "bank_txn_id": "BNKM000015",
+      "candidates_considered": 20,
+      "credit_amount_minor": 450063463,
+      "rank_of_best": 1,
+      "residual_minor": 9278712,
+      "score": "0.534848",
+      "settlement_id": null,
+      "settlement_net_sum_minor": 459342175,
+      "threshold": "0.829885"
+    },
+    {
+      "accepted": false,
+      "bank_txn_id": "BNKM000006",
+      "candidates_considered": 20,
+      "credit_amount_minor": 270265828,
+      "rank_of_best": 1,
+      "residual_minor": 6929893,
+      "score": "0.631831",
+      "settlement_id": null,
+      "settlement_net_sum_minor": 277195721,
+      "threshold": "0.829885"
+    },
+    {
+      "accepted": false,
+      "bank_txn_id": "BNKM000016",
+      "candidates_considered": 20,
+      "credit_amount_minor": 363811468,
+      "rank_of_best": 1,
+      "residual_minor": -5623550,
+      "score": "0.510677",
+      "settlement_id": null,
+      "settlement_net_sum_minor": 358187918,
+      "threshold": "0.829885"
+    },
+    {
+      "accepted": false,
+      "bank_txn_id": "BNKM000022",
+      "candidates_considered": 20,
+      "credit_amount_minor": 220106233,
+      "rank_of_best": 1,
+      "residual_minor": -212740032,
+      "score": "0.476083",
+      "settlement_id": null,
+      "settlement_net_sum_minor": 7366201,
+      "threshold": "0.829885"
+    },
+    {
+      "accepted": false,
+      "bank_txn_id": "BNKM000036",
+      "candidates_considered": 20,
+      "credit_amount_minor": 7544463,
+      "rank_of_best": 1,
+      "residual_minor": -178262,
+      "score": "0.570622",
+      "settlement_id": null,
+      "settlement_net_sum_minor": 7366201,
+      "threshold": "0.829885"
+    }
+  ],
+  "ranking_diagnostic": {
+    "by_defect_class": [
+      {
+        "defect_class": "abbreviation_variant",
+        "ranked_first": 5,
+        "total": 6
+      },
+      {
+        "defect_class": "invoice_description_mismatch",
+        "ranked_first": 4,
+        "total": 4
+      },
+      {
+        "defect_class": "legal_vs_trading_name",
+        "ranked_first": 4,
+        "total": 8
+      },
+      {
+        "defect_class": "transliteration_variant",
+        "ranked_first": 2,
+        "total": 2
+      }
+    ],
+    "total": 20,
+    "true_settlement_ranked_first": 15,
+    "would_be_wrong_if_accepted_unconditionally": 5
+  },
+  "residual": {
+    "blocked_candidate_pairs": 400,
+    "highest_best_candidate_score": 0.644592,
+    "open_settlements": 20,
+    "residual_credits": 20
+  },
+  "scoring": {
+    "by_defect_class": [
+      {
+        "correct": 0,
+        "defect_class": "abbreviation_variant",
+        "deferred": 6,
+        "total": 6,
+        "wrong": 0
+      },
+      {
+        "correct": 0,
+        "defect_class": "invoice_description_mismatch",
+        "deferred": 4,
+        "total": 4,
+        "wrong": 0
+      },
+      {
+        "correct": 0,
+        "defect_class": "legal_vs_trading_name",
+        "deferred": 8,
+        "total": 8,
+        "wrong": 0
+      },
+      {
+        "correct": 0,
+        "defect_class": "transliteration_variant",
+        "deferred": 2,
+        "total": 2,
+        "wrong": 0
+      }
+    ],
+    "correct": 0,
+    "deferred": 20,
+    "total": 20,
+    "wrong": 0,
+    "wrong_detail": []
+  },
+  "threshold_derivation": {
+    "blocked_candidate_pairs": 30704,
+    "known_negative_pairs": 30529,
+    "known_positive_pairs": 175,
+    "negative_max": 0.828032,
+    "negative_mean": 0.346492,
+    "negative_min": 0.055597,
+    "negatives_above_weakest_positive": 30399,
+    "negatives_above_weakest_positive_rate": 0.995742,
+    "positive_max": 0.866071,
+    "positive_mean": 0.449878,
+    "positive_min": 0.107633,
+    "positives_above_negative_max": [
+      0.831737,
+      0.855163,
+      0.866071
+    ],
+    "positives_below_negative_max": 172,
+    "threshold": "0.829885"
+  }
+}
