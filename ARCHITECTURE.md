@@ -451,8 +451,8 @@ discipline Tier 1's own subset-sum pooling uses. Trained on the main set's
 full labelled linkage (not just its unresolved leftovers, since the main
 set resolves entirely at Tier 1 and has almost none — every labelled pair,
 resolved or not, is valid training signal for what a match and a non-match
-look like). Threshold derived from that same population: `0.032655` sits
-strictly between the known-negative ceiling (`0.032522`) and the
+look like). Threshold derived from that same population: `0.25` sits
+strictly between the known-negative ceiling (`0.213390`) and the
 known-positive floor (`0.288721`) measured on main's 30,704-pair blocked
 candidate space. Never trained or thresholded against the holdout or the
 stress-test set — enforced by a source-level test, not just a convention.
