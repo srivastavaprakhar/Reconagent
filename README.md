@@ -187,6 +187,18 @@ Every monetary value is an integer count of minor units or a `Decimal`,
 enforced at the parsing boundary — a `float` reaching a money-path field is a
 raised exception, not a style violation caught in review.
 
+**`sentence-transformers` is an optional extra, not a base dependency.**
+It's needed only by `scripts/run_cross_encoder_ablation.py` (the Tier 3
+cross-encoder ablation) and its test — nothing on the live/default matching
+path (Tier 1, Splink, hybrid fuzzy, the audit log, the LLM explainer)
+imports it. The base install above doesn't pull it in; running the
+cross-encoder ablation needs one extra:
+
+```
+.venv/bin/pip install -e '.[cross_encoder]'
+.venv/bin/python scripts/run_cross_encoder_ablation.py   # regenerate reports/tier3_cross_encoder_ablation.{json,md}
+```
+
 ### Running the TigerBeetle audit-log demo
 
 This is a real, separate setup step — without it, the 12 audit-log tests

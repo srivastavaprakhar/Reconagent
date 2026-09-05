@@ -10,11 +10,15 @@ dependencies = [
     "rapidfuzz>=3.9",
     "faiss-cpu>=1.8",
     "tigerbeetle>=0.17.9",
-    "sentence-transformers>=3.0",
 ]
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0"]
+# Only scripts/run_cross_encoder_ablation.py (and its test, which loads that
+# script dynamically) import sentence-transformers. It is not on the
+# live/default matching path -- Tier 1, Tier 2 (Splink + hybrid fuzzy), the
+# audit log, and the LLM explainer all install and run without it.
+cross_encoder = ["sentence-transformers>=3.0"]
 
 [tool.setuptools.packages.find]
 include = ["reconagent*"]
