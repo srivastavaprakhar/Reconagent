@@ -215,6 +215,16 @@ highest legitimate deviation is 49.20 bps and the lowest flagged one is 67.84
 bps — a band of 70 (what rounding to nearest would give) misclassifies two of
 three holdout flagged cases as benign.
 
+**What this validates, and what it doesn't.** The *derivation methodology*
+is genuinely proven: it correctly recovers its own generating parameters
+from labelled data, and the holdout separation above shows that
+recovery actually mattering on a harder case. What it doesn't prove is that
+65 bps is the right band for real bank-provided rates — the holdout's tight
+corridor is itself a property of the synthetic generator's chosen deviation
+ranges, not independent evidence that this exact width is production-tight.
+Real data would need its own recalibration through the same methodology,
+not a re-use of this number.
+
 **Variance decomposition** solves `net = gross − MDR − GST − FX_spread −
 refund_adjustments`, written un-simplified so the reader can watch the FX
 spread cancel out of the pure-amount arithmetic — which is exactly why a
@@ -430,6 +440,19 @@ test run's word. The verification steps are in `PROGRESS.md`.
   shortcoming of the build** — see §11 for the full per-category breakdown.
   In one word: it earns its cost where a matching signal exists in the text
   at all, and correctly declines where none does.
+- **Not every failure-then-fix narrative in this document carries the same
+  evidence.** `reconagent/fuzzy.py`, `reconagent/probabilistic.py`, and
+  `scripts/generate_stress_test.py` each have exactly one commit in this
+  repository's history — the bug-then-fix stories told about them here
+  (the per-node resum, the rank-agreement false match, the amount-delta
+  ceiling) happened before that single commit and are not separately
+  visible in git history the way they're narrated. Contrast this with the
+  four Tier 1.5 fixes above (`21d5825`, `a7ecf77`, `1a7d063`, `c0c568c`),
+  each its own commit, independently inspectable as a before-and-after. The
+  arithmetic and the test results for the first three are real and
+  independently re-verified in this document and in `PROGRESS.md` — only
+  the *commit-level* evidence for the narrative around them is thinner than
+  it is for the four that are. Treat the two kinds of claim accordingly.
 - **Tier 3 is complete, both items attempted on their own merits, one built
   and one a confirmed negative result** — the TigerBeetle audit-log
   substrate is real and working; the cross-encoder ablation shows zero lift
@@ -471,6 +494,18 @@ real false match on the stress-test set (winning rank 1 only means "the
 least-mediocre of whatever survived blocking," not "a good match"). The fix
 was a threshold sitting inside a natural bimodal gap in the main set's own
 known-positive scores, not a number picked to make the failing case pass.
+
+**One honest limit on that claim, stated plainly rather than glossed over:**
+`PRIMARY_SCORE_FLOOR`'s exact value cannot be proven entirely free of
+influence from the stress-test failure that motivated adding the gate in
+the first place. The derivation is genuinely from the main set's own
+bimodal split, not from the stress-test case's specific number — but the
+pre-fix, rank-agreement-only version of `fuzzy.py` was never committed on
+its own; the file's git history has exactly one commit, the current one,
+with the fix already folded in. There is no separate commit to point to
+proving the floor was chosen before or independent of seeing that failure.
+The methodology is sound; the paper trail proving it wasn't fitted to the
+one case that revealed the need for it doesn't exist.
 
 **A stress-test set was built specifically to give both stages something to
 prove themselves against** — 40 cases across five categories (name
