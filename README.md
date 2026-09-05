@@ -174,7 +174,10 @@ core that's held to the same rigor.
 
 ```
 python3 -m venv .venv && .venv/bin/pip install -e '.[dev]'
-.venv/bin/pytest                                    # 265 tests (12 skip without a local TigerBeetle binary, see below)
+.venv/bin/pytest                                    # 265 passed, 13 skipped (278 collected) --
+                                                      # 12 skips need a local TigerBeetle binary (see below);
+                                                      # the 13th is test_explain.py's live-API test, correctly
+                                                      # skipped since no ANTHROPIC_API_KEY is set here
 .venv/bin/python -m reconagent.eval                 # regenerate reports/eval_report.{json,md}
 .venv/bin/python scripts/run_tier2_ablation.py      # regenerate reports/tier2_ablation.{json,md}
 .venv/bin/python scripts/generate_synthetic.py       # regenerate data/ (byte-identical under the same seed)
