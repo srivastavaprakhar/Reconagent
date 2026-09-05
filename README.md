@@ -114,13 +114,18 @@ derivations: `reports/tier2_ablation.md`.
 
 **The audit log is real, on TigerBeetle.** Every reconciliation decision is
 modelled as a double-entry transfer — money moving from an unreconciled pool
-into either a reconciled or an exceptions pool — with two guarantees coming
-from the ledger substrate itself rather than application code: a forged
-resubmission of an already-logged decision is refused outright by
-TigerBeetle, not merely detected after the fact, and the ledger's own
-account balances must reconcile or a transfer won't commit. Demonstrated on
-real data: all 152 decisions from the main dataset's actual matching run,
-written, read back, and verified.
+into either a reconciled or an exceptions pool. Two guarantees come from the
+ledger substrate itself rather than application code, and both were proven
+by attack, not assumed: a write that tries to re-submit an already-logged
+decision under its existing id with different field values — the specific
+shape a cover-up would take — is refused by TigerBeetle at write time, not
+merely detected after the fact; and the ledger's own account balances must
+reconcile or a transfer won't commit at all. (This is a precise, narrower
+claim than "tamper-proof" — it's not that every conceivable form of
+tampering is impossible, only that this specific rewrite attempt, tested
+directly against the raw client, is rejected by the substrate itself.)
+Demonstrated on real data: all 152 decisions from the main dataset's actual
+matching run, written, read back, and verified.
 
 **Tried a pretrained cross-encoder on the one category Tier 2 couldn't
 touch — legal name versus trading name for the same counterparty — and it
@@ -169,7 +174,7 @@ core that's held to the same rigor.
 
 ```
 python3 -m venv .venv && .venv/bin/pip install -e '.[dev]'
-.venv/bin/pytest                                    # 245 tests
+.venv/bin/pytest                                    # 265 tests (12 skip without a local TigerBeetle binary, see below)
 .venv/bin/python -m reconagent.eval                 # regenerate reports/eval_report.{json,md}
 .venv/bin/python scripts/run_tier2_ablation.py      # regenerate reports/tier2_ablation.{json,md}
 .venv/bin/python scripts/generate_synthetic.py       # regenerate data/ (byte-identical under the same seed)
@@ -178,6 +183,41 @@ python3 -m venv .venv && .venv/bin/pip install -e '.[dev]'
 Every monetary value is an integer count of minor units or a `Decimal`,
 enforced at the parsing boundary — a `float` reaching a money-path field is a
 raised exception, not a style violation caught in review.
+
+### Running the TigerBeetle audit-log demo
+
+This is a real, separate setup step — without it, the 12 audit-log tests
+above skip cleanly rather than fail, and `pytest`'s green result does not
+mean this demo has actually run. Verified directly on a clean clone with no
+prior TigerBeetle state: **the demo does not come up on its own; it needs
+this.**
+
+```
+curl -Lo tigerbeetle.zip https://mac.tigerbeetle.com && unzip tigerbeetle.zip
+./tigerbeetle format --cluster=0 --replica=0 --replica-count=1 \
+    --development ./recon.tigerbeetle
+./tigerbeetle start --addresses=3033 --development ./recon.tigerbeetle &
+
+# in another shell, same repo root:
+TIGERBEETLE_BINARY=$PWD/tigerbeetle .venv/bin/pytest tests/test_audit_log.py
+```
+
+That should turn the 12 skips above into 12 passes, including the real
+demonstration (152 decisions from `data/`'s actual matching run, written,
+read back, and verified) and the tamper test. macOS-only as written above
+(`mac.tigerbeetle.com`); see `tigerbeetle.com` for other platforms.
+
+**A note on demoing this live, stated plainly rather than assumed away:**
+this setup has been verified end to end in one environment (this session's),
+not on a clean machine under presentation conditions. It depends on network
+reachability to `mac.tigerbeetle.com` at demo time, a free local port, and
+no environment quirks nobody else has hit yet. For a live pitch under time
+pressure, the lower-risk choice is **not** a live terminal run of the steps
+above — it's showing the already-captured result instead: the tamper test's
+actual pass, or a short recording made once, ahead of time, in a working
+environment. If a live run is still wanted, rehearse it once beforehand in
+the exact environment the pitch will be recorded in, not for the first time
+during recording.
 
 ## Where everything is
 

@@ -564,19 +564,27 @@ anywhere on the path.
 **Two invariants are enforced by the substrate, not asserted in Python — and
 that distinction is the actual point of using a purpose-built ledger over a
 hand-rolled table:**
-1. **Append-only is enforced, not conventional.** A transfer's id is
-   deterministically derived from its `bank_txn_id`, and TigerBeetle's API
-   has no UPDATE or DELETE to begin with — so re-submitting a decision for
-   an already-logged credit with different data is rejected outright
-   (`EXISTS_WITH_DIFFERENT_*`), not merely detected after the fact. This
-   makes the log **tamper-proof, not just tamper-evident** — a deliberate
-   deviation from a hash-chain design (the right choice for the Postgres
-   path that wasn't needed here), and a strictly stronger property. Proven
-   by attack, not assumption: a test bypasses the module's own write path,
-   submits a forged transfer with the same derived id but a different
-   amount, stage, and destination account directly against the raw client,
-   and confirms TigerBeetle refuses it while the original record survives
-   byte-for-byte.
+1. **Append-only is enforced, not conventional — and the precise guarantee
+   is narrower than "nothing can ever be tampered with."** A transfer's id
+   is deterministically derived from its `bank_txn_id`, and TigerBeetle's
+   API has no UPDATE or DELETE to begin with. What this actually buys: a
+   write that attempts to re-submit an already-logged decision under its
+   existing transfer id with different field values — the specific shape a
+   cover-up would take through this system's own write path — is refused
+   by TigerBeetle itself, at write time, with `EXISTS_WITH_DIFFERENT_*`
+   (`test_audit_log.py`'s tamper test proves this by attack, not
+   assumption: it bypasses `AuditLog.write` entirely, submits a forged
+   transfer with the same derived id but a different amount, stage, and
+   destination account directly against the raw client, and confirms
+   TigerBeetle refuses it while the original record survives
+   byte-for-byte). That is a real, write-time rejection by the substrate
+   itself, not application code checking after the fact — a deliberate,
+   stronger alternative to a hash-chain design's after-the-fact detection
+   (the right choice for the Postgres path that wasn't needed here). **It
+   is not a claim that every conceivable form of tampering is impossible**
+   — altering the underlying data files directly, outside TigerBeetle's own
+   API, is a different threat model this doesn't address and was never
+   tested against.
 2. **The books have to balance.** Debits out of `SUSPENSE` must equal
    credits into `RECONCILED` plus `EXCEPTIONS`, enforced by TigerBeetle's
    own commit rules — a decision cannot be silently dropped or

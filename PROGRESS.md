@@ -3,7 +3,52 @@
 Updated after every integrated unit of work. Source of truth for scope:
 `reconagent-design-description.md`. Rules: `CLAUDE.md`.
 
-## Status: Tier 3 complete — TigerBeetle built, cross-encoder ablation a confirmed negative result. Holding for review before any further work.
+## Status: Final precision checkpoint — wording corrected, clean-clone verified. Holding completely.
+
+### Precision fix: "tamper-proof" was an overclaim, corrected everywhere
+
+The claim as it appeared in README.md, ARCHITECTURE.md, and this file
+generalized a narrower, real result into an unqualified one. What the
+tamper test actually demonstrates: a write that tries to re-submit an
+already-logged decision under its existing transfer id with different field
+values -- the specific shape a cover-up would take through this system's
+own write path -- is refused by TigerBeetle itself, at write time, not
+merely detected after the fact (`EXISTS_WITH_DIFFERENT_*`). That is real
+and stronger than a hash-chain's after-the-fact detection, but it is not a
+claim that every conceivable form of tampering is impossible -- editing the
+underlying data files directly, outside TigerBeetle's API, is a different
+threat model that was never tested against and the wording never claimed to
+cover in the first place; the fix is stating the tested mechanism precisely
+as a strength, not softening it into a hedge. `PITCH_OUTLINE.md` was checked
+and does not mention TigerBeetle at all (written before Tier 3 existed), so
+nothing there needed correcting.
+
+### Clean-clone verification: the TigerBeetle demo does not come up on its own
+
+Tested directly, not assumed: cloned fresh from `origin` into a scratch
+directory, followed only what README.md documented as setup steps at the
+time (venv + `pip install -e '.[dev]'` + `pytest`), with no TigerBeetle
+binary anywhere on `PATH` and no `TIGERBEETLE_BINARY` set.
+
+**Result: `265 passed, 13 skipped`, exit 0 -- the suite is robust to a
+missing binary, but the audit-log demonstration itself never runs.** 12 of
+the 13 skips are `tests/test_audit_log.py` (the 13th is the LLM
+explainer's live-API-key test, unrelated). A judge following only the
+README's documented steps at the time would get a fully green test run
+without ever seeing the TigerBeetle demonstration execute -- a real gap,
+not a hypothetical one.
+
+**Fixed, not just flagged:** README.md now documents the actual required
+setup (the `curl`/`format`/`start` commands, already correct in
+`reconagent/audit_log.py`'s own module docstring but never surfaced where a
+reader would actually look) under a new "Running the TigerBeetle audit-log
+demo" section, stated as a genuinely separate step whose absence is a green
+suite that proves nothing about this one demo. Also recorded there,
+explicitly: this setup has been verified end to end in only one
+environment (this session's), not on a clean machine under presentation
+conditions, and the lower-risk choice for a live pitch is showing
+already-captured output rather than a first-time live run under time
+pressure.
 
 ### Tier 3, item 3a — TigerBeetle audit-log substrate (built)
 
@@ -28,10 +73,15 @@ Money stays an integer all the way to the storage engine.
 
 **Two guarantees enforced by the substrate, not asserted in Python:**
 append-only is enforced by TigerBeetle's own API (no UPDATE/DELETE, and a
-transfer id derived from `bank_txn_id` blocks a contradictory resubmission
-outright — **tamper-proof, not just tamper-evident**, confirmed by a test
-that attacks the raw client directly and shows the forged write is refused
-while the original record survives byte-for-byte); and the ledger's own
+transfer id derived from `bank_txn_id` means a write re-submitting an
+already-logged decision with different field values is refused by
+TigerBeetle at write time, not merely detected after the fact — confirmed
+by a test that attacks the raw client directly and shows the forged write
+is refused while the original record survives byte-for-byte; this is
+narrower than "tamper-proof" — it's a real, write-time rejection of this
+one specific rewrite attempt, not a claim that every conceivable form of
+tampering, e.g. editing the underlying data files directly outside
+TigerBeetle's API, is impossible); and the ledger's own
 running balances must reconcile (`verify_log` reads TigerBeetle's balances
 back, not a sum over the rows it just wrote).
 
