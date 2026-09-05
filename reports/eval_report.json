@@ -362,24 +362,196 @@
   "throughput": [
     {
       "credits": 152,
-      "records_per_sec": 11906.937568337173,
+      "records_per_sec": 12248.967684680785,
       "scale": 200,
-      "seconds": 0.012765667001076508,
+      "seconds": 0.012409208997269161,
       "settlements": 202
     },
     {
       "credits": 751,
-      "records_per_sec": 329.60864345216413,
+      "records_per_sec": 332.1550527210924,
       "scale": 1000,
-      "seconds": 2.2784596669989696,
+      "seconds": 2.2609922499977984,
       "settlements": 1004
     },
     {
       "credits": 3728,
-      "records_per_sec": 172.44478007240326,
+      "records_per_sec": 175.63499282365154,
       "scale": 5000,
-      "seconds": 21.61851462499908,
+      "seconds": 21.22583854199911,
       "settlements": 5003
     }
-  ]
+  ],
+  "tier2_ablation": {
+    "finding": "On the main dataset, Tier 2 (Splink + hybrid fuzzy) provides zero measurable value: Tier 1 alone and Tier 1+2 produce identical match rates (100.00%). Tier 1 already resolves the main set completely, so Tier 2 never gets a case to add value on there -- provably a no-op, not a close call. On the stress-test dataset (built specifically so Tier 1 alone resolves nothing: match rate 0.00% under Tier 1 alone), Tier 2 raises match rate to 50.00% (+50.00%), with false_match count going from 0 to 0. Tier 2's gain on the stress set is uneven across defect classes, improving: abbreviation_variant (2/8), invoice_description_mismatch (4/8), ocr_typo_narration (8/8), transliteration_variant (6/8). It shows no improvement at all over Tier 1 (still 0 resolved) on: legal_vs_trading_name (0/8). In plain language: Tier 2 provides zero value on the main set (Tier 1 already resolves it completely) and partial, uneven value on the stress set -- real gains on several defect classes, no gain whatsoever on others. This is not softened or rounded up in either direction; it is what compute_metrics measured on this run.",
+    "main": {
+      "by_defect_class": [
+        {
+          "defect_class": "clean_match",
+          "match_rate_delta": 0.0,
+          "tier1+2_correct": 107,
+          "tier1+2_match_rate": 1.0,
+          "tier1_correct": 107,
+          "tier1_match_rate": 1.0,
+          "total": 107
+        },
+        {
+          "defect_class": "data_entry_error",
+          "match_rate_delta": 0.0,
+          "tier1+2_correct": 1,
+          "tier1+2_match_rate": 1.0,
+          "tier1_correct": 1,
+          "tier1_match_rate": 1.0,
+          "total": 1
+        },
+        {
+          "defect_class": "edpms_open",
+          "match_rate_delta": 0.0,
+          "tier1+2_correct": 2,
+          "tier1+2_match_rate": 1.0,
+          "tier1_correct": 2,
+          "tier1_match_rate": 1.0,
+          "total": 2
+        },
+        {
+          "defect_class": "fee_mismatch",
+          "match_rate_delta": 0.0,
+          "tier1+2_correct": 1,
+          "tier1+2_match_rate": 1.0,
+          "tier1_correct": 1,
+          "tier1_match_rate": 1.0,
+          "total": 1
+        },
+        {
+          "defect_class": "fx_drift_benign",
+          "match_rate_delta": 0.0,
+          "tier1+2_correct": 10,
+          "tier1+2_match_rate": 1.0,
+          "tier1_correct": 10,
+          "tier1_match_rate": 1.0,
+          "total": 10
+        },
+        {
+          "defect_class": "fx_drift_flagged",
+          "match_rate_delta": 0.0,
+          "tier1+2_correct": 5,
+          "tier1+2_match_rate": 1.0,
+          "tier1_correct": 5,
+          "tier1_match_rate": 1.0,
+          "total": 5
+        },
+        {
+          "defect_class": "missing_remitter",
+          "match_rate_delta": 0.0,
+          "tier1+2_correct": 6,
+          "tier1+2_match_rate": 1.0,
+          "tier1_correct": 6,
+          "tier1_match_rate": 1.0,
+          "total": 6
+        },
+        {
+          "defect_class": "partial_payment",
+          "match_rate_delta": 0.0,
+          "tier1+2_correct": 6,
+          "tier1+2_match_rate": 1.0,
+          "tier1_correct": 6,
+          "tier1_match_rate": 1.0,
+          "total": 6
+        },
+        {
+          "defect_class": "refund_fx_asymmetry",
+          "match_rate_delta": 0.0,
+          "tier1+2_correct": 2,
+          "tier1+2_match_rate": 1.0,
+          "tier1_correct": 2,
+          "tier1_match_rate": 1.0,
+          "total": 2
+        },
+        {
+          "defect_class": "subset_sum_bundle",
+          "match_rate_delta": 0.0,
+          "tier1+2_correct": 12,
+          "tier1+2_match_rate": 1.0,
+          "tier1_correct": 12,
+          "tier1_match_rate": 1.0,
+          "total": 12
+        }
+      ],
+      "dataset": "main_tier1",
+      "overall": {
+        "match_rate_delta": 0.0,
+        "recall_delta": 0.0,
+        "tier1+2_false_clear": 0,
+        "tier1+2_false_match": 0,
+        "tier1+2_match_rate": 1.0,
+        "tier1+2_recall": 1.0,
+        "tier1_false_clear": 0,
+        "tier1_false_match": 0,
+        "tier1_match_rate": 1.0,
+        "tier1_recall": 1.0
+      }
+    },
+    "stress_test": {
+      "by_defect_class": [
+        {
+          "defect_class": "abbreviation_variant",
+          "match_rate_delta": 0.25,
+          "tier1+2_correct": 2,
+          "tier1+2_match_rate": 0.25,
+          "tier1_correct": 0,
+          "tier1_match_rate": 0.0,
+          "total": 8
+        },
+        {
+          "defect_class": "invoice_description_mismatch",
+          "match_rate_delta": 0.5,
+          "tier1+2_correct": 4,
+          "tier1+2_match_rate": 0.5,
+          "tier1_correct": 0,
+          "tier1_match_rate": 0.0,
+          "total": 8
+        },
+        {
+          "defect_class": "legal_vs_trading_name",
+          "match_rate_delta": 0.0,
+          "tier1+2_correct": 0,
+          "tier1+2_match_rate": 0.0,
+          "tier1_correct": 0,
+          "tier1_match_rate": 0.0,
+          "total": 8
+        },
+        {
+          "defect_class": "ocr_typo_narration",
+          "match_rate_delta": 1.0,
+          "tier1+2_correct": 8,
+          "tier1+2_match_rate": 1.0,
+          "tier1_correct": 0,
+          "tier1_match_rate": 0.0,
+          "total": 8
+        },
+        {
+          "defect_class": "transliteration_variant",
+          "match_rate_delta": 0.75,
+          "tier1+2_correct": 6,
+          "tier1+2_match_rate": 0.75,
+          "tier1_correct": 0,
+          "tier1_match_rate": 0.0,
+          "total": 8
+        }
+      ],
+      "dataset": "stress_tier1",
+      "overall": {
+        "match_rate_delta": 0.5,
+        "recall_delta": 0.5,
+        "tier1+2_false_clear": 20,
+        "tier1+2_false_match": 0,
+        "tier1+2_match_rate": 0.5,
+        "tier1+2_recall": 0.5,
+        "tier1_false_clear": 40,
+        "tier1_false_match": 0,
+        "tier1_match_rate": 0.0,
+        "tier1_recall": 0.0
+      }
+    }
+  }
 }

@@ -3,7 +3,55 @@
 Updated after every integrated unit of work. Source of truth for scope:
 `reconagent-design-description.md`. Rules: `CLAUDE.md`.
 
-## Status: Final precision checkpoint — wording corrected, clean-clone verified. Holding completely.
+## Status: Post-review remediation, sequenced by risk — Tier A done, Tier B in progress
+
+### Tier A (3 commits: d9f8bf6, f2215aa, a660a0b) — cheap precision fixes
+
+1. `ARCHITECTURE.md` had spliced Stage 4's threshold numbers into Stage 3's
+   paragraph (`0.032655`/`0.032522` where Stage 3's real values are
+   `0.25`/`0.213390`, per `probabilistic.py`). Fixed to match the code.
+2. README's test count corrected to `265 passed, 13 skipped (278
+   collected)`, with the 13th skip (test_explain.py's live-API test) named
+   explicitly rather than left folded into "12 TigerBeetle skips."
+3. `sentence-transformers` moved from a base dependency to an optional
+   `cross_encoder` extra. **Verified, not assumed**: built a genuinely
+   fresh venv with only base+dev installed, confirmed all six core modules
+   import cleanly with the package absent, then ran the full suite --
+   **251 passed, 27 skipped, zero failures, exit 0**. The 14 extra skips
+   (27 vs. the dev-env's 13) are exactly the cross-encoder tests degrading
+   gracefully via the same broad `except Exception` the ablation's own
+   fixture already used for network unavailability -- `ModuleNotFoundError`
+   is caught the same way.
+
+### Tier B, item 4 — the four-way ablation is now in the default report
+
+`python -m reconagent.eval` previously reported Tier 1 only; a judge running
+the one command README actually documents would never see Tier 2's
+ablation without separately knowing to run a second script. Fixed by
+wiring `scripts/run_tier2_ablation.py`'s own `run_all()` /
+`build_delta_table()` / `build_finding()` into `reconagent/eval.py` via the
+same dynamic-module-load pattern the file already uses for
+`scripts/generate_synthetic.py` (`_load_generator_module`) -- reused, not
+reimplemented, per the instruction that this is presentation of
+already-correct data. Rendering (`_render_tier2_delta_section`) is a local
+copy of the ablation script's own `_render_delta_section`, kept local
+rather than imported so `render_markdown()` stays a pure function of the
+report dict with no module load as a side effect of formatting.
+
+Guarded with `report.get("tier2_ablation")`, the same pattern already used
+for the `decomposition` section -- two pre-existing tests in
+`tests/test_eval.py` build minimal report fixtures by hand without this
+key, and would have raised `KeyError` on an unconditional access. Caught
+before running anything, not discovered by a failing test.
+
+Real cost, accepted deliberately: `python -m reconagent.eval` now trains
+the Splink and hybrid-fuzzy models across all four combinations, so the
+default run went from a fraction of a second to ~30s. Ran it end to end and
+confirmed the generated `reports/eval_report.md` actually contains the new
+section with real numbers, not just that the code compiles.
+
+Full suite after this change: 265 passed, 13 skipped -- unchanged, as
+expected for presentation-only wiring.
 
 ### Precision fix: "tamper-proof" was an overclaim, corrected everywhere
 

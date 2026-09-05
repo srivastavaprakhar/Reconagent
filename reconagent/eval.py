@@ -499,6 +499,41 @@ def _load_generator_module():
     return mod
 
 
+def _load_tier2_ablation_module():
+    """Same dynamic-load pattern as `_load_generator_module` above --
+    `scripts/` has no `__init__.py`, so this is a file-path import, not a
+    package one. Safe from circularity: `scripts/run_tier2_ablation.py`
+    imports `Metrics`/`Split`/`compute_metrics` from this module, but only
+    at ITS import time, which is here, after this module has already fully
+    defined them -- called lazily, at report-build time, never at this
+    module's own top level."""
+    spec = importlib.util.spec_from_file_location(
+        "run_tier2_ablation", REPO / "scripts" / "run_tier2_ablation.py"
+    )
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules["run_tier2_ablation"] = mod
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def tier2_ablation_summary() -> dict:
+    """Does Tier 2 (Splink + hybrid fuzzy) improve recall over Tier 1 alone,
+    on the main set and the stress-test set? Reuses
+    `scripts/run_tier2_ablation.py`'s own delta-computation and finding-text
+    functions rather than recomputing the comparison here -- this function
+    is presentation wiring, the ablation itself is already-verified logic
+    living in one place."""
+    tier2 = _load_tier2_ablation_module()
+    metrics = tier2.run_all()
+    main_delta = tier2.build_delta_table(metrics["main_tier1"], metrics["main_tier1+2"])
+    stress_delta = tier2.build_delta_table(metrics["stress_tier1"], metrics["stress_tier1+2"])
+    return {
+        "finding": tier2.build_finding(main_delta, stress_delta),
+        "main": main_delta,
+        "stress_test": stress_delta,
+    }
+
+
 def throughput_table(scales=(200, 1000, 5000), seed: int = 20260903) -> list[dict]:
     gen = _load_generator_module()
     rows = []
@@ -554,6 +589,7 @@ def build_report(
         },
         "coverage_gaps": list(COVERAGE_GAPS),
         "fx_metrics_note": FX_METRICS_NOTE,
+        "tier2_ablation": tier2_ablation_summary(),
         "decomposition": {
             "main": decomposition_breakdown(main),
             "holdout": decomposition_breakdown(holdout),
@@ -572,6 +608,41 @@ def build_report(
 
 def _pct(x: float | None) -> str:
     return "n/a" if x is None else f"{x:.2%}"
+
+
+def _render_tier2_delta_section(title: str, delta: dict) -> list[str]:
+    """Formats a `build_delta_table` result. Pure presentation of an
+    already-computed dict -- mirrors `scripts/run_tier2_ablation.py`'s own
+    `_render_delta_section` line for line, kept local rather than imported
+    so this module's rendering stays a pure function of `report`, with no
+    module load as a side effect of formatting markdown."""
+    o = delta["overall"]
+    recall_delta_str = "n/a" if o["recall_delta"] is None else f"{o['recall_delta']:+.2%}"
+    lines = [
+        f"### {title}",
+        "",
+        "| metric | tier 1 | tier 1+2 | delta |",
+        "|---|---|---|---|",
+        f"| match rate | {_pct(o['tier1_match_rate'])} | {_pct(o['tier1+2_match_rate'])} "
+        f"| {o['match_rate_delta']:+.2%} |",
+        f"| recall | {_pct(o['tier1_recall'])} | {_pct(o['tier1+2_recall'])} "
+        f"| {recall_delta_str} |",
+        f"| false match (count) | {o['tier1_false_match']} | {o['tier1+2_false_match']} "
+        f"| {o['tier1+2_false_match'] - o['tier1_false_match']:+d} |",
+        f"| false clear (count) | {o['tier1_false_clear']} | {o['tier1+2_false_clear']} "
+        f"| {o['tier1+2_false_clear'] - o['tier1_false_clear']:+d} |",
+        "",
+        "| defect class | total | tier1 correct | tier1+2 correct | tier1 match rate | tier1+2 match rate | delta |",
+        "|---|---|---|---|---|---|---|",
+    ]
+    for row in delta["by_defect_class"]:
+        lines.append(
+            f"| {row['defect_class']} | {row['total']} | {row['tier1_correct']} "
+            f"| {row['tier1+2_correct']} | {_pct(row['tier1_match_rate'])} "
+            f"| {_pct(row['tier1+2_match_rate'])} | {row['match_rate_delta']:+.2%} |"
+        )
+    lines.append("")
+    return lines
 
 
 def render_markdown(report: dict) -> str:
@@ -605,6 +676,24 @@ def render_markdown(report: dict) -> str:
         f"| main | {_pct(m['match_rate'])} | {_pct(m['precision'])} | {_pct(m['recall'])} |",
         f"| holdout | {_pct(h['match_rate'])} | {_pct(h['precision'])} | {_pct(h['recall'])} |",
         "",
+    ]
+    tier2 = report.get("tier2_ablation")
+    if tier2:
+        lines += [
+            "## Tier 2 ablation: does Splink + hybrid fuzzy matching improve recall?",
+            "",
+            "Tier 1 vs Tier 1+2, on the main set and the adversarial stress-test "
+            "set built specifically because Tier 1 resolves nothing on it. Full "
+            "detail: `reports/tier2_ablation.md`.",
+            "",
+            tier2["finding"],
+            "",
+            *_render_tier2_delta_section("Main dataset (`data/`)", tier2["main"]),
+            *_render_tier2_delta_section(
+                "Stress-test dataset (`stress_test/`)", tier2["stress_test"]
+            ),
+        ]
+    lines += [
         "## Coverage gaps",
         "",
         *[f"- {g}" for g in report["coverage_gaps"]],

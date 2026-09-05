@@ -16,6 +16,51 @@ tie-ambiguous rate is reported alongside false-clear rate, not folded into it: i
 | main | 100.00% | 100.00% | 100.00% |
 | holdout | 94.34% | 100.00% | 94.34% |
 
+## Tier 2 ablation: does Splink + hybrid fuzzy matching improve recall?
+
+Tier 1 vs Tier 1+2, on the main set and the adversarial stress-test set built specifically because Tier 1 resolves nothing on it. Full detail: `reports/tier2_ablation.md`.
+
+On the main dataset, Tier 2 (Splink + hybrid fuzzy) provides zero measurable value: Tier 1 alone and Tier 1+2 produce identical match rates (100.00%). Tier 1 already resolves the main set completely, so Tier 2 never gets a case to add value on there -- provably a no-op, not a close call. On the stress-test dataset (built specifically so Tier 1 alone resolves nothing: match rate 0.00% under Tier 1 alone), Tier 2 raises match rate to 50.00% (+50.00%), with false_match count going from 0 to 0. Tier 2's gain on the stress set is uneven across defect classes, improving: abbreviation_variant (2/8), invoice_description_mismatch (4/8), ocr_typo_narration (8/8), transliteration_variant (6/8). It shows no improvement at all over Tier 1 (still 0 resolved) on: legal_vs_trading_name (0/8). In plain language: Tier 2 provides zero value on the main set (Tier 1 already resolves it completely) and partial, uneven value on the stress set -- real gains on several defect classes, no gain whatsoever on others. This is not softened or rounded up in either direction; it is what compute_metrics measured on this run.
+
+### Main dataset (`data/`)
+
+| metric | tier 1 | tier 1+2 | delta |
+|---|---|---|---|
+| match rate | 100.00% | 100.00% | +0.00% |
+| recall | 100.00% | 100.00% | +0.00% |
+| false match (count) | 0 | 0 | +0 |
+| false clear (count) | 0 | 0 | +0 |
+
+| defect class | total | tier1 correct | tier1+2 correct | tier1 match rate | tier1+2 match rate | delta |
+|---|---|---|---|---|---|---|
+| clean_match | 107 | 107 | 107 | 100.00% | 100.00% | +0.00% |
+| data_entry_error | 1 | 1 | 1 | 100.00% | 100.00% | +0.00% |
+| edpms_open | 2 | 2 | 2 | 100.00% | 100.00% | +0.00% |
+| fee_mismatch | 1 | 1 | 1 | 100.00% | 100.00% | +0.00% |
+| fx_drift_benign | 10 | 10 | 10 | 100.00% | 100.00% | +0.00% |
+| fx_drift_flagged | 5 | 5 | 5 | 100.00% | 100.00% | +0.00% |
+| missing_remitter | 6 | 6 | 6 | 100.00% | 100.00% | +0.00% |
+| partial_payment | 6 | 6 | 6 | 100.00% | 100.00% | +0.00% |
+| refund_fx_asymmetry | 2 | 2 | 2 | 100.00% | 100.00% | +0.00% |
+| subset_sum_bundle | 12 | 12 | 12 | 100.00% | 100.00% | +0.00% |
+
+### Stress-test dataset (`stress_test/`)
+
+| metric | tier 1 | tier 1+2 | delta |
+|---|---|---|---|
+| match rate | 0.00% | 50.00% | +50.00% |
+| recall | 0.00% | 50.00% | +50.00% |
+| false match (count) | 0 | 0 | +0 |
+| false clear (count) | 40 | 20 | -20 |
+
+| defect class | total | tier1 correct | tier1+2 correct | tier1 match rate | tier1+2 match rate | delta |
+|---|---|---|---|---|---|---|
+| abbreviation_variant | 8 | 0 | 2 | 0.00% | 25.00% | +25.00% |
+| invoice_description_mismatch | 8 | 0 | 4 | 0.00% | 50.00% | +50.00% |
+| legal_vs_trading_name | 8 | 0 | 0 | 0.00% | 0.00% | +0.00% |
+| ocr_typo_narration | 8 | 0 | 8 | 0.00% | 100.00% | +100.00% |
+| transliteration_variant | 8 | 0 | 6 | 0.00% | 75.00% | +75.00% |
+
 ## Coverage gaps
 
 - no FEE_MISMATCH case in the holdout set
@@ -56,9 +101,9 @@ This table counts what `decompose_variance` produced for every settlement in the
 
 | scale (settlements) | credits | seconds | records/sec |
 |---|---|---|---|
-| 200 | 152 | 0.0128 | 11907 |
-| 1000 | 751 | 2.2785 | 330 |
-| 5000 | 3728 | 21.6185 | 172 |
+| 200 | 152 | 0.0124 | 12249 |
+| 1000 | 751 | 2.2610 | 332 |
+| 5000 | 3728 | 21.2258 | 176 |
 
 ## Mutation test (harness credibility check, not a matcher metric)
 
